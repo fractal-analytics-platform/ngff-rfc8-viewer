@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 example1 = "rfc8_examples.example1:main"
+example2 = "rfc8_examples.example2:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]

@@ -1,16 +1,6 @@
-import random
-import uuid
-
 import ngio_collections as ngc
 
-from rfc8_examples import BASE_PATH
-
-rnd = random.Random()
-rnd.seed(123)
-
-
-def get_uuid4() -> str:
-    return str(uuid.UUID(int=rnd.getrandbits(128), version=4))
+from rfc8_examples import BASE_PATH, get_uuid4
 
 
 def main():
