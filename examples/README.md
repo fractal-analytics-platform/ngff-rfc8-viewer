@@ -1,5 +1,3 @@
-Generate example files.
-
 ## Example 1
 
 This is an inlined collection with a single multiscale node and two singlescale nodes.
