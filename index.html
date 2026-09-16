@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NGFF RFC-8 collections viewer</title>
+  <script type="module" src="./lib/src/main.ts"></script>
+  <style>
+    .container {
+      margin: 30px auto;
+      max-width: 1280px;
+    }
+
+    .ngff-rfc8-viewer-graph {
+      border: 1px #bbb solid;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div id="viewer"></div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const source = urlParams.get('source');
+      new NGFFViewer('viewer', source);
+    });
+  </script>
+</body>
+
+</html>
