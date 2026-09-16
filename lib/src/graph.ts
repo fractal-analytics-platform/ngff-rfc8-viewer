@@ -113,7 +113,7 @@ export function buildNetworkGraph(
   const maxZoom = Math.max(2, width / nodeSpacing / 5);
 
   const zoom = d3
-    .zoom()
+    .zoom<SVGSVGElement, unknown>()
     .scaleExtent([minZoom, maxZoom])
     .on('zoom', (event) => zoomLayer.attr('transform', event.transform));
   svg.call(zoom);
