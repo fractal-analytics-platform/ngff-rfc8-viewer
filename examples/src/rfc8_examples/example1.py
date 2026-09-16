@@ -12,13 +12,13 @@ rnd.seed(123)
 def get_uuid4() -> str:
     return str(uuid.UUID(int=rnd.getrandbits(128), version=4))
 
+
 def main():
     coord_system_id = get_uuid4()
     singlescale_1_id = get_uuid4()
     singlescale_2_id = get_uuid4()
     multiscale_id = get_uuid4()
     collection_id = get_uuid4()
-
 
     singlescale_1 = ngc.new_node(
         node_type="singlescale",
@@ -57,7 +57,7 @@ def main():
     multiscale = ngc.new_node(
         node_type="multiscale",
         id=multiscale_id,
-        name="my image",
+        name="my multiscale",
         children=(singlescale_1, singlescale_2),
     ).set_attr(
         ngc.CoordinateSystemsAttribute(
@@ -74,15 +74,16 @@ def main():
     )
 
     collection = ngc.new_node(
-        "my collection",
+        "collection",
+        name="my collection",
         id=collection_id,
         children=(multiscale,),
     )
 
-
     BASE_PATH.mkdir(parents=True, exist_ok=True)
     url = str(BASE_PATH / "example1.json")
     ngc.create(url, collection, overwrite=True)
+
 
 if __name__ == "__main__":
     main()

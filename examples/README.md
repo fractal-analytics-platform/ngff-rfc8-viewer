@@ -10,4 +10,4 @@ uv run example1
 ```
 
 Explore at
-https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://github.com/fractal-analytics-platform/ngff-rfc8-viewer/blob/examples/examples/data/example1.json
+https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/examples/examples/data/example1.json
