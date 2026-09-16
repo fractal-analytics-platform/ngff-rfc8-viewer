@@ -1,0 +1,32 @@
+.ngff-rfc8-viewer-alert {
+  text-align: center;
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.ngff-rfc8-viewer-warning {
+  background-color: rgb(255, 230, 121);
+}
+
+.ngff-rfc8-viewer-error {
+  background-color: rgb(255, 137, 121);
+}
+
+.ngff-rfc8-viewer-tree-tooltip {
+  position: absolute;
+  pointer-events: none;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font: 12px sans-serif;
+  line-height: 1.4;
+  max-width: 300px;
+  word-break: break-all;
+  transition: opacity 0.1s ease;
+}
+
+.ngff-rfc8-viewer-hide {
+  display: none;
+}
