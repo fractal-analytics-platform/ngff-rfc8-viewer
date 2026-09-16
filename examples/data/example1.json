@@ -1,12 +1,13 @@
 {
   "ome": {
     "version": "0.x",
-    "type": "my collection",
+    "type": "collection",
+    "name": "my collection",
     "id": "2293202c-28df-4298-8d49-6d4bda22594f",
     "nodes": [
       {
         "type": "multiscale",
-        "name": "my image",
+        "name": "my multiscale",
         "id": "573e8d77-550a-4889-8ff4-1e8d8944897c",
         "attributes": {
           "coordinateSystems": [
