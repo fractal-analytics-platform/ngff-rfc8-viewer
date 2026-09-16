@@ -20,7 +20,7 @@ def main():
                 ngc.new_node(
                     node_type="singlescale",
                     id=singlescale_id,
-                    name=f"resolution-{ind_singlescale}",
+                    name=f"resolution {ind_singlescale}",
                     ref=ngc.Reference(path=ngc.ZarrPath(path=f"./{ind_singlescale}")),
                 ).set_attr(
                     ngc.CoordinateTransformationsAttribute(
