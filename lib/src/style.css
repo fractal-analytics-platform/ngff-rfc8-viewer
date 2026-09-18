@@ -1,8 +1,28 @@
+.ngff-rfc8-viewer-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.ngff-rfc8-viewer-graph-container {
+  flex-grow: 1;
+}
+
+.ngff-rfc8-viewer-sidebar {
+  width: 350px;
+  height: 100%;
+  color: #fff;
+  background-color: rgb(65, 65, 65);
+  padding: 0 15px;
+  overflow: auto;
+}
+
 .ngff-rfc8-viewer-alert {
   text-align: center;
   border-radius: 10px;
   padding: 10px;
-  margin-bottom: 20px;
+  margin: 20px;
 }
 
 .ngff-rfc8-viewer-warning {

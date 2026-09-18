@@ -1,7 +1,7 @@
+import { CSS_CLASS_PREFIX } from './constants';
 import { buildNetworkGraph } from './graph';
 import { loadGraphData } from './loader';
-
-const CSS_CLASS_PREFIX = 'ngff-rfc8-viewer-';
+import { NGFFSidebar } from './sidebar';
 
 export default class NGFFViewer {
   constructor(elementId: string, source: string | null) {
@@ -20,9 +20,25 @@ export default class NGFFViewer {
       return;
     }
 
+    const viewerContainer = document.createElement('div');
+    viewerContainer.classList.add(`${CSS_CLASS_PREFIX}container`);
+
+    const graphContainer = document.createElement('div');
+    graphContainer.classList.add(`${CSS_CLASS_PREFIX}graph-container`);
+    graphContainer.id = `${elementId}-graph-container`;
+
+    const sidebar = document.createElement('div');
+    sidebar.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
+    const sidebarHandler = new NGFFSidebar(sidebar);
+
+    viewerContainer.appendChild(graphContainer);
+    viewerContainer.appendChild(sidebar);
+
+    document.getElementById(elementId)!.appendChild(viewerContainer);
+
     try {
       const data = await loadGraphData(source);
-      buildNetworkGraph(data, elementId);
+      buildNetworkGraph(data, graphContainer.id, sidebarHandler);
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';

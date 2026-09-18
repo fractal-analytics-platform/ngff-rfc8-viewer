@@ -7,22 +7,22 @@
   <title>NGFF RFC-8 collections viewer</title>
   <script type="module" src="./lib/src/main.ts"></script>
   <style>
-    .container {
-      margin: 30px auto;
-      max-width: 1280px;
+    body {
+      margin: 0;
     }
 
-    .ngff-rfc8-viewer-graph {
-      border: 1px #bbb solid;
-      border-radius: 5px;
+    #viewer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <div id="viewer"></div>
-  </div>
+  <div id="viewer"></div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);

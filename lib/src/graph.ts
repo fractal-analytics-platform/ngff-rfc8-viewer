@@ -1,5 +1,7 @@
 import * as d3 from 'd3';
-import type { BaseOmeNode, D3Node } from './types';
+import type { D3Node, OmeNode } from './types';
+import type { NGFFSidebar } from './sidebar';
+import { CSS_CLASS_PREFIX } from './constants';
 
 const colors: Record<string, string> = {
   collection: '#4f81bd',
@@ -10,16 +12,15 @@ const colors: Record<string, string> = {
 const defaultColor = '#999';
 
 function toD3(
-  tree: BaseOmeNode,
+  tree: OmeNode,
   computeExtraEdges:
-    | ((node: BaseOmeNode, extraEdges: Array<{ sourceId: string; targetId: string }>) => void)
-    | undefined
+    ((node: OmeNode, extraEdges: Array<{ sourceId: string; targetId: string }>) => void) | undefined
 ) {
   const nodes: Array<D3Node> = [];
   const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
 
   function walk(
-    node: BaseOmeNode,
+    node: OmeNode,
     parentId: string | null,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
@@ -35,7 +36,9 @@ function toD3(
       computeExtraEdges(node, extraEdges);
     }
 
-    node.nodes?.forEach((child) => walk(child, node.id, extraEdges));
+    if ('nodes' in node) {
+      node.nodes.forEach((child) => walk(child, node.id, extraEdges));
+    }
   }
 
   walk(tree, null, extraEdges);
@@ -69,8 +72,9 @@ function treeStats(node: D3Node): { leaves: number; depth: number } {
 export function buildNetworkGraph(
   data: any,
   elementId: string,
+  sidebarHandler: NGFFSidebar,
   computeExtraEdges:
-    | ((node: BaseOmeNode, extraEdges: Array<{ sourceId: string; targetId: string }>) => void)
+    | ((node: OmeNode, extraEdges: Array<{ sourceId: string; targetId: string }>) => void)
     | undefined = undefined
 ) {
   const ome = data.ome;
@@ -98,11 +102,16 @@ export function buildNetworkGraph(
     .select(`#${elementId}`)
     .append('svg')
     .attr('id', `${elementId}-graph`)
-    .attr('class', 'ngff-rfc8-viewer-graph')
+    .attr('class', `${CSS_CLASS_PREFIX}graph`)
     .attr('width', '100%')
-    .attr('height', '800px')
+    .attr('height', '100%')
     .attr('viewBox', `0 0 ${width} ${height}`)
-    .style('touch-action', 'none');
+    .style('touch-action', 'none')
+    .on('click', function (event) {
+      if (!(event.target instanceof SVGCircleElement)) {
+        sidebarHandler.hide();
+      }
+    });
 
   svg.selectAll('*').remove();
 
@@ -141,13 +150,13 @@ export function buildNetworkGraph(
     .attr('y1', (d) => Number(d.source.y))
     .attr('x2', (d) => Number(d.target.x))
     .attr('y2', (d) => Number(d.target.y))
-    .attr('stroke', (d) => colors[(d.source.data as BaseOmeNode).type] || defaultColor)
-    .attr('fill', (d) => colors[(d.source.data as BaseOmeNode).type] || defaultColor)
+    .attr('stroke', (d) => colors[(d.source.data as OmeNode).type] || defaultColor)
+    .attr('fill', (d) => colors[(d.source.data as OmeNode).type] || defaultColor)
     .attr('marker-end', 'url(#arrow)');
 
   // Build a fast lookup map of computed coordinates
   const nodeMap = new Map();
-  descendants.forEach((d) => nodeMap.set((d.data as BaseOmeNode).id, d));
+  descendants.forEach((d) => nodeMap.set((d.data as OmeNode).id, d));
 
   const resolvedExtraEdges = extraEdges.map((link) => ({
     source: nodeMap.get(link.sourceId),
@@ -171,7 +180,7 @@ export function buildNetworkGraph(
   const tooltip = d3
     .select('body')
     .append('div')
-    .attr('class', 'ngff-rfc8-viewer-tree-tooltip')
+    .attr('class', `${CSS_CLASS_PREFIX}tree-tooltip`)
     .style('opacity', 0);
 
   tree
@@ -182,18 +191,25 @@ export function buildNetworkGraph(
     .attr('cx', (d) => Number(d.x))
     .attr('cy', (d) => Number(d.y))
     .attr('r', circleRadius)
-    .attr('fill', (d) => colors[(d.data as BaseOmeNode).type] || defaultColor)
+    .attr('fill', (d) => colors[(d.data as OmeNode).type] || defaultColor)
+    .style('cursor', 'pointer')
+    .on('click', function (_, d) {
+      sidebarHandler.showInfo(d.data as OmeNode);
+    })
     .on('mouseenter', function (_, d) {
-      const data = d.data as BaseOmeNode;
-      tooltip.style('opacity', 1).html(`<strong>${data.name}</strong><br>
-        Type: ${data.type}<br>
-        Attributes: ${JSON.stringify(data.attributes)}
+      d3.select(this).attr('stroke', '#333').attr('stroke-width', 2);
+      const data = d.data as OmeNode;
+      tooltip.style('opacity', 1).html(`
+        <strong>Id: </strong>${data.id}<br>
+        <strong>Name: </strong>${data.name}<br>
+        <strong>Type: </strong> ${data.type}
       `);
     })
     .on('mousemove', function (event) {
       tooltip.style('left', `${event.pageX + 12}px`).style('top', `${event.pageY + 12}px`);
     })
     .on('mouseleave', function () {
+      d3.select(this).attr('stroke', 'none');
       tooltip.style('opacity', 0);
     });
 
@@ -206,13 +222,11 @@ export function buildNetworkGraph(
     .attr('x', (d) => Number(d.x))
     .attr('y', (d) => Number(d.y) + 2 * circleRadius + 5)
     .attr('text-anchor', 'middle')
-    .text((d) => (d.data as BaseOmeNode).name);
+    .text((d) => (d.data as OmeNode).name);
 
   // Initial zoom level
   const k = Math.max(minZoom, maxZoom / 3);
   const startX = descendants[0].x || 0;
-  const initialTransform = d3.zoomIdentity
-    .translate(width / 2 - startX * k, (-height / 2) * k)
-    .scale(k);
+  const initialTransform = d3.zoomIdentity.translate(width / 2 - startX * k, 0).scale(k);
   svg.call(zoom.transform, initialTransform);
 }
