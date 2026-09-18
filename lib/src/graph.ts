@@ -226,7 +226,9 @@ export function buildNetworkGraph(
 
   // Initial zoom level
   const k = Math.max(minZoom, maxZoom / 3);
-  const startX = descendants[0].x || 0;
-  const initialTransform = d3.zoomIdentity.translate(width / 2 - startX * k, 0).scale(k);
+  const initialTransform = d3.zoomIdentity
+    .translate(width / 2, height / 2)
+    .scale(k)
+    .translate(-width / 2, -height / 2);
   svg.call(zoom.transform, initialTransform);
 }
