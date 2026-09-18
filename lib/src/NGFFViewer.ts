@@ -11,12 +11,12 @@ export default class NGFFViewer {
       return;
     }
 
-    this.load(elementId, source);
+    this.load(element, source);
   }
 
-  async load(elementId: string, source: string | null) {
+  async load(element: HTMLElement, source: string | null) {
     if (!source) {
-      this.showAlert(elementId, 'Missing source parameter', 'warning');
+      this.showAlert(element, 'Missing source parameter', 'warning');
       return;
     }
 
@@ -25,7 +25,7 @@ export default class NGFFViewer {
 
     const graphContainer = document.createElement('div');
     graphContainer.classList.add(`${CSS_CLASS_PREFIX}graph-container`);
-    graphContainer.id = `${elementId}-graph-container`;
+    graphContainer.id = `${element.id}-graph-container`;
 
     const sidebar = document.createElement('div');
     sidebar.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
@@ -34,7 +34,7 @@ export default class NGFFViewer {
     viewerContainer.appendChild(graphContainer);
     viewerContainer.appendChild(sidebar);
 
-    document.getElementById(elementId)!.appendChild(viewerContainer);
+    element.appendChild(viewerContainer);
 
     try {
       const data = await loadGraphData(source);
@@ -42,16 +42,17 @@ export default class NGFFViewer {
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';
-      this.showAlert(elementId, error, 'error');
+      this.showAlert(element, error, 'error');
     }
   }
 
-  showAlert(elementId: string, message: string, type: 'warning' | 'error') {
+  showAlert(element: HTMLElement, message: string, type: 'warning' | 'error') {
     const alert = document.createElement('div');
     alert.classList.add(`${CSS_CLASS_PREFIX}alert`);
     alert.classList.add(`${CSS_CLASS_PREFIX}${type}`);
     alert.classList.remove(`${CSS_CLASS_PREFIX}hide`);
     alert.innerText = message;
-    document.getElementById(elementId)?.appendChild(alert);
+    element.innerHTML = '';
+    element.appendChild(alert);
   }
 }
