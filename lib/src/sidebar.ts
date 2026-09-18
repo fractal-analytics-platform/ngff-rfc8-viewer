@@ -11,7 +11,7 @@ export class NGFFSidebar {
   showInfo(node: OmeNode) {
     this.element.innerHTML = '';
 
-    this.addKeyValue('Id', node.id);
+    this.addKeyValue('Id', node.id || '-');
     this.addKeyValue('Name', node.name);
     this.addKeyValue('Type', node.type);
 

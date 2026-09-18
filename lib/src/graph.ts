@@ -36,7 +36,7 @@ function toD3(
       computeExtraEdges(node, extraEdges);
     }
 
-    if ('nodes' in node) {
+    if ('nodes' in node && node.nodes) {
       node.nodes.forEach((child) => walk(child, node.id, extraEdges));
     }
   }
