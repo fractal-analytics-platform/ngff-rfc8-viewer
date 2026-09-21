@@ -1,5 +1,5 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import type { OmeNode } from './types';
+import type { D3Node } from './types';
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -8,7 +8,7 @@ export class NGFFSidebar {
     this.element = element;
   }
 
-  showInfo(node: OmeNode) {
+  showInfo(node: D3Node) {
     this.element.innerHTML = '';
 
     this.addKeyValue('Id', node.id || '-');

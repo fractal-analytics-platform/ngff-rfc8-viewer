@@ -1,5 +1,5 @@
 import './style.css';
-import NGFFViewer from './NGFFViewer';
+import NGFFViewer from './viewer';
 
 export default NGFFViewer;
 

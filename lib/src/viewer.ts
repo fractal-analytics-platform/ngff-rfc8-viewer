@@ -1,6 +1,6 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import { buildNetworkGraph } from './graph';
-import { loadGraphData } from './loader';
+import { NGFFGraph } from './graph';
+import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 
 export default class NGFFViewer {
@@ -37,8 +37,9 @@ export default class NGFFViewer {
     element.appendChild(viewerContainer);
 
     try {
-      const data = await loadGraphData(source);
-      buildNetworkGraph(data, graphContainer.id, sidebarHandler);
+      const loader = new NGFFLoader(source);
+      const graph = new NGFFGraph(graphContainer.id, loader, sidebarHandler);
+      graph.loadRoot();
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';

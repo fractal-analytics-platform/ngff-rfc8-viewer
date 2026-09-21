@@ -51,3 +51,30 @@
 .ngff-rfc8-viewer-hide {
   display: none;
 }
+
+.ngff-rfc8-viewer-alert-fixed {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 0;
+}
+
+.ngff-rfc8-viewer-alert-fixed button {
+  background: none;
+  border: none;
+  margin: 0 10px;
+  padding: 0;
+  cursor: pointer;
+  float: right;
+  font-size: 20px;
+}
+
+@keyframes ngff-rfc8-viewer-rotate-dash {
+  to {
+    stroke-dashoffset: -15;
+  }
+}
+
+.ngff-rfc8-viewer-rotating-dash {
+  animation: ngff-rfc8-viewer-rotate-dash 0.5s linear infinite;
+}

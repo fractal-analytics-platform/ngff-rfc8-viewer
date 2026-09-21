@@ -101,5 +101,12 @@ export type D3Node = {
   type: string;
   parentId: string | null;
   attributes: any;
-  nodes?: D3Node[];
+  path?: OmePath;
+  loading: boolean;
+  expanded: boolean;
 };
+
+export type ExtraEdgesFn = (
+  node: OmeNode,
+  extraEdges: Array<{ sourceId: string; targetId: string }>
+) => void;
