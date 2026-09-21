@@ -11,6 +11,7 @@
 
 .ngff-rfc8-viewer-sidebar {
   width: 350px;
+  min-width: 350px;
   height: 100%;
   color: #fff;
   background-color: rgb(65, 65, 65);
