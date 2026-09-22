@@ -102,6 +102,7 @@ export type D3Node = {
   parentId: string | null;
   attributes: any;
   path?: OmePath;
+  resolvedPath: string;
   loading: boolean;
   expanded: boolean;
 };

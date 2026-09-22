@@ -27,6 +27,7 @@ export class NGFFGraph {
   private nodes: Array<D3Node> = [];
   private extraEdges: Array<{ sourceId: string; targetId: string }> = [];
 
+  private hierarchy: d3.HierarchyNode<unknown> | undefined;
   private width: number = 0;
   private height: number = 0;
   private currentZoom: any;
@@ -58,6 +59,7 @@ export class NGFFGraph {
     nodes: Array<D3Node>,
     node: OmeNode,
     parentId: string | null,
+    resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
     nodes.push({
@@ -68,7 +70,8 @@ export class NGFFGraph {
       path: 'path' in node ? node.path : undefined,
       parentId: parentId,
       loading: false,
-      expanded: !('path' in node)
+      expanded: !('path' in node),
+      resolvedPath
     });
 
     if (this.computeExtraEdges) {
@@ -76,40 +79,15 @@ export class NGFFGraph {
     }
 
     if ('nodes' in node && node.nodes) {
-      node.nodes.forEach((child) => this.walk(nodes, child, node.id, extraEdges));
+      node.nodes.forEach((child) => this.walk(nodes, child, node.id, resolvedPath, extraEdges));
     }
-  }
-
-  treeStats(node: OmeNode): { leaves: number; depth: number } {
-    if (!node) {
-      return { leaves: 0, depth: 0 };
-    }
-
-    const children = 'nodes' in node ? node.nodes || [] : [];
-
-    if (children.length === 0) {
-      return { leaves: 1, depth: 0 };
-    }
-
-    let leaves = 0;
-    let depth = 0;
-
-    for (const child of children) {
-      const stats = this.treeStats(child);
-
-      leaves += stats.leaves;
-      depth = Math.max(depth, stats.depth + 1);
-    }
-
-    return { leaves, depth };
   }
 
   render(data: any) {
     const ome = data.ome;
 
-    const { leaves, depth } = this.treeStats(ome);
-    this.width = Math.max(800, leaves * nodeSpacing);
-    this.height = Math.max(1, depth) * nodeSpacing;
+    this.walk(this.nodes, ome, null, './', this.extraEdges);
+    this.buildHierarchy();
 
     this.svg = d3
       .select(`#${this.elementId}`)
@@ -141,19 +119,23 @@ export class NGFFGraph {
       )
       .style('opacity', 0);
 
-    this.walk(this.nodes, ome, null, this.extraEdges);
     this.renderTree();
   }
 
+  buildHierarchy() {
+    this.hierarchy = d3.stratify()(this.nodes);
+    this.width = Math.max(800, this.hierarchy.leaves().length * nodeSpacing);
+    this.height = Math.max(1, this.hierarchy.height) * nodeSpacing;
+  }
+
   renderTree() {
-    const hierarchy = d3.stratify()(this.nodes);
     const treeLayout = d3
       .tree()
       .size([this.width, this.height])
       .separation(() => nodeSpacing);
-    treeLayout(hierarchy);
+    treeLayout(this.hierarchy!);
 
-    const descendants = hierarchy.descendants();
+    const descendants = this.hierarchy!.descendants();
 
     this.svg!.selectAll('*').remove();
     this.tooltip!.style('opacity', 0);
@@ -188,7 +170,7 @@ export class NGFFGraph {
 
     tree
       .selectAll('line.main')
-      .data(hierarchy.links())
+      .data(this.hierarchy!.links())
       .enter()
       .append('line')
       .attr('x1', (d) => Number(d.source.x))
@@ -315,16 +297,25 @@ export class NGFFGraph {
       switch (node.path.type) {
         case 'json':
           {
-            const { ome } = await this.loader.loadNode(node.path.path);
-            node.expanded = true;
-            await this.appendSubtree(ome);
+            const resolvedPath = this.resolvePath(node.resolvedPath, node.path.path);
+            const { ome } = await this.loader.loadNode(resolvedPath);
+            this.updateNode(node, ome);
+            await this.appendSubtree(
+              ome,
+              resolvedPath.substring(0, resolvedPath.search(/\/[^/]+\.json$/))
+            );
           }
           break;
         case 'zarr':
           {
-            const { ome } = await this.loader.loadNode(`${node.path.path}/zarr.json`);
-            node.expanded = true;
-            await this.appendSubtree(ome);
+            const { attributes } = await this.loader.loadNode(
+              this.resolvePath(node.resolvedPath, `${node.path.path}/zarr.json`)
+            );
+            this.updateNode(node, attributes.ome);
+            await this.appendSubtree(
+              attributes.ome,
+              this.resolvePath(node.resolvedPath, node.path.path)
+            );
           }
           break;
         default:
@@ -332,20 +323,36 @@ export class NGFFGraph {
           break;
       }
     } catch (err) {
+      node.expanded = false;
+      console.error(err);
       this.showNodeLoadingError(err instanceof Error ? err.message : 'Unexpected error');
     }
     node.loading = false;
   }
 
-  async appendSubtree(ome: OmeNode) {
+  updateNode(node: D3Node, ome: OmeNode) {
+    node.expanded = true;
+    node.attributes = { ...(node.attributes || {}), ...ome.attributes };
+    this.sidebar.showInfo(node);
+  }
+
+  resolvePath(parentPath: string, path: string) {
+    if (!path.startsWith('./') || path.includes('..')) {
+      throw new Error(`Unsupported path "${path}"`);
+    }
+    parentPath = parentPath.replace(/^\.\//, '').replace(/\/$/, '');
+    path = path.replace(/^\.\//, '').replace(/\/$/, '');
+    return parentPath ? `./${parentPath}/${path}` : `./${path}`;
+  }
+
+  async appendSubtree(ome: OmeNode, resolvedPath: string) {
     const nodes: Array<D3Node> = [];
     const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
-    const { leaves, depth } = this.treeStats(ome);
-    this.width = Math.max(this.width, leaves * nodeSpacing);
-    this.height = Math.max(1, depth) * nodeSpacing + this.height;
-    this.walk(nodes, ome, null, extraEdges);
-    // push everything except the subtree root
-    this.nodes.push(...nodes.splice(1));
+    this.walk(nodes, ome, null, resolvedPath, extraEdges);
+    if (nodes.length > 0) {
+      this.nodes.push(...nodes.splice(1));
+    }
+    this.buildHierarchy();
     this.renderTree();
   }
 
