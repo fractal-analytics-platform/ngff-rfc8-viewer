@@ -104,9 +104,8 @@ export class NGFFGraph {
       .append('div')
       .attr(
         'class',
-        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed`
-      )
-      .style('opacity', 0);
+        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed ${CSS_CLASS_PREFIX}hide`
+      );
 
     if (this.autoloadDepth > 0) {
       this.signalLoading(true);
@@ -328,7 +327,7 @@ export class NGFFGraph {
     if (node.loading || node.expanded || node.error) {
       return;
     }
-    this.errorAlert?.style('opacity', 0);
+    this.hideErrorAlert();
     node.loading = true;
     try {
       switch (node.path.type) {
@@ -404,9 +403,18 @@ export class NGFFGraph {
     this.errorAlert
       .append('button')
       .html('&times;')
-      .on('click', () => {
-        this.errorAlert?.style('opacity', 0);
-      });
-    this.errorAlert.style('opacity', 1);
+      .on('click', () => this.hideErrorAlert());
+    const classAttribute = this.errorAlert.attr('class');
+    this.errorAlert.attr(
+      'class',
+      classAttribute
+        .split(' ')
+        .filter((c) => c !== `${CSS_CLASS_PREFIX}hide`)
+        .join(' ')
+    );
+  }
+
+  hideErrorAlert() {
+    this.errorAlert!.attr('class', `${this.errorAlert!.attr('class')} ${CSS_CLASS_PREFIX}hide`);
   }
 }
