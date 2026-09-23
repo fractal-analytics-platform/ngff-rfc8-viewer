@@ -1,3 +1,5 @@
+import type { OmeNode } from './types';
+
 export class NGFFLoader {
   private source: string;
   private prefix: string;
@@ -13,7 +15,7 @@ export class NGFFLoader {
       : this.source;
   }
 
-  async loadGraphData() {
+  async loadGraphData(): Promise<OmeNode> {
     let url: URL;
     try {
       url = new URL(this.source);
@@ -28,7 +30,7 @@ export class NGFFLoader {
     return await this.loadNode(this.source);
   }
 
-  async loadNode(source: string) {
+  async loadNode(source: string): Promise<OmeNode> {
     if (source.startsWith('./')) {
       source = `${this.prefix}${source.substring(1)}`;
     } else if (!source.startsWith(this.prefix)) {
@@ -42,7 +44,7 @@ export class NGFFLoader {
       const content = await response.text();
       try {
         const data = JSON.parse(content);
-        return data;
+        return this.getOme(data);
       } catch {
         throw new Error(`Unable to load ${source}: invalid JSON content`);
       }
@@ -51,5 +53,14 @@ export class NGFFLoader {
         `Unexpected response from server while loading ${source}. Status: ${response.status}`
       );
     }
+  }
+
+  getOme(data: any): OmeNode {
+    if ('ome' in data) {
+      return data.ome;
+    } else if ('attributes' in data && 'ome' in data.attributes) {
+      return data.attributes.ome;
+    }
+    throw new Error('Payload does not contain ome field');
   }
 }

@@ -69,8 +69,8 @@ export class NGFFGraph {
 
   async loadRoot() {
     try {
-      const data = await this.loader.loadGraphData();
-      await this.render(data);
+      const ome = await this.loader.loadGraphData();
+      await this.render(ome);
     } catch (err) {
       this.showNodeLoadingError(err instanceof Error ? err.message : 'Unexpected error');
     }
@@ -105,9 +105,7 @@ export class NGFFGraph {
     }
   }
 
-  async render(data: any) {
-    const ome = data.ome;
-
+  async render(ome: OmeNode) {
     this.walk(this.nodes, ome, null, './', this.extraEdges);
     this.buildHierarchy();
 
@@ -338,7 +336,7 @@ export class NGFFGraph {
         case 'json':
           {
             const resolvedPath = this.resolvePath(node.resolvedPath, node.path.path);
-            const { ome } = await this.loader.loadNode(resolvedPath);
+            const ome = await this.loader.loadNode(resolvedPath);
             this.updateNode(node, ome);
             await this.appendSubtree(
               ome,
@@ -348,14 +346,11 @@ export class NGFFGraph {
           break;
         case 'zarr':
           {
-            const { attributes } = await this.loader.loadNode(
+            const ome = await this.loader.loadNode(
               this.resolvePath(node.resolvedPath, `${node.path.path}/zarr.json`)
             );
-            this.updateNode(node, attributes.ome);
-            await this.appendSubtree(
-              attributes.ome,
-              this.resolvePath(node.resolvedPath, node.path.path)
-            );
+            this.updateNode(node, ome);
+            await this.appendSubtree(ome, this.resolvePath(node.resolvedPath, node.path.path));
           }
           break;
         default:
