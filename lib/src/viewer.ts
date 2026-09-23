@@ -1,20 +1,21 @@
 import { CSS_CLASS_PREFIX } from './constants';
+import NGFFControlPanel from './control';
 import { NGFFGraph } from './graph';
 import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 
 export default class NGFFViewer {
-  constructor(elementId: string, source: string | null) {
+  constructor(elementId: string, source: string | null, autoloadDepth: number) {
     const element = document.getElementById(elementId);
     if (!element) {
       console.warn(`Unable to find element with id ${elementId}`);
       return;
     }
 
-    this.load(element, source);
+    this.load(element, source, autoloadDepth);
   }
 
-  async load(element: HTMLElement, source: string | null) {
+  async load(element: HTMLElement, source: string | null, autoloadDepth: number) {
     if (!source) {
       this.showAlert(element, 'Missing source parameter', 'warning');
       return;
@@ -28,8 +29,10 @@ export default class NGFFViewer {
     graphContainer.id = `${element.id}-graph-container`;
 
     const sidebar = document.createElement('div');
-    sidebar.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
     const sidebarHandler = new NGFFSidebar(sidebar);
+
+    const controlPanel = document.createElement('div');
+    graphContainer.append(controlPanel);
 
     viewerContainer.appendChild(graphContainer);
     viewerContainer.appendChild(sidebar);
@@ -38,7 +41,11 @@ export default class NGFFViewer {
 
     try {
       const loader = new NGFFLoader(source);
-      const graph = new NGFFGraph(graphContainer.id, loader, sidebarHandler);
+      const graph = new NGFFGraph(graphContainer.id, loader, sidebarHandler, autoloadDepth);
+      const control = new NGFFControlPanel(controlPanel, graph, sidebarHandler);
+      graph.onLoading((loading) =>
+        loading ? control.setLoadingState() : control.unsetLoadingState()
+      );
       graph.loadRoot();
     } catch (err) {
       console.error(err);

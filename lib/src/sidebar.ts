@@ -6,6 +6,7 @@ export class NGFFSidebar {
 
   constructor(element: HTMLElement) {
     this.element = element;
+    element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
   }
 
   showInfo(node: D3Node) {
@@ -48,5 +49,9 @@ export class NGFFSidebar {
 
   hide() {
     this.element.classList.add(`${CSS_CLASS_PREFIX}hide`);
+  }
+
+  isOpen() {
+    return !this.element.classList.contains(`${CSS_CLASS_PREFIX}hide`);
   }
 }

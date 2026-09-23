@@ -27,7 +27,15 @@
     document.addEventListener('DOMContentLoaded', () => {
       const urlParams = new URLSearchParams(window.location.search);
       const source = urlParams.get('source');
-      new NGFFViewer('viewer', source);
+      const autoload = urlParams.get('autoload');
+      let autoloadDepth = 0;
+      if (autoload !== null) {
+        try {
+          autoloadDepth = parseInt(autoload);
+        } catch {
+        }
+      }
+      new NGFFViewer('viewer', source, autoloadDepth);
     });
   </script>
 </body>

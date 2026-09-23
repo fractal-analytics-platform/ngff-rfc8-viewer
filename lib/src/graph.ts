@@ -22,12 +22,13 @@ export class NGFFGraph {
   private elementId: string;
   private loader: NGFFLoader;
   private sidebar: NGFFSidebar;
+  private autoloadDepth: number;
   private computeExtraEdges: ExtraEdgesFn | undefined;
 
   private nodes: Array<D3Node> = [];
   private extraEdges: Array<{ sourceId: string; targetId: string }> = [];
 
-  private hierarchy: d3.HierarchyNode<unknown> | undefined;
+  private hierarchy: d3.HierarchyNode<D3Node> | undefined;
   private width: number = 0;
   private height: number = 0;
   private currentZoom: any;
@@ -38,21 +39,29 @@ export class NGFFGraph {
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | undefined;
   private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | undefined;
 
+  private signalLoading: (loading: boolean) => void = () => {};
+
   constructor(
     elementId: string,
     loader: NGFFLoader,
     sidebar: NGFFSidebar,
+    autoloadDepth: number,
     computeExtraEdges: ExtraEdgesFn | undefined = undefined
   ) {
     this.elementId = elementId;
     this.loader = loader;
     this.sidebar = sidebar;
+    this.autoloadDepth = autoloadDepth;
     this.computeExtraEdges = computeExtraEdges;
+  }
+
+  onLoading(fn: (loading: boolean) => void) {
+    this.signalLoading = fn;
   }
 
   async loadRoot() {
     const data = await this.loader.loadGraphData();
-    this.render(data);
+    await this.render(data);
   }
 
   walk(
@@ -83,11 +92,26 @@ export class NGFFGraph {
     }
   }
 
-  render(data: any) {
+  async render(data: any) {
     const ome = data.ome;
 
     this.walk(this.nodes, ome, null, './', this.extraEdges);
     this.buildHierarchy();
+
+    this.errorAlert = d3
+      .select('body')
+      .append('div')
+      .attr(
+        'class',
+        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed`
+      )
+      .style('opacity', 0);
+
+    if (this.autoloadDepth > 0) {
+      this.signalLoading(true);
+      await this.recusiveLoad(this.autoloadDepth);
+      this.signalLoading(false);
+    }
 
     this.svg = d3
       .select(`#${this.elementId}`)
@@ -110,27 +134,36 @@ export class NGFFGraph {
       .attr('class', `${CSS_CLASS_PREFIX}tree-tooltip`)
       .style('opacity', 0);
 
-    this.errorAlert = d3
-      .select('body')
-      .append('div')
-      .attr(
-        'class',
-        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed`
-      )
-      .style('opacity', 0);
-
     this.renderTree();
   }
 
+  async recusiveLoad(autoloadDepth: number) {
+    if (autoloadDepth === Infinity || autoloadDepth > 0) {
+      let loaded = false;
+      for (const leave of this.hierarchy!.leaves()) {
+        if ('path' in leave.data) {
+          const node = leave.data as D3Node & { path: OmePath };
+          if (!node.expanded) {
+            await this.loadNode(node);
+            loaded = true;
+          }
+        }
+      }
+      if (loaded) {
+        await this.recusiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
+      }
+    }
+  }
+
   buildHierarchy() {
-    this.hierarchy = d3.stratify()(this.nodes);
+    this.hierarchy = d3.stratify<D3Node>()(this.nodes);
     this.width = Math.max(800, this.hierarchy.leaves().length * nodeSpacing);
     this.height = Math.max(1, this.hierarchy.height) * nodeSpacing;
   }
 
   renderTree() {
     const treeLayout = d3
-      .tree()
+      .tree<D3Node>()
       .size([this.width, this.height])
       .separation(() => nodeSpacing);
     treeLayout(this.hierarchy!);
@@ -224,7 +257,10 @@ export class NGFFGraph {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
           }
+          this.signalLoading(true);
           await this.loadNode(node as D3Node & { path: OmePath });
+          this.signalLoading(false);
+          this.renderTree();
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.remove('ngff-rfc8-viewer-rotating-dash');
           }
@@ -333,7 +369,9 @@ export class NGFFGraph {
   updateNode(node: D3Node, ome: OmeNode) {
     node.expanded = true;
     node.attributes = { ...(node.attributes || {}), ...ome.attributes };
-    this.sidebar.showInfo(node);
+    if (this.sidebar.isOpen()) {
+      this.sidebar.showInfo(node);
+    }
   }
 
   resolvePath(parentPath: string, path: string) {
@@ -353,7 +391,6 @@ export class NGFFGraph {
       this.nodes.push(...nodes.splice(1));
     }
     this.buildHierarchy();
-    this.renderTree();
   }
 
   showNodeLoadingError(message: string) {
