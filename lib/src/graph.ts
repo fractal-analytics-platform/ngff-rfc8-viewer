@@ -41,6 +41,8 @@ export class NGFFGraph {
 
   private signalLoading: (loading: boolean) => void = () => {};
 
+  private lastGeneratedId = 0;
+
   constructor(
     elementId: string,
     loader: NGFFLoader,
@@ -78,13 +80,19 @@ export class NGFFGraph {
 
   walk(
     nodes: Array<D3Node>,
-    node: OmeNode,
+    node: OmeNode & { generatedId?: string },
     parentId: string | null,
     resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
+    if (!('generatedId' in node) || !node.generatedId) {
+      this.lastGeneratedId++;
+      node.generatedId = String(this.lastGeneratedId);
+    }
+
     nodes.push({
-      id: node.id ?? node.name,
+      id: node.generatedId,
+      omeId: node.id,
       name: node.name,
       type: node.type,
       attributes: node.attributes,
@@ -101,7 +109,9 @@ export class NGFFGraph {
     }
 
     if ('nodes' in node && node.nodes) {
-      node.nodes.forEach((child) => this.walk(nodes, child, node.id, resolvedPath, extraEdges));
+      node.nodes.forEach((child) =>
+        this.walk(nodes, child, node.generatedId!, resolvedPath, extraEdges)
+      );
     }
   }
 
@@ -218,7 +228,7 @@ export class NGFFGraph {
 
     // Build a fast lookup map of computed coordinates
     const nodeMap = new Map();
-    descendants.forEach((d) => nodeMap.set((d.data as OmeNode).id, d));
+    descendants.forEach((d) => nodeMap.set(d.data.id, d));
 
     const resolvedExtraEdges = this.extraEdges.map((link) => ({
       source: nodeMap.get(link.sourceId),
@@ -272,7 +282,7 @@ export class NGFFGraph {
         if (event.target instanceof SVGCircleElement) {
           d3.select(event.target).attr('stroke', selectionStrokeColor);
           this.tooltip?.style('opacity', 1).html(`
-            <strong>Id: </strong>${d.data.id}<br>
+            <strong>Id: </strong>${d.data.omeId || '-'}<br>
             <strong>Name: </strong>${d.data.name}<br>
             <strong>Type: </strong> ${d.data.type}
           `);
@@ -365,6 +375,7 @@ export class NGFFGraph {
   updateNode(node: D3Node, ome: OmeNode) {
     node.expanded = true;
     node.attributes = { ...(node.attributes || {}), ...ome.attributes };
+    (ome as any).generatedId = node.id;
     if (this.sidebar.isOpen()) {
       this.sidebar.showInfo(node);
     }

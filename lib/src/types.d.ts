@@ -28,7 +28,7 @@ export type OmeReference = {
 
 export type BaseOmeNode = {
   type: string;
-  id: string?;
+  id?: string;
   name: string;
   nodes?: OmeNode[];
   attributes?: OmeNodeAttributes;
@@ -36,7 +36,7 @@ export type BaseOmeNode = {
 
 export type CollectionOmeNode = {
   type: 'collection';
-  id: string?;
+  id?: string;
   name: string;
   attributes?: OmeNodeAttributes;
 } & (
@@ -57,7 +57,7 @@ export type CoordinateTransformation = {
 
 export type SinglescaleOmeNode = {
   type: 'singlescale';
-  id: string?;
+  id?: string;
   name: string;
   path?: OmePath;
   attributes: OmeNodeAttributes & {
@@ -73,7 +73,7 @@ export type CoordinateSystem = {
 
 export type MultiscaleOmeNode = {
   type: 'multiscale';
-  id: string?;
+  id?: string;
   name: string;
   attributes: OmeNodeAttributes & {
     coordinateSystems: Record<any, any>;
@@ -97,6 +97,7 @@ export type Collection = {
 
 export type D3Node = {
   id: string;
+  omeId?: string;
   name: string;
   type: string;
   parentId: string | null;

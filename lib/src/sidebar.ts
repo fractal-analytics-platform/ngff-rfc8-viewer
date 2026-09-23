@@ -12,7 +12,7 @@ export class NGFFSidebar {
   showInfo(node: D3Node) {
     this.element.innerHTML = '';
 
-    this.addKeyValue('Id', node.id || '-');
+    this.addKeyValue('Id', node.omeId || '-');
     this.addKeyValue('Name', node.name);
     this.addKeyValue('Type', node.type);
 
