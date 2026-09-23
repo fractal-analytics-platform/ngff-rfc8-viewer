@@ -105,6 +105,7 @@ export type D3Node = {
   resolvedPath: string;
   loading: boolean;
   expanded: boolean;
+  error: boolean;
 };
 
 export type ExtraEdgesFn = (

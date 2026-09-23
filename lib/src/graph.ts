@@ -80,7 +80,8 @@ export class NGFFGraph {
       parentId: parentId,
       loading: false,
       expanded: !('path' in node),
-      resolvedPath
+      resolvedPath,
+      error: false
     });
 
     if (this.computeExtraEdges) {
@@ -143,7 +144,7 @@ export class NGFFGraph {
       for (const leave of this.hierarchy!.leaves()) {
         if ('path' in leave.data) {
           const node = leave.data as D3Node & { path: OmePath };
-          if (!node.expanded) {
+          if (!node.expanded && !node.error) {
             await this.loadNode(node);
             loaded = true;
           }
@@ -324,7 +325,7 @@ export class NGFFGraph {
   }
 
   async loadNode(node: D3Node & { path: OmePath }) {
-    if (node.loading || node.expanded) {
+    if (node.loading || node.expanded || node.error) {
       return;
     }
     this.errorAlert?.style('opacity', 0);
@@ -360,6 +361,7 @@ export class NGFFGraph {
       }
     } catch (err) {
       node.expanded = false;
+      node.error = true;
       console.error(err);
       this.showNodeLoadingError(err instanceof Error ? err.message : 'Unexpected error');
     }
