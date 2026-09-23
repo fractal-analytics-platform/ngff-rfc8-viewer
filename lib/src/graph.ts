@@ -37,7 +37,7 @@ export class NGFFGraph {
 
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any> | undefined;
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | undefined;
-  private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any> | undefined;
+  private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
 
   private signalLoading: (loading: boolean) => void = () => {};
 
@@ -53,6 +53,14 @@ export class NGFFGraph {
     this.sidebar = sidebar;
     this.autoloadDepth = autoloadDepth;
     this.computeExtraEdges = computeExtraEdges;
+
+    this.errorAlert = d3
+      .select('body')
+      .append('div')
+      .attr(
+        'class',
+        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed ${CSS_CLASS_PREFIX}hide`
+      );
   }
 
   onLoading(fn: (loading: boolean) => void) {
@@ -60,8 +68,12 @@ export class NGFFGraph {
   }
 
   async loadRoot() {
-    const data = await this.loader.loadGraphData();
-    await this.render(data);
+    try {
+      const data = await this.loader.loadGraphData();
+      await this.render(data);
+    } catch (err) {
+      this.showNodeLoadingError(err instanceof Error ? err.message : 'Unexpected error');
+    }
   }
 
   walk(
@@ -98,14 +110,6 @@ export class NGFFGraph {
 
     this.walk(this.nodes, ome, null, './', this.extraEdges);
     this.buildHierarchy();
-
-    this.errorAlert = d3
-      .select('body')
-      .append('div')
-      .attr(
-        'class',
-        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed ${CSS_CLASS_PREFIX}hide`
-      );
 
     if (this.autoloadDepth > 0) {
       this.signalLoading(true);
@@ -395,9 +399,6 @@ export class NGFFGraph {
   }
 
   showNodeLoadingError(message: string) {
-    if (!this.errorAlert) {
-      return;
-    }
     this.errorAlert.selectAll('*').remove();
     this.errorAlert.append('span').text(message);
     this.errorAlert
@@ -415,6 +416,6 @@ export class NGFFGraph {
   }
 
   hideErrorAlert() {
-    this.errorAlert!.attr('class', `${this.errorAlert!.attr('class')} ${CSS_CLASS_PREFIX}hide`);
+    this.errorAlert.attr('class', `${this.errorAlert.attr('class')} ${CSS_CLASS_PREFIX}hide`);
   }
 }
