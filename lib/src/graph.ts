@@ -247,13 +247,13 @@ export class NGFFGraph {
       .attr('cx', (d) => Number(d.x))
       .attr('cy', (d) => Number(d.y))
       .attr('r', circleRadius)
-      .attr('fill', (d) => colors[(d.data as D3Node).type] || defaultNodeColor)
+      .attr('fill', (d) => colors[d.data.type] || defaultNodeColor)
       .style('cursor', 'pointer')
-      .attr('stroke', (d) => ((d.data as D3Node).expanded ? 'none' : inliningStrokeColor))
-      .attr('stroke-dasharray', (d) => ((d.data as D3Node).expanded ? 'none' : '10,5'))
+      .attr('stroke', (d) => (d.data.expanded ? 'none' : inliningStrokeColor))
+      .attr('stroke-dasharray', (d) => (d.data.expanded ? 'none' : '10,5'))
       .attr('stroke-width', 2)
       .on('click', async (event, d) => {
-        const node = d.data as D3Node;
+        const node = d.data;
         this.sidebar.showInfo(node);
         if (node.path) {
           if (event.target instanceof SVGCircleElement) {
@@ -271,11 +271,10 @@ export class NGFFGraph {
       .on('mouseenter', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
           d3.select(event.target).attr('stroke', selectionStrokeColor);
-          const data = d.data as D3Node;
           this.tooltip?.style('opacity', 1).html(`
-            <strong>Id: </strong>${data.id}<br>
-            <strong>Name: </strong>${data.name}<br>
-            <strong>Type: </strong> ${data.type}
+            <strong>Id: </strong>${d.data.id}<br>
+            <strong>Name: </strong>${d.data.name}<br>
+            <strong>Type: </strong> ${d.data.type}
           `);
         }
       })
@@ -284,10 +283,7 @@ export class NGFFGraph {
       })
       .on('mouseleave', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr(
-            'stroke',
-            (d.data as D3Node).expanded ? 'none' : inliningStrokeColor
-          );
+          d3.select(event.target).attr('stroke', d.data.expanded ? 'none' : inliningStrokeColor);
           this.tooltip?.style('opacity', 0);
         }
       });
@@ -311,7 +307,7 @@ export class NGFFGraph {
       .attr('x', (d) => Number(d.x))
       .attr('y', (d) => Number(d.y) + 2 * circleRadius + 5)
       .attr('text-anchor', 'middle')
-      .text((d) => (d.data as D3Node).name);
+      .text((d) => d.data.name);
 
     // Compute initial zoom level
     if (!this.currentZoom) {
