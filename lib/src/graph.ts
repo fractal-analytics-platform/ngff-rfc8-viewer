@@ -99,7 +99,7 @@ export class NGFFGraph {
       path: 'path' in node ? node.path : undefined,
       parentId: parentId,
       loading: false,
-      expanded: !('path' in node),
+      expanded: !('path' in node) || node.type === 'singlescale',
       resolvedPath,
       error: false
     });
