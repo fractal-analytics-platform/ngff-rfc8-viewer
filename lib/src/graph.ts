@@ -317,7 +317,22 @@ export class NGFFGraph {
       .attr('x', (d) => Number(d.x))
       .attr('y', (d) => Number(d.y) + 2 * circleRadius + 5)
       .attr('text-anchor', 'middle')
-      .text((d) => d.data.name);
+      .each(function (d) {
+        // split long labels on multiple lines
+        const charsPerLine = 15;
+        const name = d.data.name;
+
+        for (let i = 0; i < name.length; i += charsPerLine) {
+          const line = name.substring(i, i + charsPerLine);
+          const lineNumber = Math.floor(i / charsPerLine);
+
+          d3.select(this)
+            .append('tspan')
+            .attr('x', Number(d.x))
+            .attr('dy', lineNumber === 0 ? 0 : '1.2em')
+            .text(line);
+        }
+      });
 
     // Compute initial zoom level
     if (!this.currentZoom) {
