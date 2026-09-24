@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "ngio-collections",
+    "zarr >= 3.4.0, < 3.5.0",
 ]
 
 [project.scripts]
