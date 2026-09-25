@@ -1,4 +1,4 @@
-# NGFF RFC-8 collection metadata viewer
+# Metadata viewer for NGFF RFC-8 collections
 
 Web viewer for the NGFF RFC-8 collections metadata - see https://ngff.openmicroscopy.org/rfc/8/index.html.
 
