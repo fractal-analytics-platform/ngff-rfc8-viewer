@@ -1,6 +1,6 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node, OmeNode } from './types';
+import type { D3Node } from './types';
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -26,14 +26,14 @@ export class NGFFSidebar {
       this.addKeyValue('Attributes', '-');
     }
 
-    this.showValidation(node.omeNode);
+    this.showValidation(node);
 
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);
   }
 
-  private showValidation(omeNode: OmeNode) {
+  private showValidation(node: D3Node) {
     try {
-      validate({ ome: omeNode });
+      validate(this.buildValidatableNode(node));
     } catch (err) {
       if (err instanceof Error) {
         const error = document.createElement('div');
@@ -50,6 +50,22 @@ export class NGFFSidebar {
         }
       }
     }
+  }
+
+  private buildValidatableNode(node: D3Node) {
+    const omeNode: any = { ...node.omeNode };
+    if (node.parentId && !('version' in omeNode)) {
+      // Add dummy version for validating non-root nodes
+      omeNode.version = '0.x';
+    }
+    if (
+      !('path' in omeNode) &&
+      !('nodes' in omeNode) &&
+      ['collection', 'multiscale'].includes(omeNode.type)
+    ) {
+      omeNode.nodes = [];
+    }
+    return { ome: omeNode };
   }
 
   private addTitle(value: string) {
