@@ -7,10 +7,10 @@ Web viewer for the NGFF RFC-8 collections metadata - see https://ngff.openmicros
 ## Quick start
 
 The web viewer is available at https://fractal-analytics-platform.github.io. Start with one of the following examples:
-* https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json
-* https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json
-* https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json
-* https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/multiplex/dataset/dataset.json
+* [Basic example](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json)
+* [Basic example, with many images in a collection](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json)
+* [Plate with multiple fields](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json)
+* [Plate with multiple acquisitions of the same field](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/multiplex/dataset/dataset.json)
 
 ## How to build the library
 
