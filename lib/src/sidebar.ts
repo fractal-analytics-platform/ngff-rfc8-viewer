@@ -1,31 +1,75 @@
+import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
 
 export class NGFFSidebar {
   private element: HTMLElement;
+  private validationEnabled: boolean;
 
-  constructor(element: HTMLElement) {
+  constructor(element: HTMLElement, validate: boolean) {
     this.element = element;
+    this.validationEnabled = validate;
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
   }
 
   showInfo(node: D3Node) {
     this.element.innerHTML = '';
 
-    this.addKeyValue('Id', node.omeId || '-');
-    this.addKeyValue('Name', node.name);
-    this.addKeyValue('Type', node.type);
+    this.addKeyValue('Id', node.omeNode.id || '-');
+    this.addKeyValue('Name', node.omeNode.name);
+    this.addKeyValue('Type', node.omeNode.type);
 
-    if (node.attributes) {
+    if (node.omeNode.attributes) {
       this.addTitle('Attributes');
       const pre = document.createElement('pre');
-      pre.innerText = JSON.stringify(node.attributes, null, 2);
+      pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
       this.element.appendChild(pre);
     } else {
       this.addKeyValue('Attributes', '-');
     }
 
+    if (this.validationEnabled) {
+      this.showValidation(node);
+    }
+
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);
+  }
+
+  private showValidation(node: D3Node) {
+    try {
+      validate(this.buildValidatableNode(node));
+    } catch (err) {
+      if (err instanceof Error) {
+        const error = document.createElement('div');
+        error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
+        error.innerText = err.message;
+        this.element.appendChild(error);
+        if ('schemaErrors' in err && Array.isArray(err.schemaErrors)) {
+          for (const schemaError of err.schemaErrors) {
+            const error = document.createElement('pre');
+            error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
+            error.innerText = JSON.stringify(schemaError, null, 2);
+            this.element.appendChild(error);
+          }
+        }
+      }
+    }
+  }
+
+  private buildValidatableNode(node: D3Node) {
+    const omeNode: any = { ...node.omeNode };
+    if (node.parentId && !('version' in omeNode)) {
+      // Add dummy version for validating non-root nodes
+      omeNode.version = '0.x';
+    }
+    if (
+      !('path' in omeNode) &&
+      !('nodes' in omeNode) &&
+      ['collection', 'multiscale'].includes(omeNode.type)
+    ) {
+      omeNode.nodes = [];
+    }
+    return { ome: omeNode };
   }
 
   private addTitle(value: string) {

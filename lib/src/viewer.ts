@@ -5,17 +5,22 @@ import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 
 export default class NGFFViewer {
-  constructor(elementId: string, source: string | null, autoloadDepth: number) {
+  constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
     const element = document.getElementById(elementId);
     if (!element) {
       console.warn(`Unable to find element with id ${elementId}`);
       return;
     }
 
-    this.load(element, source, autoloadDepth);
+    this.load(element, source, autoloadDepth, validate);
   }
 
-  async load(element: HTMLElement, source: string | null, autoloadDepth: number) {
+  async load(
+    element: HTMLElement,
+    source: string | null,
+    autoloadDepth: number,
+    validate: boolean
+  ) {
     if (!source) {
       this.showAlert(element, 'Missing source parameter', 'warning');
       return;
@@ -29,7 +34,7 @@ export default class NGFFViewer {
     graphContainer.id = `${element.id}-graph-container`;
 
     const sidebar = document.createElement('div');
-    const sidebarHandler = new NGFFSidebar(sidebar);
+    const sidebarHandler = new NGFFSidebar(sidebar, validate);
 
     const controlPanel = document.createElement('div');
     graphContainer.append(controlPanel);

@@ -97,12 +97,8 @@ export type Collection = {
 
 export type D3Node = {
   id: string;
-  omeId?: string;
-  name: string;
-  type: string;
+  omeNode: OmeNode;
   parentId: string | null;
-  attributes: any;
-  path?: OmePath;
   resolvedPath: string;
   loading: boolean;
   expanded: boolean;
