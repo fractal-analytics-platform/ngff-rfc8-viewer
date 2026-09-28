@@ -1,5 +1,6 @@
+import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node } from './types';
+import type { D3Node, OmeNode } from './types';
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -12,20 +13,43 @@ export class NGFFSidebar {
   showInfo(node: D3Node) {
     this.element.innerHTML = '';
 
-    this.addKeyValue('Id', node.omeId || '-');
-    this.addKeyValue('Name', node.name);
-    this.addKeyValue('Type', node.type);
+    this.addKeyValue('Id', node.omeNode.id || '-');
+    this.addKeyValue('Name', node.omeNode.name);
+    this.addKeyValue('Type', node.omeNode.type);
 
-    if (node.attributes) {
+    if (node.omeNode.attributes) {
       this.addTitle('Attributes');
       const pre = document.createElement('pre');
-      pre.innerText = JSON.stringify(node.attributes, null, 2);
+      pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
       this.element.appendChild(pre);
     } else {
       this.addKeyValue('Attributes', '-');
     }
 
+    this.showValidation(node.omeNode);
+
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);
+  }
+
+  private showValidation(omeNode: OmeNode) {
+    try {
+      validate({ ome: omeNode });
+    } catch (err) {
+      if (err instanceof Error) {
+        const error = document.createElement('div');
+        error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
+        error.innerText = err.message;
+        this.element.appendChild(error);
+        if ('schemaErrors' in err && Array.isArray(err.schemaErrors)) {
+          for (const schemaError of err.schemaErrors) {
+            const error = document.createElement('pre');
+            error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
+            error.innerText = JSON.stringify(schemaError, null, 2);
+            this.element.appendChild(error);
+          }
+        }
+      }
+    }
   }
 
   private addTitle(value: string) {

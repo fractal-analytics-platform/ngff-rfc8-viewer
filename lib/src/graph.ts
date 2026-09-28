@@ -92,11 +92,7 @@ export class NGFFGraph {
 
     nodes.push({
       id: node.generatedId,
-      omeId: node.id,
-      name: node.name,
-      type: node.type,
-      attributes: node.attributes,
-      path: 'path' in node ? node.path : undefined,
+      omeNode: this.getBasicOmeNode(node),
       parentId: parentId,
       loading: false,
       expanded: !('path' in node) || node.type === 'singlescale',
@@ -113,6 +109,17 @@ export class NGFFGraph {
         this.walk(nodes, child, node.generatedId!, resolvedPath, extraEdges)
       );
     }
+  }
+
+  private getBasicOmeNode(node: OmeNode): OmeNode {
+    const nodeCopy = { ...node };
+    if ('nodes' in nodeCopy) {
+      nodeCopy.nodes = [];
+    }
+    if ('generatedId' in nodeCopy) {
+      delete nodeCopy['generatedId'];
+    }
+    return nodeCopy;
   }
 
   async render(ome: OmeNode) {
@@ -222,8 +229,8 @@ export class NGFFGraph {
       .attr('y1', (d) => Number(d.source.y))
       .attr('x2', (d) => Number(d.target.x))
       .attr('y2', (d) => Number(d.target.y))
-      .attr('stroke', (d) => colors[(d.source.data as OmeNode).type] || defaultNodeColor)
-      .attr('fill', (d) => colors[(d.source.data as OmeNode).type] || defaultNodeColor)
+      .attr('stroke', (d) => colors[d.source.data.omeNode.type] || defaultNodeColor)
+      .attr('fill', (d) => colors[d.source.data.omeNode.type] || defaultNodeColor)
       .attr('marker-end', 'url(#arrow)');
 
     // Build a fast lookup map of computed coordinates
@@ -257,7 +264,7 @@ export class NGFFGraph {
       .attr('cx', (d) => Number(d.x))
       .attr('cy', (d) => Number(d.y))
       .attr('r', circleRadius)
-      .attr('fill', (d) => colors[d.data.type] || defaultNodeColor)
+      .attr('fill', (d) => colors[d.data.omeNode.type] || defaultNodeColor)
       .style('cursor', 'pointer')
       .attr('stroke', (d) => (d.data.expanded ? 'none' : inliningStrokeColor))
       .attr('stroke-dasharray', (d) => (d.data.expanded ? 'none' : '10,5'))
@@ -265,7 +272,7 @@ export class NGFFGraph {
       .on('click', async (event, d) => {
         const node = d.data;
         this.sidebar.showInfo(node);
-        if (node.path) {
+        if ('path' in node.omeNode && node.omeNode.path) {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
           }
@@ -282,9 +289,9 @@ export class NGFFGraph {
         if (event.target instanceof SVGCircleElement) {
           d3.select(event.target).attr('stroke', selectionStrokeColor);
           this.tooltip?.style('opacity', 1).html(`
-            <strong>Id: </strong>${d.data.omeId || '-'}<br>
-            <strong>Name: </strong>${d.data.name}<br>
-            <strong>Type: </strong> ${d.data.type}
+            <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
+            <strong>Name: </strong>${d.data.omeNode.name}<br>
+            <strong>Type: </strong> ${d.data.omeNode.type}
           `);
         }
       })
@@ -320,7 +327,7 @@ export class NGFFGraph {
       .each(function (d) {
         // split long labels on multiple lines
         const charsPerLine = 15;
-        const name = d.data.name;
+        const name = d.data.omeNode.name;
 
         for (let i = 0; i < name.length; i += charsPerLine) {
           const line = name.substring(i, i + charsPerLine);
@@ -389,7 +396,7 @@ export class NGFFGraph {
 
   updateNode(node: D3Node, ome: OmeNode) {
     node.expanded = true;
-    node.attributes = { ...(node.attributes || {}), ...ome.attributes };
+    node.omeNode.attributes = { ...(node.omeNode.attributes || {}), ...ome.attributes };
     (ome as any).generatedId = node.id;
     if (this.sidebar.isOpen()) {
       this.sidebar.showInfo(node);

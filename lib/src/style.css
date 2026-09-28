@@ -20,6 +20,24 @@
   overflow: auto;
 }
 
+.ngff-rfc8-viewer-sidebar div.ngff-rfc8-viewer-error {
+  margin-top: 30px;
+  padding: 5px 10px;
+  border-radius: 3px;
+  color: rgb(255, 132, 116);
+  background-color: rgb(63, 44, 41);
+  font-weight: bold;
+}
+
+.ngff-rfc8-viewer-sidebar pre.ngff-rfc8-viewer-error {
+  margin-top: 10px;
+  padding: 5px;
+  border-radius: 3px;
+  background-color: rgb(255, 200, 192);
+  color: #000;
+  overflow-x: scroll;
+}
+
 .ngff-rfc8-viewer-alert {
   text-align: center;
   border-radius: 10px;

@@ -41,13 +41,13 @@ export class NGFFLoader {
       cache: 'no-cache'
     });
     if (response.ok) {
-      const content = await response.text();
+      let data: any;
       try {
-        const data = JSON.parse(content);
-        return this.getOme(data);
+        data = await response.json();
       } catch {
         throw new Error(`Unable to load ${source}: invalid JSON content`);
       }
+      return this.getOme(data);
     } else {
       throw new Error(
         `Unexpected response from server while loading ${source}. Status: ${response.status}`
