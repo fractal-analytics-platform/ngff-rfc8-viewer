@@ -1,4 +1,5 @@
 import type { OmeNode } from './types';
+import { validateRequiredOmeStructure } from './validation';
 
 export class NGFFLoader {
   private source: string;
@@ -47,7 +48,9 @@ export class NGFFLoader {
       } catch {
         throw new Error(`Unable to load ${source}: invalid JSON content`);
       }
-      return this.getOme(data);
+      const ome = this.getOme(data);
+      validateRequiredOmeStructure(ome);
+      return ome;
     } else {
       throw new Error(
         `Unexpected response from server while loading ${source}. Status: ${response.status}`
