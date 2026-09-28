@@ -160,8 +160,8 @@ export class NGFFGraph {
     if (autoloadDepth === Infinity || autoloadDepth > 0) {
       let loaded = false;
       for (const leave of this.hierarchy!.leaves()) {
-        if ('path' in leave.data) {
-          const node = leave.data as D3Node & { path: OmePath };
+        if ('path' in leave.data.omeNode) {
+          const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
           if (!node.expanded && !node.error) {
             await this.loadNode(node);
             loaded = true;
@@ -277,7 +277,7 @@ export class NGFFGraph {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
           }
           this.signalLoading(true);
-          await this.loadNode(node as D3Node & { path: OmePath });
+          await this.loadNode(node as D3Node & { omeNode: OmeNode & { path: OmePath } });
           this.signalLoading(false);
           this.renderTree();
           if (event.target instanceof SVGCircleElement) {
@@ -353,17 +353,17 @@ export class NGFFGraph {
     this.svg!.call(zoom.transform, this.currentZoom);
   }
 
-  async loadNode(node: D3Node & { path: OmePath }) {
+  async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
     if (node.loading || node.expanded || node.error) {
       return;
     }
     this.hideErrorAlert();
     node.loading = true;
     try {
-      switch (node.path.type) {
+      switch (node.omeNode.path.type) {
         case 'json':
           {
-            const resolvedPath = this.resolvePath(node.resolvedPath, node.path.path);
+            const resolvedPath = this.resolvePath(node.resolvedPath, node.omeNode.path.path);
             const ome = await this.loader.loadNode(resolvedPath);
             this.updateNode(node, ome);
             await this.appendSubtree(
@@ -375,14 +375,17 @@ export class NGFFGraph {
         case 'zarr':
           {
             const ome = await this.loader.loadNode(
-              this.resolvePath(node.resolvedPath, `${node.path.path}/zarr.json`)
+              this.resolvePath(node.resolvedPath, `${node.omeNode.path.path}/zarr.json`)
             );
             this.updateNode(node, ome);
-            await this.appendSubtree(ome, this.resolvePath(node.resolvedPath, node.path.path));
+            await this.appendSubtree(
+              ome,
+              this.resolvePath(node.resolvedPath, node.omeNode.path.path)
+            );
           }
           break;
         default:
-          this.showNodeLoadingError(`Unexpected path type: ${node.path.type}`);
+          this.showNodeLoadingError(`Unexpected path type: ${node.omeNode.path.type}`);
           break;
       }
     } catch (err) {
