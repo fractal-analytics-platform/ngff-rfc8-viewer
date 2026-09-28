@@ -4,9 +4,11 @@ import type { D3Node } from './types';
 
 export class NGFFSidebar {
   private element: HTMLElement;
+  private validationEnabled: boolean;
 
-  constructor(element: HTMLElement) {
+  constructor(element: HTMLElement, validate: boolean) {
     this.element = element;
+    this.validationEnabled = validate;
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
   }
 
@@ -26,7 +28,9 @@ export class NGFFSidebar {
       this.addKeyValue('Attributes', '-');
     }
 
-    this.showValidation(node);
+    if (this.validationEnabled) {
+      this.showValidation(node);
+    }
 
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);
   }
