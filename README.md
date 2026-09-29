@@ -2,7 +2,7 @@
 
 Web viewer for the NGFF RFC-8 collections metadata - see https://ngff.openmicroscopy.org/rfc/8/index.html.
 
-> ⚠️ **WARNING**: This project is a proof of concept. It is experimental, unstable, and not intended for production use.
+⚠️ **WARNING**: This project is a proof of concept. It is experimental, unstable, and not intended for production use.
 
 ## Quick start
 
@@ -13,6 +13,8 @@ Start with one of the following examples:
 * [Basic example, with many images in a collection](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json)
 * [Plate with multiple fields](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json)
 * [Plate with multiple acquisitions of the same field](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/multiplex/dataset/dataset.json)
+* [Basic example of invalid attributes (click on multiscale node)](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?validate=true&source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/invalid/missing-multiscale-coordinate-systems.json). Note that the URL includes a `validate=true` query parameter.
+
 
 ## How to build the library
 
