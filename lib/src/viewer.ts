@@ -5,10 +5,19 @@ import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 
 const exampleSources = [
-  ["basic example", "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json"],
-  ["many images", "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json"],
-  ["plate with multiple fields", "https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json"]
-]
+  [
+    'basic example',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json'
+  ],
+  [
+    'many images',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json'
+  ],
+  [
+    'plate with multiple fields',
+    'https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json'
+  ]
+];
 
 export default class NGFFViewer {
   constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
@@ -31,11 +40,17 @@ export default class NGFFViewer {
       let queryParams = new URLSearchParams(window.location.search);
       let currentUrl = window.location.href;
 
-      let linksHtml = exampleSources.map(([name, url]) => {
-        queryParams.set('source', url);
-        return `<a href="${currentUrl.split('?')[0]}?${queryParams.toString()}">${name}</a>`;
-      }).join('<br>');
-      this.showAlert(element, `Missing source parameter. Try one of the examples:<br>${linksHtml}`, 'warning');
+      let linksHtml = exampleSources
+        .map(([name, url]) => {
+          queryParams.set('source', url);
+          return `<a href="${currentUrl.split('?')[0]}?${queryParams.toString()}">${name}</a>`;
+        })
+        .join('<br>');
+      this.showAlert(
+        element,
+        `Missing source parameter. Try one of the examples:<br>${linksHtml}`,
+        'warning'
+      );
       return;
     }
 
