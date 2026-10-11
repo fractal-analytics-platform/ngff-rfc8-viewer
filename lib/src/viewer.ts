@@ -3,6 +3,7 @@ import NGFFControlPanel from './control';
 import { NGFFGraph } from './graph';
 import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
+import { SVGGraph } from './views/svg';
 
 const exampleSources = [
   [
@@ -77,8 +78,16 @@ export default class NGFFViewer {
 
     try {
       const loader = new NGFFLoader(source);
-      const graph = new NGFFGraph(graphContainer.id, loader, sidebarHandler, autoloadDepth);
-      const control = new NGFFControlPanel(controlPanel, graph, sidebarHandler);
+      const graph = new NGFFGraph(loader, autoloadDepth);
+      const view = new SVGGraph(graph, graphContainer.id);
+      view.onNodeSelect((node) => sidebarHandler.showInfo(node));
+      view.onBackgroundClick(() => sidebarHandler.hide());
+      graph.onNodeUpdated((node) => {
+        if (sidebarHandler.isOpen()) {
+          sidebarHandler.showInfo(node);
+        }
+      });
+      const control = new NGFFControlPanel(controlPanel, graph, view, sidebarHandler);
       graph.onLoading((loading) =>
         loading ? control.setLoadingState() : control.unsetLoadingState()
       );

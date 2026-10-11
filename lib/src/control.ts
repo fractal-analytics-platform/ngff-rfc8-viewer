@@ -1,17 +1,20 @@
 import { CSS_CLASS_PREFIX } from './constants';
 import type { NGFFGraph } from './graph';
+import type { SVGGraph } from './views/svg';
 import type { NGFFSidebar } from './sidebar';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
+  private view: SVGGraph;
   private sidebar: NGFFSidebar;
 
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
 
-  constructor(element: HTMLElement, graph: NGFFGraph, sidebar: NGFFSidebar) {
+  constructor(element: HTMLElement, graph: NGFFGraph, view: SVGGraph, sidebar: NGFFSidebar) {
     this.graph = graph;
+    this.view = view;
     this.sidebar = sidebar;
 
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
@@ -39,7 +42,7 @@ export default class NGFFControlPanel {
     this.setLoadingState();
     try {
       await this.graph.recusiveLoad(Infinity);
-      this.graph.renderTree();
+      this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }
@@ -50,7 +53,7 @@ export default class NGFFControlPanel {
     this.setLoadingState();
     try {
       await this.graph.recusiveLoad(1);
-      this.graph.renderTree();
+      this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }
