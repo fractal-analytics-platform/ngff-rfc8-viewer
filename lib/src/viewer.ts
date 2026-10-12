@@ -80,10 +80,22 @@ export default class NGFFViewer {
     try {
       const loader = new NGFFLoader(source);
       const graph = new NGFFGraph(loader, autoloadDepth);
-      let queryParams = new URLSearchParams(window.location.search);
+      const queryParams = new URLSearchParams(window.location.search);
       // Determine which view to use based on the query parameter
-      let view = queryParams.get('view') === 'list' ? new ListGraph(graph, graphContainer.id) : new SVGGraph(graph, graphContainer.id);
-      view.onNodeSelect((node) => sidebarHandler.showInfo(node));
+      const view =
+        queryParams.get('view') === 'list'
+          ? new ListGraph(graph, graphContainer.id)
+          : new SVGGraph(graph, graphContainer.id);
+      view.onNodeSelect((node) => {
+        sidebarHandler.showInfo(node);
+
+        // Update the URL hash with the resolved path of the selected node
+        let path = node.resolvedPath;
+        if ('path' in node.omeNode && node.omeNode.path) {
+          path = graph.resolvePath(path, node.omeNode.path.path);
+        }
+        window.location.hash = path === './' ? '' : path;
+      });
       view.onBackgroundClick(() => sidebarHandler.hide());
       graph.onNodeUpdated((node) => {
         if (sidebarHandler.isOpen()) {

@@ -1,11 +1,10 @@
 import { CSS_CLASS_PREFIX } from './constants';
 import type { NGFFGraph } from './graph';
-import type { SVGGraph } from './views/svg';
 import type { NGFFSidebar } from './sidebar';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
-  private view: SVGGraph;
+  private view: { renderTree: () => void };
   private sidebar: NGFFSidebar;
 
   private spinner: HTMLElement;
@@ -14,7 +13,12 @@ export default class NGFFControlPanel {
   private viewSvgButton: HTMLButtonElement;
   private viewListButton: HTMLButtonElement;
 
-  constructor(element: HTMLElement, graph: NGFFGraph, view: SVGGraph, sidebar: NGFFSidebar) {
+  constructor(
+    element: HTMLElement,
+    graph: NGFFGraph,
+    view: { renderTree: () => void },
+    sidebar: NGFFSidebar
+  ) {
     this.graph = graph;
     this.view = view;
     this.sidebar = sidebar;
