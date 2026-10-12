@@ -64,12 +64,9 @@ export class ListGraph {
     const hasChildren = ["multiscale", "collection"].includes(node.omeNode.type);
     const nodeElement = document.createElement('div');
     
-    let parentId = parent?.omeNode?.id;
-    if (parentId) {
-      nodeElement.setAttribute('data-parent-id', parentId);
-    }
-    nodeElement.title = `ID: ${node.omeNode.id}\nparentId: ${parentId ?? 'none'}`;
-    nodeElement.id = `node-${node.omeNode.id}`;
+    let parentId = parent ? parent.id : null;
+    nodeElement.title = `ID: ${node.id}\nparentId: ${parentId ?? 'none'}`;
+    nodeElement.id = `node-${node.id}`;
     nodeElement.className = `node-element ${isCollapsed ? 'collapsed' : ''} ${hasChildren ? 'has-children' : ''}`;
     
     // Add a button to load children and toggle the collapsed class of the node
