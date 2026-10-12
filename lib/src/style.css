@@ -162,13 +162,13 @@
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-.has-children>button::before {
+.has-children > button::before {
   content: '▼ ';
   display: inline-block;
   transition: transform 0.2s ease;
   margin-right: 3px;
 }
-.has-children.collapsed>button::before {
+.has-children.collapsed > button::before {
   transform: rotate(-90deg);
 }
 

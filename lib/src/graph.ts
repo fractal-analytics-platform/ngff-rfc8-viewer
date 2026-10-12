@@ -159,9 +159,7 @@ export class NGFFGraph {
       throw new Error('Cannot select a path before the graph has loaded');
     }
 
-    let parentIds = targetPath.split('/');
-    console.log(`Parent IDs to traverse:`, parentIds);
-
+    const parentIds = targetPath.split('/');
     let currentNode: D3Node | null = null;
     currentNode = this.nodes.find((n) => this.getNodeId(n) === parentIds[0]) || null;
     if (!currentNode) {
@@ -171,12 +169,17 @@ export class NGFFGraph {
 
     while (parentIds.length > 0) {
       const nextId = parentIds[0];
-      console.log("nextId", nextId);
       // make sure node is loaded before looking for its children
-      await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
-      const child = this.nodes.find((n) => n.parentId === currentNode!.id && this.getNodeId(n) === nextId);
+      await this.loadNodeWithSignal(
+        currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
+      );
+      const child = this.nodes.find(
+        (n) => n.parentId === currentNode!.id && this.getNodeId(n) === nextId
+      );
       if (!child) {
-        throw new Error(`Node at path "${this.getNodeId(currentNode!)}" had no child with ID "${nextId}"`);
+        throw new Error(
+          `Node at path "${this.getNodeId(currentNode!)}" had no child with ID "${nextId}"`
+        );
       }
       currentNode = child;
       parentIds.shift();

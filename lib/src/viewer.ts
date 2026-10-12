@@ -90,7 +90,7 @@ export default class NGFFViewer {
         sidebarHandler.showInfo(node);
 
         // Update the URL hash with hierarchy path of the selected node
-        let idsToNode = graph.getParentsIds(node).join('/');
+        const idsToNode = graph.getParentsIds(node).join('/');
         window.location.hash = idsToNode;
       });
       view.onBackgroundClick(() => sidebarHandler.hide());
