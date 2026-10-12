@@ -37,10 +37,10 @@ export default class NGFFViewer {
     validate: boolean
   ) {
     if (!source) {
-      let queryParams = new URLSearchParams(window.location.search);
-      let currentUrl = window.location.href;
+      const queryParams = new URLSearchParams(window.location.search);
+      const currentUrl = window.location.href;
 
-      let linksHtml = exampleSources
+      const linksHtml = exampleSources
         .map(([name, url]) => {
           queryParams.set('source', url);
           return `<a href="${currentUrl.split('?')[0]}?${queryParams.toString()}">${name}</a>`;
