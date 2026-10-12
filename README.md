@@ -2,11 +2,11 @@
 
 Web viewer for the NGFF RFC-8 collections metadata - see https://ngff.openmicroscopy.org/rfc/8/index.html.
 
-⚠️ **WARNING**: This project is a proof of concept. It is experimental, unstable, and not intended for production use.
+⚠️ **WARNING**: This project is a proof of concept. It is experimental, unstable, and not intended for production use. Its functionality will evolve with RFC-8 progress.
 
 ## Quick start
 
-The web viewer is available at https://fractal-analytics-platform.github.io.
+The web viewer is available at https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/.
 
 Start with one of the following examples:
 * [Basic example](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json)
@@ -15,6 +15,7 @@ Start with one of the following examples:
 * [Plate with multiple acquisitions of the same field](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/multiplex/dataset/dataset.json)
 * [Basic example of invalid attributes (click on multiscale node)](https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?validate=true&source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/invalid/missing-multiscale-coordinate-systems.json). Note that the for the moment the validation feature (based on [ngff-rfc8-validator](https://github.com/fractal-analytics-platform/ngff-rfc8-validator)) is optional, and enabled only when the URL includes the `validate=true` query parameter.
 
+To create new RFC-8 OME-Zarr collections, also check out the [ngio-collections](https://github.com/BioVisionCenter/ngio-collections) package.
 
 ## How to build the library
 
@@ -69,6 +70,8 @@ In this way, `npm run pre-commit` will run before every commit.
 
 ## Contributors and license
 
-The Fractal project is developed by the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) at the University of Zurich, who contracts [eXact lab s.r.l.](https://www.exact-lab.it/en/) for software engineering and development support.
+This project is developed by the [BioVisionCenter](https://www.biovisioncenter.uzh.ch/en.html) at the University of Zurich, who contracts [eXact lab s.r.l.](https://www.exact-lab.it/en/) for software engineering and development support.
 
-Unless otherwise specified, Fractal components are released under the BSD 3-Clause License, and copyright is with the BioVisionCenter at the University of Zurich.
+Unless otherwise specified, all components are released under the BSD 3-Clause License, and copyright is with the BioVisionCenter at the University of Zurich.
+
+Issues and PRs for the project are welcome. Be aware that this project is in a proof of concept phase and we don't commit to its API stability. Given that RFC-8 may still evolve, we expect to adapt new RFC-8 changes as they come and break existing functionality when needed.
