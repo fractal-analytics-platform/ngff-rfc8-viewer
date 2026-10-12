@@ -89,12 +89,9 @@ export default class NGFFViewer {
       view.onNodeSelect((node) => {
         sidebarHandler.showInfo(node);
 
-        // Update the URL hash with the resolved path of the selected node
-        let path = node.resolvedPath;
-        if ('path' in node.omeNode && node.omeNode.path) {
-          path = graph.resolvePath(path, node.omeNode.path.path);
-        }
-        window.location.hash = path === './' ? '' : path;
+        // Update the URL hash with hierarchy path of the selected node
+        let idsToNode = graph.getParentsIds(node).join('/');
+        window.location.hash = idsToNode;
       });
       view.onBackgroundClick(() => sidebarHandler.hide());
       graph.onNodeUpdated((node) => {
@@ -106,12 +103,16 @@ export default class NGFFViewer {
       graph.onLoading((loading) =>
         loading ? control.setLoadingState() : control.unsetLoadingState()
       );
+
+      // When page loads, we first load the graph's root...
       const rootLoaded = await graph.loadRoot();
       const selectedPath = window.location.hash.slice(1);
+      // ...the handle any hash of nodeIds e.g. #root/child/grandchild
       if (rootLoaded && selectedPath) {
         try {
           const node = await graph.loadNodeAtPath(decodeURIComponent(selectedPath));
           view.selectNode(node);
+          view.renderTree();
         } catch (err) {
           graph.reportError(err instanceof Error ? err.message : 'Unexpected error');
         }

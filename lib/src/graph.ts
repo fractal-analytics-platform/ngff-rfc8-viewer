@@ -138,63 +138,53 @@ export class NGFFGraph {
     }
   }
 
-  async loadNodeAtPath(path: string): Promise<D3Node> {
-    const relativePath = path.startsWith('./') ? path : `./${path}`;
-    const targetPath = this.resolvePath('./', relativePath);
+  getNodeId(node: D3Node): string {
+    return node.omeNode.id || node.omeNode?.name;
+  }
 
+  getParentsIds(node: D3Node): Array<string> {
+    const parents: Array<string> = [];
+    parents.push(this.getNodeId(node));
+    let current = node;
+    while (current.parentId) {
+      const parent = this.nodes.find((n) => n.id === current.parentId);
+      if (!parent) break;
+      parents.push(this.getNodeId(parent));
+      current = parent;
+    }
+    return parents.reverse();
+  }
+
+  // path is a hierarchy of node IDs, e.g. "root/child/grandchild"
+  async loadNodeAtPath(targetPath: string): Promise<D3Node> {
     if (!this.hierarchy) {
       throw new Error('Cannot select a path before the graph has loaded');
     }
 
-    while (true) {
-      const descendants = this.hierarchy.descendants();
-      const matchingPathNode = descendants
-        .map((descendant) => descendant.data)
-        .filter((node): node is PathD3Node => this.isPathNode(node))
-        .find((node) => this.resolvePath(node.resolvedPath, node.omeNode.path.path) === targetPath);
+    let parentIds = targetPath.split('/');
+    console.log(`Parent IDs to traverse:`, parentIds);
 
-      if (matchingPathNode) {
-        if (matchingPathNode.error) {
-          throw new Error(`Unable to load node at path "${targetPath}"`);
-        }
-        if (!matchingPathNode.loaded) {
-          await this.loadNodeWithSignal(
-            matchingPathNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
-          );
-          if (matchingPathNode.error) {
-            throw new Error(`Unable to load node at path "${targetPath}"`);
-          }
-        }
-        this.expandAncestors(matchingPathNode);
-        this.signalChange();
-        return matchingPathNode;
-      }
-
-      const candidates = descendants
-        .map((descendant) => descendant.data)
-        .filter(
-          (node): node is PathD3Node =>
-            this.isPathNode(node) &&
-            !node.loaded &&
-            !node.error &&
-            this.isStrictlyWithinContentPath(node, targetPath)
-        );
-      const nextNode = candidates.reduce<PathD3Node | null>((deepest, node) => {
-        if (!deepest || this.getContentPath(node).length > this.getContentPath(deepest).length) {
-          return node;
-        }
-        return deepest;
-      }, null);
-
-      if (!nextNode) {
-        throw new Error(`No node found at path "${targetPath}"`);
-      }
-
-      await this.loadNodeWithSignal(nextNode);
-      if (nextNode.error) {
-        throw new Error(`Unable to load node at path "${targetPath}"`);
-      }
+    let currentNode: D3Node | null = null;
+    currentNode = this.nodes.find((n) => this.getNodeId(n) === parentIds[0]) || null;
+    if (!currentNode) {
+      throw new Error(`No node found at path "${targetPath}"`);
     }
+    parentIds.shift();
+
+    while (parentIds.length > 0) {
+      const nextId = parentIds[0];
+      console.log("nextId", nextId);
+      // make sure node is loaded before looking for its children
+      await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
+      const child = this.nodes.find((n) => n.parentId === currentNode!.id && this.getNodeId(n) === nextId);
+      if (!child) {
+        throw new Error(`Node at path "${this.getNodeId(currentNode!)}" had no child with ID "${nextId}"`);
+      }
+      currentNode = child;
+      parentIds.shift();
+    }
+
+    return currentNode!;
   }
 
   private isPathNode(node: D3Node): node is PathD3Node {
