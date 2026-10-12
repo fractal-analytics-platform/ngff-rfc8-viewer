@@ -140,7 +140,9 @@
 }
 
 .ngff-rfc8-viewer-list-graph-root {
-  padding: 43px 15px 15px 15px;
+  padding: 65px 15px 15px 15px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .node-element {
@@ -149,9 +151,9 @@
 
 .node-element button {
   background-color: transparent;
-  border-color: transparent;
   padding: 7px;
   border-radius: 5px;
+  border: solid 1px transparent;
 }
 
 .node-element button:hover {

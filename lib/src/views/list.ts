@@ -13,10 +13,6 @@ const defaultNodeColor = '#999';
 const selectionStrokeColor = '#333';
 const inliningStrokeColor = '#8e009b';
 
-const nodeSpacing = 160;
-const circleRadius = 24;
-const arrowSize = 20;
-
 export class ListGraph {
   private graph: NGFFGraph;
   private containerId: string;
@@ -26,18 +22,21 @@ export class ListGraph {
   private backgroundClickHandler: () => void = () => {};
 
   constructor(graph: NGFFGraph, containerId: string) {
-    console.log("Initializing ListGraph with containerId:", containerId);
     this.graph = graph;
-
     this.containerId = containerId;
 
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}list-graph-root`);
-    this.rootElement.innerHTML = '<h1>Graph</h1>';
-    // document.getElementById(this.containerId)!.innerHTML = '';
+    this.rootElement.onclick = (event) => {
+      if (event.target !== this.rootElement) return;
+      this.backgroundClickHandler();
+    }
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
     graph.onChange(() => this.renderTree());
+    graph.onError((message) =>
+      message === null ? undefined : this.showErrorAlert(message)
+    );
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
@@ -75,9 +74,11 @@ export class ListGraph {
     
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
+    button.style.borderColor = colors[node.omeNode.type] || defaultNodeColor;
     button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
+      this.nodeSelectHandler(node);
       // Adding 'collapsed' class will hide child nodes etc.
       nodeElement.classList.toggle('collapsed');
       if (isLoaded) {
@@ -98,16 +99,7 @@ export class ListGraph {
   }
 
   showErrorAlert(message: string) {
-    this.errorAlert.selectAll('*').remove();
-    this.errorAlert.append('span').text(message);
-    this.errorAlert
-      .append('button')
-      .html('&times;')
-      .on('click', () => this.hideErrorAlert());
-    this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, false);
-  }
-
-  hideErrorAlert() {
-    this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, true);
+    // basic handler for now
+    alert(message);
   }
 }
