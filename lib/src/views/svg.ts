@@ -169,8 +169,8 @@ export class SVGGraph {
       .attr('r', circleRadius)
       .attr('fill', (d) => colors[d.data.omeNode.type] || defaultNodeColor)
       .style('cursor', 'pointer')
-      .attr('stroke', (d) => (d.data.expanded ? 'none' : inliningStrokeColor))
-      .attr('stroke-dasharray', (d) => (d.data.expanded ? 'none' : '10,5'))
+      .attr('stroke', (d) => (d.data.loaded ? 'none' : inliningStrokeColor))
+      .attr('stroke-dasharray', (d) => (d.data.loaded ? 'none' : '10,5'))
       .attr('stroke-width', 2)
       .on('click', async (event, d) => {
         const node = d.data;
@@ -203,7 +203,7 @@ export class SVGGraph {
       })
       .on('mouseleave', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', d.data.expanded ? 'none' : inliningStrokeColor);
+          d3.select(event.target).attr('stroke', d.data.loaded ? 'none' : inliningStrokeColor);
           this.tooltip?.style('opacity', 0);
         }
       });

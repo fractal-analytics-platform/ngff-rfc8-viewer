@@ -101,8 +101,9 @@ export type D3Node = {
   parentId: string | null;
   resolvedPath: string;
   loading: boolean;
-  expanded: boolean;
+  loaded: boolean;
   error: boolean;
+  collapsed: boolean;
 };
 
 export type ExtraEdgesFn = (

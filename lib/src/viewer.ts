@@ -4,6 +4,7 @@ import { NGFFGraph } from './graph';
 import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 import { SVGGraph } from './views/svg';
+import { ListGraph } from './views/list';
 
 const exampleSources = [
   [
@@ -79,7 +80,9 @@ export default class NGFFViewer {
     try {
       const loader = new NGFFLoader(source);
       const graph = new NGFFGraph(loader, autoloadDepth);
-      const view = new SVGGraph(graph, graphContainer.id);
+      let queryParams = new URLSearchParams(window.location.search);
+      // Determine which view to use based on the query parameter
+      let view = queryParams.get('view') === 'list' ? new ListGraph(graph, graphContainer.id) : new SVGGraph(graph, graphContainer.id);
       view.onNodeSelect((node) => sidebarHandler.showInfo(node));
       view.onBackgroundClick(() => sidebarHandler.hide());
       graph.onNodeUpdated((node) => {

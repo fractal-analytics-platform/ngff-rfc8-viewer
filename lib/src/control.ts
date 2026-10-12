@@ -11,6 +11,8 @@ export default class NGFFControlPanel {
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
+  private viewSvgButton: HTMLButtonElement;
+  private viewListButton: HTMLButtonElement;
 
   constructor(element: HTMLElement, graph: NGFFGraph, view: SVGGraph, sidebar: NGFFSidebar) {
     this.graph = graph;
@@ -35,6 +37,28 @@ export default class NGFFControlPanel {
     element.appendChild(this.loadNextBtn);
 
     element.appendChild(this.spinner);
+
+    this.viewSvgButton = document.createElement('button');
+    this.viewSvgButton.textContent = 'View SVG';
+    this.viewSvgButton.setAttribute('type', 'button');
+    this.viewSvgButton.addEventListener('click', () => {
+      window.location.search = new URLSearchParams({
+        ...Object.fromEntries(new URLSearchParams(window.location.search)),
+        view: 'svg'
+      }).toString();
+    });
+    element.appendChild(this.viewSvgButton);
+
+    this.viewListButton = document.createElement('button');
+    this.viewListButton.textContent = 'View List';
+    this.viewListButton.setAttribute('type', 'button');
+    this.viewListButton.addEventListener('click', () => {
+      window.location.search = new URLSearchParams({
+        ...Object.fromEntries(new URLSearchParams(window.location.search)),
+        view: 'list'
+      }).toString();
+    });
+    element.appendChild(this.viewListButton);
   }
 
   async loadAll() {

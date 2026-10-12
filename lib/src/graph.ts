@@ -79,9 +79,10 @@ export class NGFFGraph {
       omeNode: this.getBasicOmeNode(node),
       parentId: parentId,
       loading: false,
-      expanded: !('path' in node) || node.type === 'singlescale',
+      loaded: !('path' in node) || node.type === 'singlescale',
       resolvedPath,
-      error: false
+      error: false,
+      collapsed: false,
     });
 
     if (this.computeExtraEdges) {
@@ -135,7 +136,7 @@ export class NGFFGraph {
       for (const leave of this.hierarchy!.leaves()) {
         if ('path' in leave.data.omeNode) {
           const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
-          if (!node.expanded && !node.error) {
+          if (!node.loaded && !node.error) {
             await this.loadNode(node);
             loaded = true;
           }
@@ -152,7 +153,7 @@ export class NGFFGraph {
   }
 
   async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
-    if (node.loading || node.expanded || node.error) {
+    if (node.loading || node.loaded || node.error) {
       return;
     }
     this.signalError(null);
@@ -187,7 +188,7 @@ export class NGFFGraph {
           break;
       }
     } catch (err) {
-      node.expanded = false;
+      node.loaded = false;
       node.error = true;
       console.error(err);
       this.signalError(err instanceof Error ? err.message : 'Unexpected error');
@@ -196,7 +197,7 @@ export class NGFFGraph {
   }
 
   updateNode(node: D3Node, ome: OmeNode) {
-    node.expanded = true;
+    node.loaded = true;
     node.omeNode.attributes = { ...(node.omeNode.attributes || {}), ...ome.attributes };
     (ome as any).generatedId = node.id;
     this.signalNodeUpdated(node);

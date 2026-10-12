@@ -138,3 +138,37 @@
 .ngff-rfc8-viewer-rotating-dash {
   animation: ngff-rfc8-viewer-rotate-dash 0.5s linear infinite;
 }
+
+.ngff-rfc8-viewer-list-graph-root {
+  padding: 43px 15px 15px 15px;
+}
+
+.node-element {
+  padding: 2px 2px 2px 20px;
+}
+
+.node-element button {
+  background-color: transparent;
+  border-color: transparent;
+  padding: 7px;
+  border-radius: 5px;
+}
+
+.node-element button:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.has-children>button::before {
+  content: '▼ ';
+  display: inline-block;
+  transition: transform 0.2s ease;
+  margin-right: 3px;
+}
+.has-children.collapsed>button::before {
+  transform: rotate(-90deg);
+}
+
+.node-element.collapsed .node-element {
+  display: none;
+}
