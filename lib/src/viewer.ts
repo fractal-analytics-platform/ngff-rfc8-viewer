@@ -43,7 +43,10 @@ export default class NGFFViewer {
       const linksHtml = exampleSources
         .map(([name, url]) => {
           queryParams.set('source', url);
-          return `<a href="${currentUrl.split('?')[0]}?${queryParams.toString()}">${name}</a>`;
+          const link = document.createElement('a');
+          link.href = `${currentUrl.split('?')[0]}?${queryParams.toString()}`;
+          link.textContent = name;
+          return link.outerHTML;
         })
         .join('<br>');
       this.showAlert(
