@@ -2,6 +2,8 @@ import * as d3 from 'd3';
 import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
 import type { NGFFLoader } from './loader';
 
+type PathD3Node = D3Node & { omeNode: OmeNode & { path: OmePath } };
+
 export class NGFFGraph {
   private loader: NGFFLoader;
   private autoloadDepth: number;
@@ -37,6 +39,10 @@ export class NGFFGraph {
     this.signalError = fn;
   }
 
+  reportError(message: string) {
+    this.signalError(message);
+  }
+
   onNodeUpdated(fn: (node: D3Node) => void) {
     this.signalNodeUpdated = fn;
   }
@@ -53,12 +59,14 @@ export class NGFFGraph {
     return this.extraEdges;
   }
 
-  async loadRoot() {
+  async loadRoot(): Promise<boolean> {
     try {
       const ome = await this.loader.loadGraphData();
       await this.render(ome);
+      return true;
     } catch (err) {
       this.signalError(err instanceof Error ? err.message : 'Unexpected error');
+      return false;
     }
   }
 
@@ -82,7 +90,7 @@ export class NGFFGraph {
       loaded: !('path' in node) || node.type === 'singlescale',
       resolvedPath,
       error: false,
-      collapsed: false,
+      collapsed: false
     });
 
     if (this.computeExtraEdges) {
@@ -127,6 +135,97 @@ export class NGFFGraph {
       await this.loadNode(node);
     } finally {
       this.signalLoading(false);
+    }
+  }
+
+  async loadNodeAtPath(path: string): Promise<D3Node> {
+    const relativePath = path.startsWith('./') ? path : `./${path}`;
+    const targetPath = this.resolvePath('./', relativePath);
+
+    if (!this.hierarchy) {
+      throw new Error('Cannot select a path before the graph has loaded');
+    }
+
+    while (true) {
+      const descendants = this.hierarchy.descendants();
+      const matchingPathNode = descendants
+        .map((descendant) => descendant.data)
+        .filter((node): node is PathD3Node => this.isPathNode(node))
+        .find((node) => this.resolvePath(node.resolvedPath, node.omeNode.path.path) === targetPath);
+
+      if (matchingPathNode) {
+        if (matchingPathNode.error) {
+          throw new Error(`Unable to load node at path "${targetPath}"`);
+        }
+        if (!matchingPathNode.loaded) {
+          await this.loadNodeWithSignal(
+            matchingPathNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
+          );
+          if (matchingPathNode.error) {
+            throw new Error(`Unable to load node at path "${targetPath}"`);
+          }
+        }
+        this.expandAncestors(matchingPathNode);
+        this.signalChange();
+        return matchingPathNode;
+      }
+
+      const candidates = descendants
+        .map((descendant) => descendant.data)
+        .filter(
+          (node): node is PathD3Node =>
+            this.isPathNode(node) &&
+            !node.loaded &&
+            !node.error &&
+            this.isStrictlyWithinContentPath(node, targetPath)
+        );
+      const nextNode = candidates.reduce<PathD3Node | null>((deepest, node) => {
+        if (!deepest || this.getContentPath(node).length > this.getContentPath(deepest).length) {
+          return node;
+        }
+        return deepest;
+      }, null);
+
+      if (!nextNode) {
+        throw new Error(`No node found at path "${targetPath}"`);
+      }
+
+      await this.loadNodeWithSignal(nextNode);
+      if (nextNode.error) {
+        throw new Error(`Unable to load node at path "${targetPath}"`);
+      }
+    }
+  }
+
+  private isPathNode(node: D3Node): node is PathD3Node {
+    return 'path' in node.omeNode && node.omeNode.path !== undefined;
+  }
+
+  private getContentPath(node: PathD3Node): string {
+    const path = this.resolvePath(node.resolvedPath, node.omeNode.path.path);
+    if (node.omeNode.path.type !== 'json') {
+      return path;
+    }
+    const directory = path.substring(0, path.lastIndexOf('/'));
+    return directory === '.' || directory === '' ? './' : directory;
+  }
+
+  private isStrictlyWithinContentPath(node: PathD3Node, targetPath: string): boolean {
+    const contentPath = this.getContentPath(node);
+    return (
+      targetPath !== contentPath && targetPath.startsWith(`${contentPath.replace(/\/$/, '')}/`)
+    );
+  }
+
+  private expandAncestors(node: D3Node) {
+    let parentId = node.parentId;
+    while (parentId !== null) {
+      const parent = this.nodes.find((candidate) => candidate.id === parentId);
+      if (!parent) {
+        break;
+      }
+      parent.collapsed = false;
+      parentId = parent.parentId;
     }
   }
 

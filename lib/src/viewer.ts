@@ -106,7 +106,16 @@ export default class NGFFViewer {
       graph.onLoading((loading) =>
         loading ? control.setLoadingState() : control.unsetLoadingState()
       );
-      graph.loadRoot();
+      const rootLoaded = await graph.loadRoot();
+      const selectedPath = window.location.hash.slice(1);
+      if (rootLoaded && selectedPath) {
+        try {
+          const node = await graph.loadNodeAtPath(decodeURIComponent(selectedPath));
+          view.selectNode(node);
+        } catch (err) {
+          graph.reportError(err instanceof Error ? err.message : 'Unexpected error');
+        }
+      }
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';

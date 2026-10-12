@@ -1,4 +1,3 @@
-import * as d3 from 'd3';
 import type { D3Node, OmeNode, OmePath } from './../types';
 import { CSS_CLASS_PREFIX } from './../constants';
 import type { NGFFGraph } from './../graph';
@@ -10,14 +9,12 @@ const colors: Record<string, string> = {
 };
 
 const defaultNodeColor = '#999';
-const selectionStrokeColor = '#333';
-const inliningStrokeColor = '#8e009b';
 
 export class ListGraph {
   private graph: NGFFGraph;
   private containerId: string;
   private rootElement: HTMLDivElement;
-  
+
   private nodeSelectHandler: (node: D3Node) => void = () => {};
   private backgroundClickHandler: () => void = () => {};
 
@@ -30,17 +27,19 @@ export class ListGraph {
     this.rootElement.onclick = (event) => {
       if (event.target !== this.rootElement) return;
       this.backgroundClickHandler();
-    }
+    };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
     graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? undefined : this.showErrorAlert(message)
-    );
+    graph.onError((message) => (message === null ? undefined : this.showErrorAlert(message)));
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
     this.nodeSelectHandler = fn;
+  }
+
+  selectNode(node: D3Node) {
+    this.nodeSelectHandler(node);
   }
 
   onBackgroundClick(fn: () => void) {
@@ -61,21 +60,21 @@ export class ListGraph {
   renderNode(node: D3Node, parent: D3Node | undefined) {
     const isLoaded = node.loaded;
     const isCollapsed = node.collapsed || !isLoaded;
-    const hasChildren = ["multiscale", "collection"].includes(node.omeNode.type);
+    const hasChildren = ['multiscale', 'collection'].includes(node.omeNode.type);
     const nodeElement = document.createElement('div');
-    
-    let parentId = parent ? parent.id : null;
+
+    const parentId = parent ? parent.id : null;
     nodeElement.title = `ID: ${node.id}\nparentId: ${parentId ?? 'none'}`;
     nodeElement.id = `node-${node.id}`;
     nodeElement.className = `node-element ${isCollapsed ? 'collapsed' : ''} ${hasChildren ? 'has-children' : ''}`;
-    
+
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
     button.style.borderColor = colors[node.omeNode.type] || defaultNodeColor;
     button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
-      this.nodeSelectHandler(node);
+      this.selectNode(node);
       // Adding 'collapsed' class will hide child nodes etc.
       nodeElement.classList.toggle('collapsed');
       if (isLoaded) {

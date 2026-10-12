@@ -73,6 +73,10 @@ export class SVGGraph {
     this.nodeSelectHandler = fn;
   }
 
+  selectNode(node: D3Node) {
+    this.nodeSelectHandler(node);
+  }
+
   onBackgroundClick(fn: () => void) {
     this.backgroundClickHandler = fn;
   }
@@ -174,7 +178,7 @@ export class SVGGraph {
       .attr('stroke-width', 2)
       .on('click', async (event, d) => {
         const node = d.data;
-        this.nodeSelectHandler(node);
+        this.selectNode(node);
         if ('path' in node.omeNode && node.omeNode.path) {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
