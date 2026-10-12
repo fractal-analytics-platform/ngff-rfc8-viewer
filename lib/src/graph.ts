@@ -185,6 +185,9 @@ export class NGFFGraph {
       parentIds.shift();
     }
 
+    // Finally, let's load the target node
+    await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
+
     return currentNode!;
   }
 
