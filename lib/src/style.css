@@ -143,6 +143,7 @@
   padding: 65px 15px 15px 15px;
   height: 100%;
   box-sizing: border-box;
+  overflow: auto;
 }
 
 .node-element {
