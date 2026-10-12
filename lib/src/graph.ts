@@ -2,8 +2,6 @@ import * as d3 from 'd3';
 import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
 import type { NGFFLoader } from './loader';
 
-type PathD3Node = D3Node & { omeNode: OmeNode & { path: OmePath } };
-
 export class NGFFGraph {
   private loader: NGFFLoader;
   private autoloadDepth: number;
@@ -185,38 +183,6 @@ export class NGFFGraph {
     }
 
     return currentNode!;
-  }
-
-  private isPathNode(node: D3Node): node is PathD3Node {
-    return 'path' in node.omeNode && node.omeNode.path !== undefined;
-  }
-
-  private getContentPath(node: PathD3Node): string {
-    const path = this.resolvePath(node.resolvedPath, node.omeNode.path.path);
-    if (node.omeNode.path.type !== 'json') {
-      return path;
-    }
-    const directory = path.substring(0, path.lastIndexOf('/'));
-    return directory === '.' || directory === '' ? './' : directory;
-  }
-
-  private isStrictlyWithinContentPath(node: PathD3Node, targetPath: string): boolean {
-    const contentPath = this.getContentPath(node);
-    return (
-      targetPath !== contentPath && targetPath.startsWith(`${contentPath.replace(/\/$/, '')}/`)
-    );
-  }
-
-  private expandAncestors(node: D3Node) {
-    let parentId = node.parentId;
-    while (parentId !== null) {
-      const parent = this.nodes.find((candidate) => candidate.id === parentId);
-      if (!parent) {
-        break;
-      }
-      parent.collapsed = false;
-      parentId = parent.parentId;
-    }
   }
 
   async recusiveLoad(autoloadDepth: number) {
