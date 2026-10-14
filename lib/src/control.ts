@@ -4,14 +4,23 @@ import type { NGFFSidebar } from './sidebar';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
+  private view: { renderTree: () => void };
   private sidebar: NGFFSidebar;
 
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
+  private viewTreeButton: HTMLButtonElement;
+  private viewListButton: HTMLButtonElement;
 
-  constructor(element: HTMLElement, graph: NGFFGraph, sidebar: NGFFSidebar) {
+  constructor(
+    element: HTMLElement,
+    graph: NGFFGraph,
+    view: { renderTree: () => void },
+    sidebar: NGFFSidebar
+  ) {
     this.graph = graph;
+    this.view = view;
     this.sidebar = sidebar;
 
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
@@ -31,6 +40,28 @@ export default class NGFFControlPanel {
     this.loadNextBtn.addEventListener('click', () => this.loadNext());
     element.appendChild(this.loadNextBtn);
 
+    this.viewTreeButton = document.createElement('button');
+    this.viewTreeButton.textContent = 'View Tree';
+    this.viewTreeButton.setAttribute('type', 'button');
+    this.viewTreeButton.addEventListener('click', () => {
+      window.location.search = new URLSearchParams({
+        ...Object.fromEntries(new URLSearchParams(window.location.search)),
+        view: 'tree'
+      }).toString();
+    });
+    element.appendChild(this.viewTreeButton);
+
+    this.viewListButton = document.createElement('button');
+    this.viewListButton.textContent = 'View List';
+    this.viewListButton.setAttribute('type', 'button');
+    this.viewListButton.addEventListener('click', () => {
+      window.location.search = new URLSearchParams({
+        ...Object.fromEntries(new URLSearchParams(window.location.search)),
+        view: 'list'
+      }).toString();
+    });
+    element.appendChild(this.viewListButton);
+
     element.appendChild(this.spinner);
   }
 
@@ -39,7 +70,7 @@ export default class NGFFControlPanel {
     this.setLoadingState();
     try {
       await this.graph.recusiveLoad(Infinity);
-      this.graph.renderTree();
+      this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }
@@ -50,7 +81,7 @@ export default class NGFFControlPanel {
     this.setLoadingState();
     try {
       await this.graph.recusiveLoad(1);
-      this.graph.renderTree();
+      this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }
