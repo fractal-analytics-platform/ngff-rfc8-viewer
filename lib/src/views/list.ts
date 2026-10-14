@@ -15,7 +15,12 @@ export class ListView {
     this.graph = graph;
     this.containerId = containerId;
     this.errorAlert = document.createElement('div');
-    this.errorAlert.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}error`, `${CSS_CLASS_PREFIX}alert-fixed`, `${CSS_CLASS_PREFIX}hide`);
+    this.errorAlert.classList.add(
+      `${CSS_CLASS_PREFIX}alert`,
+      `${CSS_CLASS_PREFIX}error`,
+      `${CSS_CLASS_PREFIX}alert-fixed`,
+      `${CSS_CLASS_PREFIX}hide`
+    );
     document.getElementById(this.containerId)?.appendChild(this.errorAlert);
 
     this.rootElement = document.createElement('div');
@@ -27,7 +32,9 @@ export class ListView {
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
     graph.onChange(() => this.renderTree());
-    graph.onError((message) => (message === null ? this.hideErrorAlert() : this.showErrorAlert(message)));
+    graph.onError((message) =>
+      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    );
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
