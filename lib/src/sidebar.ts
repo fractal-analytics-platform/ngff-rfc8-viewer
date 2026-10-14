@@ -2,18 +2,85 @@ import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
 
+const defaultWidth = 560;
+const minWidth = 150;
+const minSpace = 100;
+
 export class NGFFSidebar {
   private element: HTMLElement;
+  private content: HTMLElement;
   private validationEnabled: boolean;
 
   constructor(element: HTMLElement, validate: boolean) {
     this.element = element;
     this.validationEnabled = validate;
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
+
+    this.buildResizer();
+
+    const content = document.createElement('div');
+    content.classList.add(`${CSS_CLASS_PREFIX}sidebar-content`);
+    element.appendChild(content);
+    this.content = content;
+
+    this.setWidth(defaultWidth);
+  }
+
+  private buildResizer() {
+    const resizer = document.createElement('div');
+    resizer.classList.add(`${CSS_CLASS_PREFIX}sidebar-resizer`);
+    this.element.appendChild(resizer);
+
+    let resizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    const onMouseDown = (e: MouseEvent) => {
+      resizing = true;
+      startX = e.clientX;
+      startWidth = this.element.offsetWidth;
+      document.addEventListener('selectstart', preventSelect);
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    };
+
+    const preventSelect = (e: Event) => {
+      e.preventDefault();
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (!resizing) return;
+
+      const delta = e.clientX - startX;
+      const newWidth = startWidth - delta;
+      const maxWidth = document.documentElement.clientWidth - minSpace;
+
+      if (newWidth >= minWidth && newWidth <= maxWidth) {
+        this.setWidth(newWidth);
+      }
+    };
+
+    const onMouseUp = () => {
+      resizing = false;
+      document.removeEventListener('selectstart', preventSelect);
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
+    resizer.addEventListener('mousedown', onMouseDown);
+  }
+
+  private setWidth(width: number) {
+    const viewportWidth = document.documentElement.clientWidth;
+    if (width > viewportWidth - minSpace) {
+      width = viewportWidth - minSpace;
+    }
+    this.element.style.width = `${width}px`;
+    this.element.style.minWidth = `${width}px`;
   }
 
   showInfo(node: D3Node) {
-    this.element.innerHTML = '';
+    this.content.innerHTML = '';
 
     this.addKeyValue('Id', node.omeNode.id || '-');
     this.addKeyValue('Name', node.omeNode.name);
@@ -23,7 +90,7 @@ export class NGFFSidebar {
       this.addTitle('Attributes');
       const pre = document.createElement('pre');
       pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
-      this.element.appendChild(pre);
+      this.content.appendChild(pre);
     } else {
       this.addKeyValue('Attributes', '-');
     }
@@ -36,21 +103,29 @@ export class NGFFSidebar {
   }
 
   private showValidation(node: D3Node) {
+    this.element.classList.remove(`${CSS_CLASS_PREFIX}has-error`);
     try {
       validate(this.buildValidatableNode(node));
     } catch (err) {
       if (err instanceof Error) {
         const error = document.createElement('div');
-        error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
-        error.innerText = err.message;
-        this.element.appendChild(error);
-        if ('schemaErrors' in err && Array.isArray(err.schemaErrors)) {
+        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
+        error.classList.add(`${CSS_CLASS_PREFIX}error`);
+        this.content.prepend(error);
+        if (
+          'schemaErrors' in err &&
+          Array.isArray(err.schemaErrors) &&
+          err.schemaErrors.length > 0
+        ) {
+          error.innerText = 'Validation errors, see below';
           for (const schemaError of err.schemaErrors) {
             const error = document.createElement('pre');
             error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
             error.innerText = JSON.stringify(schemaError, null, 2);
-            this.element.appendChild(error);
+            this.content.appendChild(error);
           }
+        } else {
+          error.innerText = err.message;
         }
       }
     }
@@ -77,7 +152,7 @@ export class NGFFSidebar {
     const title = document.createElement('strong');
     title.innerText = value;
     p.appendChild(title);
-    this.element.appendChild(p);
+    this.content.appendChild(p);
   }
 
   private addKeyValue(key: string, value: string) {
@@ -88,7 +163,7 @@ export class NGFFSidebar {
     text.innerText = value || '-';
     p.appendChild(title);
     p.appendChild(text);
-    this.element.appendChild(p);
+    this.content.appendChild(p);
   }
 
   hide() {
