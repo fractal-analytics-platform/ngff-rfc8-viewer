@@ -3,7 +3,7 @@ import NGFFControlPanel from './control';
 import { NGFFGraph } from './graph';
 import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
-import { SVGGraph } from './views/svg';
+import { TreeGraph } from './views/tree';
 import { ListGraph } from './views/list';
 
 const exampleSources = [
@@ -85,7 +85,7 @@ export default class NGFFViewer {
       const view =
         queryParams.get('view') === 'list'
           ? new ListGraph(graph, graphContainer.id)
-          : new SVGGraph(graph, graphContainer.id);
+          : new TreeGraph(graph, graphContainer.id);
       view.onNodeSelect((node) => {
         sidebarHandler.showInfo(node);
 

@@ -1,7 +1,7 @@
 import * as d3 from 'd3';
-import type { D3Node, OmeNode, OmePath } from './../types';
-import { CSS_CLASS_PREFIX } from './../constants';
-import type { NGFFGraph } from './../graph';
+import type { D3Node, OmeNode, OmePath } from '../types';
+import { CSS_CLASS_PREFIX } from '../constants';
+import type { NGFFGraph } from '../graph';
 
 const colors: Record<string, string> = {
   collection: '#4f81bd',
@@ -17,7 +17,7 @@ const nodeSpacing = 160;
 const circleRadius = 24;
 const arrowSize = 20;
 
-export class SVGGraph {
+export class TreeGraph {
   private graph: NGFFGraph;
   private width: number = 0;
   private height: number = 0;
