@@ -75,7 +75,10 @@ export class TreeView {
     const hierarchy = this.graph.getHierarchy();
     this.width = Math.max(800, hierarchy.leaves().length * nodeSpacing);
     this.height = Math.max(1, hierarchy.height) * nodeSpacing;
-    this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
+    // We only want to set the viewBox on the first render
+    if (!this.svg.attr('viewBox')) {
+      this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
+    }
 
     const treeLayout = d3
       .tree<D3Node>()
