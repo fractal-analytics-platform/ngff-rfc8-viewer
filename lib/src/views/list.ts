@@ -1,14 +1,6 @@
 import type { D3Node, OmeNode, OmePath } from './../types';
-import { CSS_CLASS_PREFIX } from './../constants';
+import { CSS_CLASS_PREFIX, NODE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
-
-const colors: Record<string, string> = {
-  collection: '#4f81bd',
-  multiscale: '#9bbb59',
-  singlescale: '#c0504d'
-};
-
-const defaultNodeColor = '#999';
 
 export class ListView {
   private graph: NGFFGraph;
@@ -70,7 +62,7 @@ export class ListView {
 
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
-    button.style.borderColor = colors[node.omeNode.type] || defaultNodeColor;
+    button.style.borderColor = NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
     button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {

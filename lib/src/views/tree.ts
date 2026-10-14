@@ -1,17 +1,7 @@
 import * as d3 from 'd3';
 import type { D3Node, OmeNode, OmePath } from '../types';
-import { CSS_CLASS_PREFIX } from '../constants';
+import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from '../constants';
 import type { NGFFGraph } from '../graph';
-
-const colors: Record<string, string> = {
-  collection: '#4f81bd',
-  multiscale: '#9bbb59',
-  singlescale: '#c0504d'
-};
-
-const defaultNodeColor = '#999';
-const selectionStrokeColor = '#333';
-const inliningStrokeColor = '#8e009b';
 
 const nodeSpacing = 160;
 const circleRadius = 24;
@@ -136,8 +126,8 @@ export class TreeView {
       .attr('y1', (d) => Number(d.source.y))
       .attr('x2', (d) => Number(d.target.x))
       .attr('y2', (d) => Number(d.target.y))
-      .attr('stroke', (d) => colors[d.source.data.omeNode.type] || defaultNodeColor)
-      .attr('fill', (d) => colors[d.source.data.omeNode.type] || defaultNodeColor)
+      .attr('stroke', (d) => NODE_COLORS[d.source.data.omeNode.type] || NODE_COLORS.default)
+      .attr('fill', (d) => NODE_COLORS[d.source.data.omeNode.type] || NODE_COLORS.default)
       .attr('marker-end', 'url(#arrow)');
 
     // Build a fast lookup map of computed coordinates
@@ -171,9 +161,9 @@ export class TreeView {
       .attr('cx', (d) => Number(d.x))
       .attr('cy', (d) => Number(d.y))
       .attr('r', circleRadius)
-      .attr('fill', (d) => colors[d.data.omeNode.type] || defaultNodeColor)
+      .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
       .style('cursor', 'pointer')
-      .attr('stroke', (d) => (d.data.loaded ? 'none' : inliningStrokeColor))
+      .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
       .attr('stroke-dasharray', (d) => (d.data.loaded ? 'none' : '10,5'))
       .attr('stroke-width', 2)
       .on('click', async (event, d) => {
@@ -194,7 +184,7 @@ export class TreeView {
       })
       .on('mouseenter', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', selectionStrokeColor);
+          d3.select(event.target).attr('stroke', STROKE_COLORS.selection);
           this.tooltip?.style('opacity', 1).html(`
             <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
             <strong>Name: </strong>${d.data.omeNode.name}<br>
@@ -207,7 +197,7 @@ export class TreeView {
       })
       .on('mouseleave', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', d.data.loaded ? 'none' : inliningStrokeColor);
+          d3.select(event.target).attr('stroke', d.data.loaded ? 'none' : STROKE_COLORS.inlining);
           this.tooltip?.style('opacity', 0);
         }
       });
