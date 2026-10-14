@@ -15,10 +15,26 @@
 }
 
 .ngff-rfc8-viewer-sidebar {
-  max-width: calc(100vw - 200px);
   height: 100%;
   display: flex;
   flex-direction: row;
+}
+
+@media (min-width: 769px) {
+  .ngff-rfc8-viewer-sidebar {
+    max-width: calc(100vw - 200px);
+  }
+
+  .ngff-rfc8-viewer-sidebar-resizer {
+    height: 100%;
+    min-width: 9px;
+    background: #6cafff;
+    cursor: e-resize;
+  }
+
+  .ngff-rfc8-viewer-sidebar.ngff-rfc8-viewer-has-error .ngff-rfc8-viewer-sidebar-resizer {
+    background: #ff8686;
+  }
 }
 
 /*
@@ -29,26 +45,22 @@ Show the "sidebar" below the graph
   .ngff-rfc8-viewer-container {
     flex-direction: column;
   }
+
   .ngff-rfc8-viewer-graph-container {
     flex-grow: 1;
     overflow: auto;
   }
+
   .ngff-rfc8-viewer-sidebar {
     width: 100%;
     min-width: 100%;
     flex: 0 0 350px;
+    max-height: calc(100vh - 300px);
   }
-}
 
-.ngff-rfc8-viewer-sidebar-resizer {
-  height: 100%;
-  min-width: 9px;
-  background: #6cafff;
-  cursor: e-resize;
-}
-
-.ngff-rfc8-viewer-sidebar.ngff-rfc8-viewer-has-error .ngff-rfc8-viewer-sidebar-resizer {
-  background: #ff8686;
+  .ngff-rfc8-viewer-sidebar.ngff-rfc8-viewer-has-error {
+    border-top: 6px #ff8686 solid;
+  }
 }
 
 .ngff-rfc8-viewer-sidebar-content {
@@ -212,6 +224,7 @@ Show the "sidebar" below the graph
   transition: transform 0.2s ease;
   margin-right: 3px;
 }
+
 .has-children.collapsed > button::before {
   transform: rotate(-90deg);
 }
