@@ -55,7 +55,7 @@ Show the "sidebar" below the graph
     width: 100%;
     min-width: 100%;
     flex: 0 0 350px;
-    max-height: calc(100vh - 300px);
+    max-height: calc(100vh - 500px);
   }
 
   .ngff-rfc8-viewer-sidebar.ngff-rfc8-viewer-has-error {
