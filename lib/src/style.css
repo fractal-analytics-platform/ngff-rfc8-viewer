@@ -11,31 +11,51 @@
 }
 
 .ngff-rfc8-viewer-sidebar {
-  width: 350px;
-  min-width: 350px;
+  max-width: calc(100vw - 200px);
   height: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+.ngff-rfc8-viewer-sidebar-resizer {
+  height: 100%;
+  min-width: 9px;
+  background: #6cafff;
+  cursor: e-resize;
+}
+
+.ngff-rfc8-viewer-sidebar.ngff-rfc8-viewer-has-error .ngff-rfc8-viewer-sidebar-resizer {
+  background: #ff8686;
+}
+
+.ngff-rfc8-viewer-sidebar-content {
   color: #fff;
   background-color: rgb(65, 65, 65);
   padding: 0 15px;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: none;
+  flex-grow: 1;
 }
 
-.ngff-rfc8-viewer-sidebar div.ngff-rfc8-viewer-error {
-  margin-top: 30px;
+.ngff-rfc8-viewer-sidebar-content pre {
+  overflow-x: scroll;
+}
+
+.ngff-rfc8-viewer-sidebar-content div.ngff-rfc8-viewer-error {
+  margin-top: 10px;
   padding: 5px 10px;
   border-radius: 3px;
-  color: rgb(255, 132, 116);
-  background-color: rgb(63, 44, 41);
+  background-color: rgb(255, 200, 192);
+  color: #000;
   font-weight: bold;
 }
 
-.ngff-rfc8-viewer-sidebar pre.ngff-rfc8-viewer-error {
+.ngff-rfc8-viewer-sidebar-content pre.ngff-rfc8-viewer-error {
   margin-top: 10px;
   padding: 5px;
   border-radius: 3px;
   background-color: rgb(255, 200, 192);
   color: #000;
-  overflow-x: scroll;
 }
 
 .ngff-rfc8-viewer-alert {
@@ -63,6 +83,7 @@
   z-index: 99999;
   display: flex;
   align-items: center;
+  overflow-x: auto;
 }
 
 .ngff-rfc8-viewer-control-panel button {
