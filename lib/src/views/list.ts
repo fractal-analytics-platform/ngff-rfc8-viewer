@@ -10,7 +10,7 @@ const colors: Record<string, string> = {
 
 const defaultNodeColor = '#999';
 
-export class ListGraph {
+export class ListView {
   private graph: NGFFGraph;
   private containerId: string;
   private rootElement: HTMLDivElement;

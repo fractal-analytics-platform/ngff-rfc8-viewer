@@ -3,8 +3,8 @@ import NGFFControlPanel from './control';
 import { NGFFGraph } from './graph';
 import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
-import { TreeGraph } from './views/tree';
-import { ListGraph } from './views/list';
+import { TreeView } from './views/tree';
+import { ListView } from './views/list';
 
 const exampleSources = [
   [
@@ -84,8 +84,8 @@ export default class NGFFViewer {
       // Determine which view to use based on the query parameter
       const view =
         queryParams.get('view') === 'list'
-          ? new ListGraph(graph, graphContainer.id)
-          : new TreeGraph(graph, graphContainer.id);
+          ? new ListView(graph, graphContainer.id)
+          : new TreeView(graph, graphContainer.id);
       view.onNodeSelect((node) => {
         sidebarHandler.showInfo(node);
 

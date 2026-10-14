@@ -17,7 +17,7 @@ const nodeSpacing = 160;
 const circleRadius = 24;
 const arrowSize = 20;
 
-export class TreeGraph {
+export class TreeView {
   private graph: NGFFGraph;
   private width: number = 0;
   private height: number = 0;
