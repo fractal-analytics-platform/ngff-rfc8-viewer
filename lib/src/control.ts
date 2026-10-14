@@ -10,7 +10,7 @@ export default class NGFFControlPanel {
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
-  private viewSvgButton: HTMLButtonElement;
+  private viewTreeButton: HTMLButtonElement;
   private viewListButton: HTMLButtonElement;
 
   constructor(
@@ -40,18 +40,16 @@ export default class NGFFControlPanel {
     this.loadNextBtn.addEventListener('click', () => this.loadNext());
     element.appendChild(this.loadNextBtn);
 
-    element.appendChild(this.spinner);
-
-    this.viewSvgButton = document.createElement('button');
-    this.viewSvgButton.textContent = 'View SVG';
-    this.viewSvgButton.setAttribute('type', 'button');
-    this.viewSvgButton.addEventListener('click', () => {
+    this.viewTreeButton = document.createElement('button');
+    this.viewTreeButton.textContent = 'View Tree';
+    this.viewTreeButton.setAttribute('type', 'button');
+    this.viewTreeButton.addEventListener('click', () => {
       window.location.search = new URLSearchParams({
         ...Object.fromEntries(new URLSearchParams(window.location.search)),
-        view: 'svg'
+        view: 'tree'
       }).toString();
     });
-    element.appendChild(this.viewSvgButton);
+    element.appendChild(this.viewTreeButton);
 
     this.viewListButton = document.createElement('button');
     this.viewListButton.textContent = 'View List';
@@ -63,6 +61,8 @@ export default class NGFFControlPanel {
       }).toString();
     });
     element.appendChild(this.viewListButton);
+
+    element.appendChild(this.spinner);
   }
 
   async loadAll() {
