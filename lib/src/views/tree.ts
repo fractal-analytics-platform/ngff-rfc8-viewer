@@ -298,10 +298,9 @@ export class TreeView {
       height = height / scale;
     }
 
-    const svgElement = this.svg.node().cloneNode(true) as SVGSVGElement;
+    const svgElement = this.svg.node()!.cloneNode(true) as SVGSVGElement;
     const g = svgElement.querySelector('g') as SVGGElement;
-    const transform = g
-      .getAttribute('transform')
+    const transform = (g.getAttribute('transform') || '')
       .replace(/translate\([^)]*\)/, `translate(0,${k * CIRCLE_RADIUS})`)
       .replace(/scale\([^)]*\)/, `scale(${k})`);
     g.setAttribute('transform', transform);
@@ -335,9 +334,13 @@ export class TreeView {
     const img = new Image();
     img.onload = () => {
       try {
-        ctx.drawImage(img, 0, 0);
+        ctx?.drawImage(img, 0, 0);
         canvas.toBlob((blob) => {
-          this.downloadImage(blob, 'png');
+          if (blob !== null) {
+            this.downloadImage(blob, 'png');
+          } else {
+            this.showErrorAlert('Unable to draw the image');
+          }
         }, 'image/png');
       } catch (err) {
         this.showErrorAlert(err instanceof Error ? err.message : 'Unable to generate the image');
