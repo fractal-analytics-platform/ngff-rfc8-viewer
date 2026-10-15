@@ -317,17 +317,7 @@ export class TreeView {
     const svgElement = this.buildExportableSVG();
     const svgString = new XMLSerializer().serializeToString(svgElement);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `tree-${Date.now()}.svg`;
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    URL.revokeObjectURL(url);
+    this.downloadImage(blob, 'svg');
   }
 
   async exportPNG() {
@@ -347,15 +337,7 @@ export class TreeView {
       try {
         ctx.drawImage(img, 0, 0);
         canvas.toBlob((blob) => {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `tree-${Date.now()}.png`;
-
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
+          this.downloadImage(blob, 'png');
         }, 'image/png');
       } catch (err) {
         this.showErrorAlert(err instanceof Error ? err.message : 'Unable to generate the image');
@@ -365,5 +347,17 @@ export class TreeView {
     // Trigger image onload
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     img.src = URL.createObjectURL(blob);
+  }
+
+  private downloadImage(blob: Blob, extension: string) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tree-${Date.now()}.${extension}`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 }
