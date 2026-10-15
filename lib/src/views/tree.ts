@@ -3,10 +3,10 @@ import type { D3Node, OmeNode, OmePath } from '../types';
 import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from '../constants';
 import type { NGFFGraph } from '../graph';
 
-const nodeSpacing = 160;
-const circleRadius = 24;
-const arrowSize = 20;
-const maxExportSize = 16384;
+const NODE_SPACING = 160;
+const CIRCLE_RADIUS = 24;
+const ARROW_SIZE = 20;
+const MAX_EXPORT_SIZE = 16384;
 
 export class TreeView {
   private graph: NGFFGraph;
@@ -89,8 +89,8 @@ export class TreeView {
 
   renderTree() {
     const hierarchy = this.graph.getHierarchy();
-    this.width = Math.max(800, hierarchy.leaves().length * nodeSpacing);
-    this.height = Math.max(1, hierarchy.height) * nodeSpacing;
+    this.width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
+    this.height = Math.max(1, hierarchy.height) * NODE_SPACING;
     // We only want to set the viewBox on the first render
     if (!this.svg.attr('viewBox')) {
       this.svg.attr('viewBox', `0 0 ${this.width} ${this.height}`);
@@ -99,7 +99,7 @@ export class TreeView {
     const treeLayout = d3
       .tree<D3Node>()
       .size([this.width, this.height])
-      .separation(() => nodeSpacing);
+      .separation(() => NODE_SPACING);
     treeLayout(this.graph.getHierarchy());
 
     const descendants = this.graph.getHierarchy().descendants();
@@ -111,7 +111,7 @@ export class TreeView {
     const tree = zoomLayer.append('g');
 
     const minZoom = 0.1;
-    const maxZoom = Math.max(2, this.width / nodeSpacing / 5);
+    const maxZoom = Math.max(2, this.width / NODE_SPACING / 5);
 
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
@@ -126,14 +126,14 @@ export class TreeView {
       .append('defs')
       .append('marker')
       .attr('id', 'arrow')
-      .attr('viewBox', `0 0 ${arrowSize} ${arrowSize}`)
-      .attr('refX', arrowSize + circleRadius)
-      .attr('refY', arrowSize / 2)
-      .attr('markerWidth', arrowSize)
-      .attr('markerHeight', arrowSize)
+      .attr('viewBox', `0 0 ${ARROW_SIZE} ${ARROW_SIZE}`)
+      .attr('refX', ARROW_SIZE + CIRCLE_RADIUS)
+      .attr('refY', ARROW_SIZE / 2)
+      .attr('markerWidth', ARROW_SIZE)
+      .attr('markerHeight', ARROW_SIZE)
       .attr('orient', 'auto')
       .append('path')
-      .attr('d', `M 0 0 L ${arrowSize} ${arrowSize / 2} L 0 ${arrowSize} z`)
+      .attr('d', `M 0 0 L ${ARROW_SIZE} ${ARROW_SIZE / 2} L 0 ${ARROW_SIZE} z`)
       .attr('fill', 'context-fill');
 
     tree
@@ -169,7 +169,7 @@ export class TreeView {
       .attr('y2', (d) => Number(d.target.y))
       .attr('fill', '#e1b12c')
       .attr('stroke', '#e1b12c')
-      .attr('stroke-dasharray', `${arrowSize / 3}, ${arrowSize / 3}`)
+      .attr('stroke-dasharray', `${ARROW_SIZE / 3}, ${ARROW_SIZE / 3}`)
       .attr('marker-end', 'url(#arrow)');
 
     tree
@@ -179,7 +179,7 @@ export class TreeView {
       .append('circle')
       .attr('cx', (d) => Number(d.x))
       .attr('cy', (d) => Number(d.y))
-      .attr('r', circleRadius)
+      .attr('r', CIRCLE_RADIUS)
       .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
       .style('cursor', 'pointer')
       .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
@@ -238,7 +238,7 @@ export class TreeView {
       .append('text')
       .attr('class', 'node-label')
       .attr('x', (d) => Number(d.x))
-      .attr('y', (d) => Number(d.y) + 2 * circleRadius + 5)
+      .attr('y', (d) => Number(d.y) + 2 * CIRCLE_RADIUS + 5)
       .attr('text-anchor', 'middle')
       .each(function (d) {
         // split long labels on multiple lines
@@ -287,12 +287,12 @@ export class TreeView {
     // Recompute initial dimensions
     const hierarchy = this.graph.getHierarchy();
     let k = 1;
-    let width = Math.max(800, hierarchy.leaves().length * nodeSpacing);
-    let height = (Math.max(1, hierarchy.height) + 1) * nodeSpacing;
+    let width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
+    let height = (Math.max(1, hierarchy.height) + 1) * NODE_SPACING;
 
     // Rescale to fit max allowed size
-    if (width > maxExportSize || height > maxExportSize) {
-      const scale = Math.max(width, height) / maxExportSize;
+    if (width > MAX_EXPORT_SIZE || height > MAX_EXPORT_SIZE) {
+      const scale = Math.max(width, height) / MAX_EXPORT_SIZE;
       k = k / scale;
       width = width / scale;
       height = height / scale;
@@ -302,7 +302,7 @@ export class TreeView {
     const g = svgElement.querySelector('g') as SVGGElement;
     const transform = g
       .getAttribute('transform')
-      .replace(/translate\([^)]*\)/, `translate(0,${k * circleRadius})`)
+      .replace(/translate\([^)]*\)/, `translate(0,${k * CIRCLE_RADIUS})`)
       .replace(/scale\([^)]*\)/, `scale(${k})`);
     g.setAttribute('transform', transform);
     svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
