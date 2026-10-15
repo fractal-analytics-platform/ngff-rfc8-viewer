@@ -6,6 +6,7 @@ import type { NGFFGraph } from '../graph';
 const nodeSpacing = 160;
 const circleRadius = 24;
 const arrowSize = 20;
+const maxExportSize = 16384;
 
 export class TreeView {
   private graph: NGFFGraph;
@@ -57,6 +58,21 @@ export class TreeView {
     graph.onError((message) =>
       message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
     );
+
+    const exportButtons = d3
+      .select(`#${containerId}`)
+      .append('div')
+      .attr('class', 'export-buttons');
+
+    exportButtons
+      .append('button')
+      .text('Export SVG')
+      .on('click', () => this.exportSVG());
+
+    exportButtons
+      .append('button')
+      .text('Export PNG')
+      .on('click', () => this.exportPNG());
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
@@ -265,5 +281,89 @@ export class TreeView {
 
   hideErrorAlert() {
     this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, true);
+  }
+
+  private buildExportableSVG() {
+    // Recompute initial dimensions
+    const hierarchy = this.graph.getHierarchy();
+    let k = 1;
+    let width = Math.max(800, hierarchy.leaves().length * nodeSpacing);
+    let height = (Math.max(1, hierarchy.height) + 1) * nodeSpacing;
+
+    // Rescale to fit max allowed size
+    if (width > maxExportSize || height > maxExportSize) {
+      const scale = Math.max(width, height) / maxExportSize;
+      k = k / scale;
+      width = width / scale;
+      height = height / scale;
+    }
+
+    const svgElement = this.svg.node().cloneNode(true) as SVGSVGElement;
+    const g = svgElement.querySelector('g') as SVGGElement;
+    const transform = g
+      .getAttribute('transform')
+      .replace(/translate\([^)]*\)/, `translate(0,${k * circleRadius})`)
+      .replace(/scale\([^)]*\)/, `scale(${k})`);
+    g.setAttribute('transform', transform);
+    svgElement.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    svgElement.setAttribute('width', String(width));
+    svgElement.setAttribute('height', String(height));
+
+    return svgElement;
+  }
+
+  exportSVG() {
+    const svgElement = this.buildExportableSVG();
+    const svgString = new XMLSerializer().serializeToString(svgElement);
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `tree-${Date.now()}.svg`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+  }
+
+  async exportPNG() {
+    const svgElement = this.buildExportableSVG();
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = Number(svgElement.getAttribute('width'));
+    canvas.height = Number(svgElement.getAttribute('height'));
+
+    const svgString = new XMLSerializer().serializeToString(svgElement);
+
+    // Create an image from the SVG
+    const img = new Image();
+    img.onload = () => {
+      try {
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `tree-${Date.now()}.png`;
+
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 'image/png');
+      } catch (err) {
+        this.showErrorAlert(err instanceof Error ? err.message : 'Unable to generate the image');
+      }
+    };
+
+    // Trigger image onload
+    const blob = new Blob([svgString], { type: 'image/svg+xml' });
+    img.src = URL.createObjectURL(blob);
   }
 }
