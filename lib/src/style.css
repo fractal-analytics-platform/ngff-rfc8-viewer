@@ -2,6 +2,10 @@
   box-sizing: border-box;
 }
 
+body {
+  font-family: Arial, sans-serif;
+}
+
 .ngff-rfc8-viewer-container {
   position: relative;
   width: 100%;
