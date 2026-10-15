@@ -320,7 +320,7 @@ export class TreeView {
     this.downloadImage(blob, 'svg');
   }
 
-  async exportPNG() {
+  exportPNG() {
     const svgElement = this.buildExportableSVG();
 
     const canvas = document.createElement('canvas');
