@@ -5,6 +5,7 @@ import type { D3Node } from './types';
 const defaultWidth = 560;
 const minWidth = 150;
 const minSpace = 100;
+const smallScreenBreakpoint = 768;
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -72,6 +73,9 @@ export class NGFFSidebar {
 
   private setWidth(width: number) {
     const viewportWidth = document.documentElement.clientWidth;
+    if (viewportWidth <= smallScreenBreakpoint) {
+      return;
+    }
     if (width > viewportWidth - minSpace) {
       width = viewportWidth - minSpace;
     }
