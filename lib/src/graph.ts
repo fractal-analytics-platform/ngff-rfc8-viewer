@@ -119,7 +119,7 @@ export class NGFFGraph {
 
     if (this.autoloadDepth > 0) {
       this.signalLoading(true);
-      await this.recusiveLoad(this.autoloadDepth);
+      await this.recursiveLoad(this.autoloadDepth);
       this.signalLoading(false);
     }
 
@@ -191,7 +191,7 @@ export class NGFFGraph {
     return currentNode!;
   }
 
-  async recusiveLoad(autoloadDepth: number) {
+  async recursiveLoad(autoloadDepth: number) {
     if (autoloadDepth === Infinity || autoloadDepth > 0) {
       let loaded = false;
       for (const leave of this.hierarchy!.leaves()) {
@@ -204,7 +204,7 @@ export class NGFFGraph {
         }
       }
       if (loaded) {
-        await this.recusiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
+        await this.recursiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
       }
     }
   }
