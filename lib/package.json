@@ -9,7 +9,7 @@
     "test": "vitest",
     "lint": "prettier --check . && eslint .",
     "format": "prettier --write .",
-    "pre-commit": "lint-staged"
+    "pre-commit": "tsc && lint-staged"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
