@@ -263,8 +263,11 @@ export class NGFFGraph {
   }
 
   resolvePath(parentPath: string, path: string) {
-    if (!path.startsWith('./') || path.includes('..')) {
+    if (!(path.startsWith('./') || path.startsWith('http')) || path.includes('..')) {
       throw new Error(`Unsupported path "${path}"`);
+    }
+    if (path.startsWith('http')) {
+      return path;
     }
     parentPath = parentPath.replace(/^\.\//, '').replace(/\/$/, '');
     path = path.replace(/^\.\//, '').replace(/\/$/, '');
