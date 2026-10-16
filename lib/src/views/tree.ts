@@ -127,7 +127,7 @@ export class TreeView {
       .append('marker')
       .attr('id', 'arrow')
       .attr('viewBox', `0 0 ${ARROW_SIZE} ${ARROW_SIZE}`)
-      .attr('refX', ARROW_SIZE + CIRCLE_RADIUS)
+      .attr('refX', ARROW_SIZE)
       .attr('refY', ARROW_SIZE / 2)
       .attr('markerWidth', ARROW_SIZE)
       .attr('markerHeight', ARROW_SIZE)
@@ -143,10 +143,28 @@ export class TreeView {
       .append('line')
       .attr('x1', (d) => Number(d.source.x))
       .attr('y1', (d) => Number(d.source.y))
-      .attr('x2', (d) => Number(d.target.x))
-      .attr('y2', (d) => Number(d.target.y))
-      .attr('stroke', (d) => NODE_COLORS[d.source.data.omeNode.type] || NODE_COLORS.default)
-      .attr('fill', (d) => NODE_COLORS[d.source.data.omeNode.type] || NODE_COLORS.default)
+      // just draw line to the edge of the target circle
+      .attr('x2', (d) => {
+        const lineDx = Number(d.target.x) - Number(d.source.x);
+        const lineDy = Number(d.target.y) - Number(d.source.y);
+        const lineLength = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+        const offsetX = (lineDx / lineLength) * CIRCLE_RADIUS;
+        return Number(d.target.x) - offsetX;
+      })
+      .attr('y2', (d) => {
+        const lineDx = Number(d.target.x) - Number(d.source.x);
+        const lineDy = Number(d.target.y) - Number(d.source.y);
+        const lineLength = Math.sqrt(lineDx * lineDx + lineDy * lineDy);
+        const offsetY = (lineDy / lineLength) * CIRCLE_RADIUS;
+        return Number(d.target.y) - offsetY;
+      })
+      // if the child (target) has a path, it is considered "remote" (different file from it's parent)
+      .attr('stroke', (d) =>
+        'path' in d.target.data.omeNode ? STROKE_COLORS.remote : STROKE_COLORS.local
+      )
+      .attr('fill', (d) =>
+        'path' in d.target.data.omeNode ? STROKE_COLORS.remote : STROKE_COLORS.local
+      )
       .attr('marker-end', 'url(#arrow)');
 
     // Build a fast lookup map of computed coordinates
@@ -181,6 +199,7 @@ export class TreeView {
       .attr('cy', (d) => Number(d.y))
       .attr('r', CIRCLE_RADIUS)
       .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
+      .attr('opacity', (d) => (d.data.loaded ? 1 : 0.4))
       .style('cursor', 'pointer')
       .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
       .attr('stroke-dasharray', (d) => (d.data.loaded ? 'none' : '10,5'))

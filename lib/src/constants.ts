@@ -9,5 +9,7 @@ export const NODE_COLORS: Record<string, string> = {
 
 export const STROKE_COLORS: Record<string, string> = {
   selection: '#333',
-  inlining: '#8e009b'
+  inlining: '#8e009b',
+  remote: '#ddd',
+  local: '#555'
 };
