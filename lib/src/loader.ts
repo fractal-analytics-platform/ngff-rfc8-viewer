@@ -34,7 +34,7 @@ export class NGFFLoader {
   async loadNode(source: string): Promise<OmeNode> {
     if (source.startsWith('./')) {
       source = `${this.prefix}${source.substring(1)}`;
-    } else if (!source.startsWith(this.prefix)) {
+    } else if (!(source.startsWith(this.prefix) || source.startsWith('http'))) {
       throw new Error(`Unable to load ${source}: URL doesn't start with ${this.prefix}`);
     }
     const response = await fetch(source, {
