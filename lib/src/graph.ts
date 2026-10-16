@@ -239,10 +239,7 @@ export class NGFFGraph {
               this.resolvePath(node.resolvedPath, `${node.omeNode.path.path}/zarr.json`)
             );
             this.updateNode(node, ome);
-            this.appendSubtree(
-              ome,
-              this.resolvePath(node.resolvedPath, node.omeNode.path.path)
-            );
+            this.appendSubtree(ome, this.resolvePath(node.resolvedPath, node.omeNode.path.path));
           }
           break;
         default:
