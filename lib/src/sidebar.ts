@@ -90,6 +90,10 @@ export class NGFFSidebar {
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
 
+    if ('path' in node.omeNode) {
+      this.addKeyValue('Path', `${node.omeNode.path?.path} (type: ${node.omeNode.path?.type})`);
+    }
+
     if (node.omeNode.attributes) {
       this.addTitle('Attributes');
       const pre = document.createElement('pre');

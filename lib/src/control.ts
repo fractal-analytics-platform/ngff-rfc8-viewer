@@ -69,7 +69,7 @@ export default class NGFFControlPanel {
     this.sidebar.hide();
     this.setLoadingState();
     try {
-      await this.graph.recusiveLoad(Infinity);
+      await this.graph.recursiveLoad(Infinity);
       this.view.renderTree();
     } finally {
       this.unsetLoadingState();
@@ -80,7 +80,7 @@ export default class NGFFControlPanel {
     this.sidebar.hide();
     this.setLoadingState();
     try {
-      await this.graph.recusiveLoad(1);
+      await this.graph.recursiveLoad(1);
       this.view.renderTree();
     } finally {
       this.unsetLoadingState();

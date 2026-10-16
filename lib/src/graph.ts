@@ -119,7 +119,7 @@ export class NGFFGraph {
 
     if (this.autoloadDepth > 0) {
       this.signalLoading(true);
-      await this.recusiveLoad(this.autoloadDepth);
+      await this.recursiveLoad(this.autoloadDepth);
       this.signalLoading(false);
     }
 
@@ -191,7 +191,7 @@ export class NGFFGraph {
     return currentNode!;
   }
 
-  async recusiveLoad(autoloadDepth: number) {
+  async recursiveLoad(autoloadDepth: number) {
     if (autoloadDepth === Infinity || autoloadDepth > 0) {
       let loaded = false;
       for (const leave of this.hierarchy!.leaves()) {
@@ -204,7 +204,7 @@ export class NGFFGraph {
         }
       }
       if (loaded) {
-        await this.recusiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
+        await this.recursiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
       }
     }
   }
@@ -225,8 +225,9 @@ export class NGFFGraph {
           {
             const resolvedPath = this.resolvePath(node.resolvedPath, node.omeNode.path.path);
             const ome = await this.loader.loadNode(resolvedPath);
+            // just updates the 'attributes' from ome - NOT the child ome.nodes
             this.updateNode(node, ome);
-            await this.appendSubtree(
+            this.appendSubtree(
               ome,
               resolvedPath.substring(0, resolvedPath.search(/\/[^/]+\.json$/))
             );
@@ -238,10 +239,7 @@ export class NGFFGraph {
               this.resolvePath(node.resolvedPath, `${node.omeNode.path.path}/zarr.json`)
             );
             this.updateNode(node, ome);
-            await this.appendSubtree(
-              ome,
-              this.resolvePath(node.resolvedPath, node.omeNode.path.path)
-            );
+            this.appendSubtree(ome, this.resolvePath(node.resolvedPath, node.omeNode.path.path));
           }
           break;
         default:
@@ -273,7 +271,7 @@ export class NGFFGraph {
     return parentPath ? `./${parentPath}/${path}` : `./${path}`;
   }
 
-  async appendSubtree(ome: OmeNode, resolvedPath: string) {
+  appendSubtree(ome: OmeNode, resolvedPath: string) {
     const nodes: Array<D3Node> = [];
     const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
     this.walk(nodes, ome, null, resolvedPath, extraEdges);
