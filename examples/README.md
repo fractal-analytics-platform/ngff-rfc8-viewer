@@ -22,3 +22,12 @@ uv run example2
 
 Explore at
 https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json
+
+
+
+## Example 3
+
+This is a collection of 2 nodes, each using a `https` path to refer to the above 2 examples.
+
+Explore at
+https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/?source=https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example3/root.json
