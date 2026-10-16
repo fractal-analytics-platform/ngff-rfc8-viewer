@@ -1,0 +1,28 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "collection",
+    "name": "http_collection",
+    "id": "http_collection",
+    "nodes": [
+      {
+        "type": "collection",
+        "name": "example1",
+        "id": "example1",
+        "path": {
+          "type": "json",
+          "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json"
+        }
+      },
+      {
+        "type": "collection",
+        "name": "example2",
+        "id": "example2",
+        "path": {
+          "type": "json",
+          "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json"
+        }
+      }
+    ]
+  }
+}
