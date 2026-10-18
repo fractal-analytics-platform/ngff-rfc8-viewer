@@ -1,6 +1,7 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
+import { createThumbnailImg } from './thumbnail';
 
 const defaultWidth = 560;
 const minWidth = 150;
@@ -89,6 +90,10 @@ export class NGFFSidebar {
     this.addKeyValue('Id', node.omeNode.id || '-');
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
+
+    if (node.omeNode.type == 'multiscale') {
+      this.content.appendChild(createThumbnailImg(node));
+    }
 
     if ('path' in node.omeNode) {
       this.addKeyValue('Path', `${node.omeNode.path?.path} (type: ${node.omeNode.path?.type})`);

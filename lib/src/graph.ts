@@ -104,9 +104,6 @@ export class NGFFGraph {
 
   private getBasicOmeNode(node: OmeNode): OmeNode {
     const nodeCopy = { ...node };
-    if ('nodes' in nodeCopy) {
-      nodeCopy.nodes = [];
-    }
     if ('generatedId' in nodeCopy) {
       delete nodeCopy['generatedId'];
     }

@@ -253,3 +253,43 @@ Show the "sidebar" below the graph
 .node-element.collapsed .node-element {
   display: none;
 }
+
+/* Thumbnail container styles */
+
+.thumbnail-container {
+  display: inline-block;
+}
+
+.spinner {
+  position: relative;
+}
+.spinner img {
+  background-color: #ddd;
+  width: 100px;
+  height: 100px;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner:after {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin-top: -20px;
+  margin-left: -20px;
+  border-radius: 50%;
+  border: 3px solid rgba(180, 180, 180, 0.6);
+  border-top-color: rgba(0, 0, 0, 0.6);
+  animation: spinner 1s linear infinite;
+}
+.thumbnail {
+  border-radius: 5px;
+}
