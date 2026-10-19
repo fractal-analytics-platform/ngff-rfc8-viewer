@@ -62,20 +62,29 @@ export function createThumbnailImg(node: D3Node, width: number = defaultWidth): 
   container.classList.add('thumbnail-container');
   container.appendChild(imgElement);
 
-  omezarr.NgffImage.load(store, { attrs: v05Attrs }).then(async (ngffImg) => {
-    // render the thumbnail image
-    const rfc8Src = await ngffImg.render({ targetSize: 200, autoBoost: true });
-    imgElement.src = rfc8Src;
-    container.classList.remove('spinner');
-    // add other info to tooltip
-    const scaleInfo = await ngffImg.getScales();
-    const shapeInfo = await ngffImg.getShape();
-    const calcShapesInfo = await ngffImg.calcShapes();
-    const tooltip = `Full-size Shape: ${JSON.stringify(shapeInfo)}
+  omezarr.NgffImage.load(store, { attrs: v05Attrs })
+    .then(async (ngffImg) => {
+      // render the thumbnail image
+      const rfc8Src = await ngffImg.render({ targetSize: 200, autoBoost: true });
+      imgElement.src = rfc8Src;
+      container.classList.remove('spinner');
+      // add other info to tooltip
+      const scaleInfo = await ngffImg.getScales();
+      const shapeInfo = await ngffImg.getShape();
+      const calcShapesInfo = await ngffImg.calcShapes();
+      const tooltip = `Full-size Shape: ${JSON.stringify(shapeInfo)}
 Scales: ${JSON.stringify(scaleInfo)}
 Shapes from Scales: ${JSON.stringify(calcShapesInfo)}`;
-    imgElement.title = tooltip;
-  });
+      imgElement.title = tooltip;
+    })
+    .catch((error) => {
+      // handle error by displaying a 'X' and add an error message to the tooltip
+      console.error('Error loading NGFF image:', error);
+      imgElement.title = error.toString();
+      container.classList.remove('spinner');
+      container.classList.add('thumbnail-error');
+      container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
+    });
 
   return container;
 }
