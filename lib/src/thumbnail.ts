@@ -63,9 +63,18 @@ export function createThumbnailImg(node: D3Node, width: number = defaultWidth): 
   container.appendChild(imgElement);
 
   omezarr.NgffImage.load(store, { attrs: v05Attrs }).then(async (ngffImg) => {
+    // render the thumbnail image
     const rfc8Src = await ngffImg.render({ targetSize: 200, autoBoost: true });
     imgElement.src = rfc8Src;
     container.classList.remove('spinner');
+    // add other info to tooltip
+    const scaleInfo = await ngffImg.getScales();
+    const shapeInfo = await ngffImg.getShape();
+    const calcShapesInfo = await ngffImg.calcShapes();
+    const tooltip = `Full-size Shape: ${JSON.stringify(shapeInfo)}
+Scales: ${JSON.stringify(scaleInfo)}
+Shapes from Scales: ${JSON.stringify(calcShapesInfo)}`;
+    imgElement.title = tooltip;
   });
 
   return container;
