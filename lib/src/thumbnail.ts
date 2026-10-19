@@ -5,8 +5,6 @@ import * as zarr from 'zarrita';
 const defaultWidth = 200;
 
 export function createThumbnailImg(node: D3Node, width: number = defaultWidth): HTMLDivElement {
-  console.log('Creating thumbnail for node:', node);
-
   const storePath = node.resolvedPath;
   const store = new zarr.FetchStore(storePath);
 
@@ -53,11 +51,13 @@ export function createThumbnailImg(node: D3Node, width: number = defaultWidth): 
 
   const imgElement = document.createElement('img');
   imgElement.classList.add('thumbnail');
-  imgElement.width = width;
   // set initial source for the image to data:url for a blank image
   imgElement.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
 
   const container = document.createElement('div');
+  // set the container's width and height - css will 'fit' the image within it
+  container.style.width = `${width}px`;
+  container.style.height = `${width}px`;
   container.classList.add('spinner');
   container.classList.add('thumbnail-container');
   container.appendChild(imgElement);

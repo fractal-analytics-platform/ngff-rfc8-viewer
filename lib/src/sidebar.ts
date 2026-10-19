@@ -91,8 +91,9 @@ export class NGFFSidebar {
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
 
+    // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type == 'multiscale') {
-      this.content.appendChild(createThumbnailImg(node));
+      this.content.appendChild(createThumbnailImg(node, 150));
     }
 
     if ('path' in node.omeNode) {

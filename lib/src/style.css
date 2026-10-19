@@ -258,15 +258,19 @@ Show the "sidebar" below the graph
 
 .thumbnail-container {
   display: inline-block;
+  border-radius: 5px;
+}
+.thumbnail-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center center;
+  display: block;
+  border-radius: 5px;
 }
 
 .spinner {
   position: relative;
-}
-.spinner img {
-  background-color: #ddd;
-  width: 100px;
-  height: 100px;
 }
 
 @keyframes spinner {
@@ -289,7 +293,4 @@ Show the "sidebar" below the graph
   border: 3px solid rgba(180, 180, 180, 0.6);
   border-top-color: rgba(0, 0, 0, 0.6);
   animation: spinner 1s linear infinite;
-}
-.thumbnail {
-  border-radius: 5px;
 }
