@@ -85,7 +85,7 @@ export class NGFFGraph {
       omeNode: this.getBasicOmeNode(node),
       parentId: parentId,
       loading: false,
-      loaded: !('path' in node) || node.type === 'singlescale',
+      loaded: !('path' in node),
       resolvedPath,
       error: false,
       collapsed: false
@@ -214,7 +214,7 @@ export class NGFFGraph {
   }
 
   async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
-    if (node.loading || node.loaded || node.error) {
+    if (node.loading || node.loaded || node.error || node.omeNode.type == 'singlescale') {
       return;
     }
     this.signalError(null);
