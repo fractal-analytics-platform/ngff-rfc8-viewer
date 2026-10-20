@@ -197,7 +197,7 @@ export class NGFFGraph {
       for (const leave of this.hierarchy!.leaves()) {
         if ('path' in leave.data.omeNode) {
           const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
-          if (!node.loaded && !node.error) {
+          if (!node.loaded && !node.error && !(node.omeNode.type == 'singlescale')) {
             await this.loadNode(node);
             loaded = true;
           }
