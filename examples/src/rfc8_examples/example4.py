@@ -92,13 +92,13 @@ def main():
     root_collection_path.mkdir(parents=True, exist_ok=True)
 
     well = ngc.new_node(
-        "well",
+        "collection",
         name="Well A1",
         id=well_id,
         children=[
-            _get_image(name="Field 0", coord_system_id=coord_system_id),
-            _get_image(name="Field 1", coord_system_id=coord_system_id),
-            _get_image(name="Field 0 / registered", coord_system_id=coord_system_id),
+            _get_image(name="0", coord_system_id=coord_system_id),
+            _get_image(name="1", coord_system_id=coord_system_id),
+            _get_image(name="1 / registered", coord_system_id=coord_system_id),
             _get_image(name="Nuclei label", coord_system_id=coord_system_id),
             # TODO: Add table here
         ],
@@ -110,7 +110,7 @@ def main():
     print(f"{well_ref=}")
 
     plate = ngc.new_node(
-        "plate",
+        "collection",
         name="Plate",
         id=plate_id,
         children=[],
@@ -118,7 +118,6 @@ def main():
 
     url = str(root_collection_path / "plate/plate.json")
     ngc.create(url, plate, overwrite=True)
-    print("plate created")
 
     collection = ngc.new_node(
         "collection",
