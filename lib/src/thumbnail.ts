@@ -1,3 +1,4 @@
+import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node, SinglescaleOmeNode } from './types';
 import * as omezarr from 'ome-zarr.js';
 import * as zarr from 'zarrita';
@@ -5,20 +6,41 @@ import * as zarr from 'zarrita';
 const defaultWidth = 200;
 
 export function createThumbnailImg(node: D3Node, width: number = defaultWidth): HTMLDivElement {
+  const imgElement = document.createElement('img');
+  // set initial source for the image to data:url for a blank image
+  imgElement.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+
+  const container = document.createElement('div');
+  // set the container's width and height - css will 'fit' the image within it
+  container.style.width = `${width}px`;
+  container.style.height = `${width}px`;
+  container.classList.add(`${CSS_CLASS_PREFIX}spinner`);
+  container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-container`);
+  container.appendChild(imgElement);
+
+  function showError(error: string) {
+    imgElement.title = error;
+    container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
+    container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-error`);
+    container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
+  }
+
   const storePath = node.resolvedPath;
   const store = new zarr.FetchStore(storePath);
 
   const rfc8multiscales = node.omeNode;
   if (!('nodes' in rfc8multiscales) || rfc8multiscales.nodes?.length === 0) {
-    throw new Error('RFC8 multiscales node does not contain any nodes');
+    showError('RFC8 multiscale node does not contain any nodes');
+    return container;
   }
 
   const ssNodes = rfc8multiscales.nodes?.map((node) => node as SinglescaleOmeNode);
   if (!(ssNodes && ssNodes.length > 0)) {
-    throw new Error('No singlescale OME nodes found');
+    showError('No singlescale OME nodes found');
+    return container;
   }
 
-  const ds: omezarr.Dataset[] = ssNodes.map((node) => {
+  function createDataset(node: SinglescaleOmeNode): omezarr.Dataset {
     const scaleTransform = node.attributes.coordinateTransformations.find(
       (ct) => ct.type === 'scale'
     );
@@ -34,12 +56,11 @@ export function createThumbnailImg(node: D3Node, width: number = defaultWidth): 
         }
       ]
     };
-  });
+  }
 
-  const ds0 = ds[0];
   const ms: omezarr.Multiscale = {
     axes: rfc8multiscales.attributes?.coordinateSystems[0].axes,
-    datasets: [ds0]
+    datasets: ssNodes.map(createDataset) as [omezarr.Dataset, ...omezarr.Dataset[]]
   };
 
   const v05Attrs = {
@@ -49,25 +70,12 @@ export function createThumbnailImg(node: D3Node, width: number = defaultWidth): 
     }
   };
 
-  const imgElement = document.createElement('img');
-  imgElement.classList.add('thumbnail');
-  // set initial source for the image to data:url for a blank image
-  imgElement.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
-
-  const container = document.createElement('div');
-  // set the container's width and height - css will 'fit' the image within it
-  container.style.width = `${width}px`;
-  container.style.height = `${width}px`;
-  container.classList.add('spinner');
-  container.classList.add('thumbnail-container');
-  container.appendChild(imgElement);
-
   omezarr.NgffImage.load(store, { attrs: v05Attrs })
     .then(async (ngffImg) => {
       // render the thumbnail image
       const rfc8Src = await ngffImg.render({ targetSize: 200, autoBoost: true });
       imgElement.src = rfc8Src;
-      container.classList.remove('spinner');
+      container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
       // add other info to tooltip
       const scaleInfo = await ngffImg.getScales();
       const shapeInfo = await ngffImg.getShape();
@@ -81,8 +89,8 @@ Shapes from Scales: ${JSON.stringify(calcShapesInfo)}`;
       // handle error by displaying a 'X' and add an error message to the tooltip
       console.error('Error loading NGFF image:', error);
       imgElement.title = error.toString();
-      container.classList.remove('spinner');
-      container.classList.add('thumbnail-error');
+      container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
+      container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-error`);
       container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
     });
 

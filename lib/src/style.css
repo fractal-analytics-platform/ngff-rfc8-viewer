@@ -156,12 +156,27 @@ Show the "sidebar" below the graph
   background-color: rgb(249, 250, 251);
 }
 
-.ngff-rfc8-viewer-spinner {
-  background-image: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg class='spinner'%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='currentColor' stroke-width='10' stroke-dasharray='251 251' stroke-dashoffset='75' stroke-linecap='round' /%3E%3C/g%3E%3C/svg%3E");
+.ngff-rfc8-viewer-control-spinner {
   width: 20px;
   height: 20px;
   display: inline-block;
   margin-left: 10px;
+  position: relative;
+}
+
+.ngff-rfc8-viewer-spinner:after {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  margin-left: -10px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
   animation: spin 1s linear infinite;
 }
 
@@ -223,46 +238,48 @@ Show the "sidebar" below the graph
   overflow: auto;
 }
 
-.node-element {
+.ngff-rfc8-viewer-node-element {
   padding: 2px 2px 2px 20px;
 }
 
-.node-element button {
+.ngff-rfc8-viewer-node-element button {
   background-color: transparent;
   padding: 7px;
   border-radius: 5px;
   border: solid 1px transparent;
 }
 
-.node-element button:hover {
+.ngff-rfc8-viewer-node-element button:hover {
   background-color: rgba(0, 0, 0, 0.05);
   border-color: rgba(0, 0, 0, 0.1);
 }
 
-.has-children > button::before {
+.ngff-rfc8-viewer-has-children > button::before {
   content: '▼ ';
   display: inline-block;
   transition: transform 0.2s ease;
   margin-right: 3px;
 }
 
-.has-children.collapsed > button::before {
+.ngff-rfc8-viewer-has-children.collapsed > button::before {
   transform: rotate(-90deg);
 }
 
-.node-element.collapsed .node-element {
+.ngff-rfc8-viewer-node-element.collapsed .ngff-rfc8-viewer-node-element {
   display: none;
 }
 
 /* Thumbnail container styles */
 
-.thumbnail-container {
+.ngff-rfc8-viewer-thumbnail-container {
   display: inline-block;
   border-radius: 5px;
   background-color: #ccc;
   position: relative;
+  /* color for the spinner */
+  color: #777;
 }
-.thumbnail-container img {
+.ngff-rfc8-viewer-thumbnail-container img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -271,33 +288,7 @@ Show the "sidebar" below the graph
   border-radius: 5px;
 }
 
-.spinner {
-  position: relative;
-}
-
-@keyframes spinner {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-.spinner:after {
-  content: '';
-  box-sizing: border-box;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 40px;
-  height: 40px;
-  margin-top: -20px;
-  margin-left: -20px;
-  border-radius: 50%;
-  border: 3px solid rgba(180, 180, 180, 0.6);
-  border-top-color: rgba(0, 0, 0, 0.6);
-  animation: spinner 1s linear infinite;
-}
-
-.thumbnail-error div {
+.ngff-rfc8-viewer-thumbnail-error div {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -306,6 +297,6 @@ Show the "sidebar" below the graph
   color: #bbb;
   pointer-events: none;
 }
-.thumbnail-error img {
+.ngff-rfc8-viewer-thumbnail-error img {
   position: absolute;
 }

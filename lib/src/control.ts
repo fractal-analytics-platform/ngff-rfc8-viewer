@@ -26,7 +26,11 @@ export default class NGFFControlPanel {
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
 
     this.spinner = document.createElement('div');
-    this.spinner.classList.add(`${CSS_CLASS_PREFIX}spinner`, `${CSS_CLASS_PREFIX}hide`);
+    this.spinner.classList.add(
+      `${CSS_CLASS_PREFIX}control-spinner`,
+      `${CSS_CLASS_PREFIX}spinner`,
+      `${CSS_CLASS_PREFIX}hide`
+    );
 
     this.loadAllBtn = document.createElement('button');
     this.loadAllBtn.textContent = 'Load all nodes';
