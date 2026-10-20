@@ -1,11 +1,13 @@
-import ngio_collections as ngc
 import shutil
+
+import ngio_collections as ngc
 
 from rfc8_examples import BASE_PATH, get_uuid4
 
 NUM_COLLECTIONS = 3
 NUM_MULTISCALES = 5
 NUM_SINGLESCALES = 3
+
 
 def main():
     coord_system_id = get_uuid4()
@@ -42,12 +44,14 @@ def main():
                     singlescale_path = multiscale_path / str(ind_singlescale)
                     singlescale_path.mkdir(parents=True, exist_ok=True)
 
-                    scale_factor = 2.0 ** ind_singlescale
+                    scale_factor = 2.0**ind_singlescale
                     singlescale = ngc.new_node(
                         node_type="singlescale",
                         id=singlescale_id,
                         name=f"resolution {ind_singlescale}",
-                        ref=ngc.Reference(path=ngc.ZarrPath(path=f"./{ind_singlescale}")),
+                        ref=ngc.Reference(
+                            path=ngc.ZarrPath(path=f"./{ind_singlescale}")
+                        ),
                     ).set_attr(
                         ngc.CoordinateTransformationsAttribute(
                             [
@@ -61,25 +65,31 @@ def main():
                     )
                     singlescales.append(singlescale)
 
-                    singlescale_resolved = ngc.new_node(
-                        node_type="singlescale",
-                        id=singlescale_id,
-                        name=f"resolution {ind_singlescale}",
-                        children=[],
-                    ).set_attr(
-                        ngc.CoordinateTransformationsAttribute(
-                            [
-                                ngc.ScaleTransformation(
-                                    input=ngc.ReferenceObj(id=singlescale_id),
-                                    output=ngc.ReferenceObj(id=coord_system_id),
-                                    scale=[scale_factor, scale_factor],
-                                )
-                            ]
+                    singlescale_resolved = (
+                        ngc.new_node(
+                            node_type="singlescale",
+                            id=singlescale_id,
+                            name=f"resolution {ind_singlescale}",
+                            children=[],
                         )
-                    ).set_attr(ngc.WellAttribute(
-                        column=ngc.ReferenceObj(id="test"),
-                        row=ngc.ReferenceObj(id="test"),
-                    ))
+                        .set_attr(
+                            ngc.CoordinateTransformationsAttribute(
+                                [
+                                    ngc.ScaleTransformation(
+                                        input=ngc.ReferenceObj(id=singlescale_id),
+                                        output=ngc.ReferenceObj(id=coord_system_id),
+                                        scale=[scale_factor, scale_factor],
+                                    )
+                                ]
+                            )
+                        )
+                        .set_attr(
+                            ngc.WellAttribute(
+                                column=ngc.ReferenceObj(id="test"),
+                                row=ngc.ReferenceObj(id="test"),
+                            )
+                        )
+                    )
                     singlescale_path.mkdir(parents=True, exist_ok=True)
                     url = str(singlescale_path)
                     ngc.create(url, singlescale_resolved, overwrite=True)
