@@ -1,9 +1,18 @@
 import type { OmeNode } from './types';
 import { validateRequiredOmeStructure } from './validation';
 
+export class UntrustedDomainError extends Error {
+  domain: string;
+  constructor(domain: string) {
+    super(`The domain ${domain} is not trusted`);
+    this.domain = domain;
+  }
+}
+
 export class NGFFLoader {
   private source: string;
   private prefix: string;
+  private trustedDomains: string[] = [];
 
   constructor(source: string) {
     this.source = source;
@@ -14,28 +23,23 @@ export class NGFFLoader {
     this.prefix = this.source.endsWith('.json')
       ? this.source.substring(0, this.source.search(/\/[^/]+\.json$/))
       : this.source;
+
+    const url = this.checkUrl(this.source);
+    this.addTrustedDomain(url.hostname);
   }
 
   async loadGraphData(): Promise<OmeNode> {
-    let url: URL;
-    try {
-      url = new URL(this.source);
-    } catch {
-      throw new Error(`Unable to load data: source is not a valid URL`);
-    }
-
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      throw new Error(`Unable to load data: protocol ${url.protocol} is not supported`);
-    }
-
     return await this.loadNode(this.source);
   }
 
   async loadNode(source: string): Promise<OmeNode> {
     if (source.startsWith('./')) {
       source = `${this.prefix}${source.substring(1)}`;
-    } else if (!(source.startsWith(this.prefix) || source.startsWith('http'))) {
-      throw new Error(`Unable to load ${source}: URL doesn't start with ${this.prefix}`);
+    } else {
+      const url = this.checkUrl(source);
+      if (!this.trustedDomains.includes(url.hostname)) {
+        throw new UntrustedDomainError(url.hostname);
+      }
     }
     const response = await fetch(source, {
       mode: 'cors',
@@ -58,7 +62,26 @@ export class NGFFLoader {
     }
   }
 
-  getOme(data: any): OmeNode {
+  addTrustedDomain(domain: string) {
+    this.trustedDomains.push(domain);
+  }
+
+  private checkUrl(source: string) {
+    let url: URL;
+    try {
+      url = new URL(source);
+    } catch {
+      throw new Error(`Source is not a valid URL`);
+    }
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      throw new Error(`Protocol ${url.protocol} is not supported`);
+    }
+
+    return url;
+  }
+
+  private getOme(data: any): OmeNode {
     if ('ome' in data) {
       return data.ome;
     } else if ('attributes' in data && 'ome' in data.attributes) {
