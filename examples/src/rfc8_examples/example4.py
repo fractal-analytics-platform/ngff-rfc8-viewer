@@ -82,39 +82,54 @@ def _get_image(name: str, coord_system_id: str):
 
 def main():
     coord_system_id = get_uuid4()
-    collection_id = get_uuid4()
-    plate_id = get_uuid4()
-    well_id = get_uuid4()
 
     root_collection_path = BASE_PATH / "example4"
     if Path(root_collection_path).exists():
         shutil.rmtree(root_collection_path)
     root_collection_path.mkdir(parents=True, exist_ok=True)
 
-    well = ngc.new_node(
+    well_A1 = ngc.new_node(
         "collection",
         name="Well A1",
-        id=well_id,
+        id=get_uuid4(),
         children=[
             _get_image(name="0", coord_system_id=coord_system_id),
             _get_image(name="1", coord_system_id=coord_system_id),
-            _get_image(name="1 / registered", coord_system_id=coord_system_id),
-            _get_image(name="Nuclei label", coord_system_id=coord_system_id),
-            # TODO: Add table here
+            _get_image(name="0_corrected", coord_system_id=coord_system_id),
+            _get_image(name="1_corrected", coord_system_id=coord_system_id),
+            _get_image(name="nuclei_0", coord_system_id=coord_system_id),
+            _get_image(name="nuclei_1", coord_system_id=coord_system_id),
+            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_0_corrected"),
+            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_1_corrected"),
         ],
     )
-    print(f"{well=}")
+    well_A2 = ngc.new_node(
+        "collection",
+        name="Well A2",
+        id=get_uuid4(),
+        children=[
+            _get_image(name="0", coord_system_id=coord_system_id),
+            _get_image(name="1", coord_system_id=coord_system_id),
+            _get_image(name="0_corrected", coord_system_id=coord_system_id),
+            _get_image(name="1_corrected", coord_system_id=coord_system_id),
+            _get_image(name="nuclei_0", coord_system_id=coord_system_id),
+            _get_image(name="nuclei_1", coord_system_id=coord_system_id),
+            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_0_corrected"),
+            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_1_corrected"),
+        ],
+    )
 
     url = str(root_collection_path / "plate/well-A1/well.json")
-    well_ref = ngc.create(url, well, overwrite=True)
-    print(f"{well_ref=}")
+    well_A1_ref = ngc.create(url, well_A1, overwrite=True)
+    url = str(root_collection_path / "plate/well-A2/well.json")
+    well_A2_ref = ngc.create(url, well_A2, overwrite=True)
 
     plate = ngc.new_node(
         "collection",
         name="Plate",
-        id=plate_id,
+        id=get_uuid4(),
         children=[],
-    ).add_ref(well_ref)
+    ).add_ref(well_A1_ref, well_A2_ref)
 
     url = str(root_collection_path / "plate/plate.json")
     ngc.create(url, plate, overwrite=True)
@@ -122,7 +137,7 @@ def main():
     collection = ngc.new_node(
         "collection",
         name="My dataset",
-        id=collection_id,
+        id=get_uuid4(),
         children=[plate],
     )
 
