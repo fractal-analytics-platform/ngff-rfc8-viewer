@@ -10,8 +10,8 @@
         "name": "0",
         "id": "d6a82a95-1b92-4e0a-843c-def36840ff07",
         "path": {
-          "type": "json",
-          "path": "./0/image.json"
+          "type": "zarr",
+          "path": "./0"
         }
       },
       {
@@ -19,8 +19,8 @@
         "name": "1",
         "id": "573e8d77-550a-4889-8ff4-1e8d8944897c",
         "path": {
-          "type": "json",
-          "path": "./1/image.json"
+          "type": "zarr",
+          "path": "./1"
         }
       },
       {
@@ -28,8 +28,8 @@
         "name": "0_corrected",
         "id": "b3a1f131-5573-4e2d-8f9b-34c95653d4bd",
         "path": {
-          "type": "json",
-          "path": "./0_corrected/image.json"
+          "type": "zarr",
+          "path": "./0_corrected"
         }
       },
       {
@@ -37,8 +37,8 @@
         "name": "1_corrected",
         "id": "e0edeaf1-166d-4683-8609-dcba6fafc520",
         "path": {
-          "type": "json",
-          "path": "./1_corrected/image.json"
+          "type": "zarr",
+          "path": "./1_corrected"
         }
       },
       {
@@ -46,8 +46,8 @@
         "name": "nuclei_0",
         "id": "1a1f141b-72c5-4633-bb66-ecb350c1eb44",
         "path": {
-          "type": "json",
-          "path": "./nuclei_0/image.json"
+          "type": "zarr",
+          "path": "./nuclei_0"
         }
       },
       {
@@ -55,8 +55,8 @@
         "name": "nuclei_1",
         "id": "e81775f3-ca42-45f7-a051-e671246595df",
         "path": {
-          "type": "json",
-          "path": "./nuclei_1/image.json"
+          "type": "zarr",
+          "path": "./nuclei_1"
         }
       },
       {
@@ -64,8 +64,8 @@
         "name": "measurements_0_corrected",
         "id": "7823908d-43ec-4f85-ba17-a6a492cadf50",
         "path": {
-          "type": "json",
-          "path": "./measurements_0_corrected/image.json"
+          "type": "zarr",
+          "path": "./measurements_0_corrected"
         }
       },
       {
@@ -73,8 +73,8 @@
         "name": "measurements_1_corrected",
         "id": "4e1ad87e-c4cf-4b8a-8968-02f6d67c8720",
         "path": {
-          "type": "json",
-          "path": "./measurements_1_corrected/image.json"
+          "type": "zarr",
+          "path": "./measurements_1_corrected"
         }
       },
       {
@@ -82,8 +82,8 @@
         "name": "0",
         "id": "7ba35975-cd2e-4163-858c-2e6e57ed22d0",
         "path": {
-          "type": "json",
-          "path": "../well-A2/0/image.json"
+          "type": "zarr",
+          "path": "../well-A2/0"
         }
       },
       {
@@ -91,8 +91,8 @@
         "name": "1",
         "id": "f5e77d4d-cf30-4f2d-9097-a70286ee6241",
         "path": {
-          "type": "json",
-          "path": "../well-A2/1/image.json"
+          "type": "zarr",
+          "path": "../well-A2/1"
         }
       },
       {
@@ -100,8 +100,8 @@
         "name": "0_corrected",
         "id": "6f33f708-8343-4946-a56a-62c3c4ef7978",
         "path": {
-          "type": "json",
-          "path": "../well-A2/0_corrected/image.json"
+          "type": "zarr",
+          "path": "../well-A2/0_corrected"
         }
       },
       {
@@ -109,8 +109,8 @@
         "name": "1_corrected",
         "id": "d560f64b-e3dd-4ffa-98b4-85deaaaa1310",
         "path": {
-          "type": "json",
-          "path": "../well-A2/1_corrected/image.json"
+          "type": "zarr",
+          "path": "../well-A2/1_corrected"
         }
       },
       {
@@ -118,8 +118,8 @@
         "name": "nuclei_0",
         "id": "d8eb6412-0826-4069-8293-b3205fe0a658",
         "path": {
-          "type": "json",
-          "path": "../well-A2/nuclei_0/image.json"
+          "type": "zarr",
+          "path": "../well-A2/nuclei_0"
         }
       },
       {
@@ -127,8 +127,8 @@
         "name": "nuclei_1",
         "id": "7ca5d0ed-e9e4-42dd-9525-e9d3d1f7fbe4",
         "path": {
-          "type": "json",
-          "path": "../well-A2/nuclei_1/image.json"
+          "type": "zarr",
+          "path": "../well-A2/nuclei_1"
         }
       },
       {
@@ -136,8 +136,8 @@
         "name": "measurements_0_corrected",
         "id": "e2485bb6-6425-4e83-8de0-4a9e5640230e",
         "path": {
-          "type": "json",
-          "path": "../well-A2/measurements_0_corrected/image.json"
+          "type": "zarr",
+          "path": "../well-A2/measurements_0_corrected"
         }
       },
       {
@@ -145,8 +145,8 @@
         "name": "measurements_1_corrected",
         "id": "633d6624-74ee-4fd8-b91d-f46412c32f37",
         "path": {
-          "type": "json",
-          "path": "../well-A2/measurements_1_corrected/image.json"
+          "type": "zarr",
+          "path": "../well-A2/measurements_1_corrected"
         }
       }
     ]

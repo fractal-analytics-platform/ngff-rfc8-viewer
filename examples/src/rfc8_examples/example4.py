@@ -102,10 +102,10 @@ def main():
     images_A1_ref = []
     images_A2_ref = []
     for image in images_A1:
-        url = str(root_collection_path / f"plate/well-A1/{image.name}/image.json")
+        url = str(root_collection_path / f"plate/well-A1/{image.name}/zarr.json")
         images_A1_ref.append(ngc.create(url, image, overwrite=True))
     for image in images_A2:
-        url = str(root_collection_path / f"plate/well-A2/{image.name}/image.json")
+        url = str(root_collection_path / f"plate/well-A2/{image.name}/zarr.json")
         images_A1_ref.append(ngc.create(url, image, overwrite=True))
 
     well_A1 = ngc.new_node(

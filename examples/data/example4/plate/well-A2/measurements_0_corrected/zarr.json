@@ -1,0 +1,13 @@
+{
+  "attributes": {
+    "ome": {
+      "version": "0.x",
+      "type": "table",
+      "name": "measurements_0_corrected",
+      "id": "e2485bb6-6425-4e83-8de0-4a9e5640230e",
+      "nodes": []
+    }
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}
