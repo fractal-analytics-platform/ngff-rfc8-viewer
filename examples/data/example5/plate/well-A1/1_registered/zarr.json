@@ -6,6 +6,10 @@
       "name": "1_registered",
       "id": "b3a1f131-5573-4e2d-8f9b-34c95653d4bd",
       "attributes": {
+        "field": {
+          "id": 0
+        },
+        "acquisition": 1,
         "coordinateSystems": [
           {
             "id": "c4da537c-1651-4dae-8486-7db30d67b366",

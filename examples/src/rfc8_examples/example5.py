@@ -28,11 +28,16 @@ def _get_singlescales(coord_system_id: int) -> list[ngc.Node]:
     ]
 
 
-def _get_image(name: str, coord_system_id: str) -> ngc.Node:
+def _get_image(
+    name: str,
+    coord_system_id: str,
+    attributes: dict | None = None,
+) -> ngc.Node:
     _image = ngc.new_node(
         node_type="multiscale",
         id=get_uuid4(),
         name=name,
+        attributes=attributes,
         children=_get_singlescales(coord_system_id=coord_system_id),
     ).set_attr(
         ngc.CoordinateSystemsAttribute(
@@ -55,18 +60,22 @@ def _get_images(coord_system_id: int) -> list[ngc.Node]:
         _get_image(
             name="0",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}, "acquisition": 0},
         ),
         _get_image(
             name="1",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}, "acquisition": 1},
         ),
         _get_image(
             name="1_registered",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}, "acquisition": 1},
         ),
         _get_image(
             name="nuclei",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}, "acquisition": 0},
         ),
         ngc.new_node(
             node_type="table",
@@ -96,7 +105,6 @@ def main():
         id=get_uuid4(),
         children=[],
     ).add_ref(*images_A1_ref)
-
 
     url = str(root_collection_path / "plate/well-A1/well.json")
     well_A1_ref = ngc.create(url, well_A1, overwrite=True)
