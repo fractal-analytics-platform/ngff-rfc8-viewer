@@ -67,7 +67,6 @@ export default class NGFFViewer {
     graphContainer.id = `${element.id}-graph-container`;
 
     const sidebar = document.createElement('div');
-    const sidebarHandler = new NGFFSidebar(sidebar, validate);
 
     const controlPanel = document.createElement('div');
     graphContainer.append(controlPanel);
@@ -80,6 +79,7 @@ export default class NGFFViewer {
     try {
       const loader = new NGFFLoader(source);
       const graph = new NGFFGraph(loader, autoloadDepth);
+      const sidebarHandler = new NGFFSidebar(sidebar, validate, graph);
       const queryParams = new URLSearchParams(window.location.search);
       // Determine which view to use based on the query parameter
       const view =
@@ -114,7 +114,7 @@ export default class NGFFViewer {
           view.selectNode(node);
           view.renderTree();
         } catch (err) {
-          graph.reportError(err instanceof Error ? err.message : 'Unexpected error');
+          graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
         }
       }
     } catch (err) {

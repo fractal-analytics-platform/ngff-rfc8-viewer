@@ -1,11 +1,15 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node, SinglescaleOmeNode } from './types';
+import type { D3Node, SinglescaleOmeNode, OmeNode } from './types';
 import * as omezarr from 'ome-zarr.js';
 import * as zarr from 'zarrita';
 
 const defaultWidth = 200;
 
-export function createThumbnailImg(node: D3Node, width: number = defaultWidth): HTMLDivElement {
+export function createThumbnailImg(
+  node: D3Node,
+  width: number = defaultWidth,
+  ssChildren?: OmeNode[]
+): HTMLDivElement {
   const imgElement = document.createElement('img');
   // set initial source for the image to data:url for a blank image
   imgElement.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
@@ -29,18 +33,26 @@ export function createThumbnailImg(node: D3Node, width: number = defaultWidth): 
   const store = new zarr.FetchStore(storePath);
 
   const rfc8multiscales = node.omeNode;
-  if (!('nodes' in rfc8multiscales) || rfc8multiscales.nodes?.length === 0) {
+  if (
+    (!('nodes' in rfc8multiscales) || rfc8multiscales.nodes?.length === 0) &&
+    !(ssChildren && ssChildren.length > 0)
+  ) {
     showError('RFC8 multiscale node does not contain any nodes');
     return container;
   }
 
-  const ssNodes = rfc8multiscales.nodes?.map((node) => node as SinglescaleOmeNode);
+  const ssNodes =
+    'nodes' in rfc8multiscales && rfc8multiscales.nodes?.length
+      ? rfc8multiscales.nodes?.map((node) => node as SinglescaleOmeNode)
+      : ssChildren?.map((node) => node as SinglescaleOmeNode);
+
   if (!(ssNodes && ssNodes.length > 0)) {
     showError('No singlescale OME nodes found');
     return container;
   }
 
   function createDataset(node: SinglescaleOmeNode): omezarr.Dataset {
+    console.log('Creating dataset for node:', node);
     const scaleTransform = node.attributes.coordinateTransformations.find(
       (ct) => ct.type === 'scale'
     );

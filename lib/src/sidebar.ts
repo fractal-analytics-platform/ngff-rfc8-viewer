@@ -1,6 +1,7 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
+import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
 
 const defaultWidth = 560;
@@ -12,10 +13,28 @@ export class NGFFSidebar {
   private element: HTMLElement;
   private content: HTMLElement;
   private validationEnabled: boolean;
+  private node: D3Node | null = null;
+  private graph: NGFFGraph;
 
-  constructor(element: HTMLElement, validate: boolean) {
+  constructor(element: HTMLElement, validate: boolean, graph: NGFFGraph) {
     this.element = element;
+    this.graph = graph;
     this.validationEnabled = validate;
+
+    // Listen for loading events from the graph to refresh the sidebar if needed
+    graph.onLoading((loading) => {
+      if (!loading) {
+        // If the current node is a multiscale node with remote children (now loaded),
+        // showInfo() to display thumbnail
+        if (
+          this.node &&
+          this.node.omeNode.type == 'multiscale' &&
+          !('nodes' in this.node.omeNode)
+        ) {
+          this.showInfo(this.node);
+        }
+      }
+    });
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
 
     this.buildResizer();
@@ -85,6 +104,7 @@ export class NGFFSidebar {
   }
 
   showInfo(node: D3Node) {
+    this.node = node;
     this.content.innerHTML = '';
 
     this.addKeyValue('Id', node.omeNode.id || '-');
@@ -93,7 +113,12 @@ export class NGFFSidebar {
 
     // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type == 'multiscale') {
-      this.content.appendChild(createThumbnailImg(node, 150));
+      if ('nodes' in node.omeNode) {
+        this.content.appendChild(createThumbnailImg(node, 150));
+      } else {
+        const children = this.graph.getChildren(node).map((child) => child.omeNode);
+        this.content.appendChild(createThumbnailImg(node, 150, children));
+      }
     }
 
     if ('path' in node.omeNode) {
