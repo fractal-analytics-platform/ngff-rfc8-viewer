@@ -1,0 +1,19 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "collection",
+    "name": "Plate",
+    "id": "e81775f3-ca42-45f7-a051-e671246595df",
+    "nodes": [
+      {
+        "type": "collection",
+        "name": "Well A1",
+        "id": "aac9912d-17bf-4b18-8b3c-354de7c834d3",
+        "path": {
+          "type": "json",
+          "path": "./well-A1/well.json"
+        }
+      }
+    ]
+  }
+}
