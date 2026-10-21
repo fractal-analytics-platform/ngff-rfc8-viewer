@@ -1,0 +1,13 @@
+{
+  "attributes": {
+    "ome": {
+      "version": "0.x",
+      "type": "table",
+      "name": "nuclei_measurements",
+      "id": "1a1f141b-72c5-4633-bb66-ecb350c1eb44",
+      "nodes": []
+    }
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}

@@ -1,0 +1,53 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "collection",
+    "name": "My dataset",
+    "id": "67dd30d7-3aa8-4f8c-bf5f-9af75a1703c5",
+    "nodes": [
+      {
+        "type": "collection",
+        "name": "Plate",
+        "id": "e56a0eb1-0348-44bc-9d0f-5781a0d96ade",
+        "attributes": {
+          "plate": {
+            "acquisitions": [],
+            "columns": [
+              {
+                "id": "1"
+              },
+              {
+                "id": "2"
+              }
+            ],
+            "rows": [
+              {
+                "id": "A"
+              }
+            ]
+          }
+        },
+        "nodes": [
+          {
+            "type": "collection",
+            "name": "Well A1",
+            "id": "042cc7c2-560b-4cb9-875b-693192bb2bfd",
+            "path": {
+              "type": "json",
+              "path": "./plate/well-A1/well.json"
+            }
+          },
+          {
+            "type": "collection",
+            "name": "Well A2",
+            "id": "d4e3fda5-1691-49e2-9611-516c30665bc3",
+            "path": {
+              "type": "json",
+              "path": "./plate/well-A2/well.json"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

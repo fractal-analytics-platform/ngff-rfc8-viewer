@@ -92,6 +92,5 @@ def main():
     _create_zarr_array(base_dir / "2")
 
 
-
 if __name__ == "__main__":
     main()

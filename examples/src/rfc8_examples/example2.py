@@ -18,10 +18,11 @@ def _create_zarr_array(path: str | Path) -> None:
         overwrite=True,
     )
 
+
 def main():
     base_dir = BASE_PATH / "example2"
     base_dir.mkdir(parents=True, exist_ok=True)
-    
+
     coord_system_id = get_uuid4()
     collection_id = get_uuid4()
     multiscales = []
@@ -78,10 +79,8 @@ def main():
         children=multiscales,
     )
 
-
     url = str(base_dir / "root.json")
     ngc.create(url, collection, overwrite=True)
-
 
 
 if __name__ == "__main__":

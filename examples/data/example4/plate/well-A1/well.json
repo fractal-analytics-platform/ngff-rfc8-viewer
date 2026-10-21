@@ -1,0 +1,92 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "collection",
+    "name": "Well A1",
+    "id": "042cc7c2-560b-4cb9-875b-693192bb2bfd",
+    "attributes": {
+      "well": {
+        "column": {
+          "id": "1"
+        },
+        "row": {
+          "id": "A"
+        }
+      }
+    },
+    "nodes": [
+      {
+        "type": "multiscale",
+        "name": "0",
+        "id": "d6a82a95-1b92-4e0a-843c-def36840ff07",
+        "path": {
+          "type": "zarr",
+          "path": "./0"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "1",
+        "id": "573e8d77-550a-4889-8ff4-1e8d8944897c",
+        "path": {
+          "type": "zarr",
+          "path": "./1"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "0_corrected",
+        "id": "b3a1f131-5573-4e2d-8f9b-34c95653d4bd",
+        "path": {
+          "type": "zarr",
+          "path": "./0_corrected"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "1_corrected",
+        "id": "e0edeaf1-166d-4683-8609-dcba6fafc520",
+        "path": {
+          "type": "zarr",
+          "path": "./1_corrected"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "nuclei_0",
+        "id": "1a1f141b-72c5-4633-bb66-ecb350c1eb44",
+        "path": {
+          "type": "zarr",
+          "path": "./nuclei_0"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "nuclei_1",
+        "id": "e81775f3-ca42-45f7-a051-e671246595df",
+        "path": {
+          "type": "zarr",
+          "path": "./nuclei_1"
+        }
+      },
+      {
+        "type": "table",
+        "name": "measurements_0_corrected",
+        "id": "7823908d-43ec-4f85-ba17-a6a492cadf50",
+        "path": {
+          "type": "zarr",
+          "path": "./measurements_0_corrected"
+        }
+      },
+      {
+        "type": "table",
+        "name": "measurements_1_corrected",
+        "id": "4e1ad87e-c4cf-4b8a-8968-02f6d67c8720",
+        "path": {
+          "type": "zarr",
+          "path": "./measurements_1_corrected"
+        }
+      }
+    ]
+  }
+}
