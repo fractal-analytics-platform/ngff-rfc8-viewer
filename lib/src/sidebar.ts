@@ -8,6 +8,11 @@ const defaultWidth = 560;
 const minWidth = 150;
 const minSpace = 100;
 const smallScreenBreakpoint = 768;
+// validation errors to ignore for *unloaded* multiscale nodes only
+const IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE = [
+  "must have required property 'attributes'",
+  'must match "then" schema'
+];
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -154,24 +159,39 @@ export class NGFFSidebar {
     } catch (err) {
       if (err instanceof Error) {
         const error = document.createElement('div');
-        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
         error.classList.add(`${CSS_CLASS_PREFIX}error`);
-        this.content.prepend(error);
+        let errorCount = 0;
         if (
           'schemaErrors' in err &&
           Array.isArray(err.schemaErrors) &&
           err.schemaErrors.length > 0
         ) {
+          const toIgnore =
+            !node.loaded && node.omeNode.type === 'multiscale'
+              ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
+              : [];
+
           error.innerText = 'Validation errors, see below';
-          for (const schemaError of err.schemaErrors) {
+          for (const schemaError of err.schemaErrors.filter(
+            (se) => !toIgnore.includes(se.message)
+          )) {
+            // we log in case node reloading causes the error to be lost
+            console.log('Schema Validation error:', schemaError);
             const error = document.createElement('pre');
             error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
             error.innerText = JSON.stringify(schemaError, null, 2);
             this.content.appendChild(error);
+            errorCount++;
           }
         } else {
           error.innerText = err.message;
+          errorCount++;
         }
+        if (errorCount === 0) {
+          return;
+        }
+        this.content.prepend(error);
+        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
       }
     }
   }
