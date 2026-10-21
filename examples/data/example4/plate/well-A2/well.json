@@ -31,7 +31,7 @@
         "nodes": [
           {
             "type": "singlescale",
-            "name": "high-res",
+            "name": "s0",
             "id": "b9cfda65-2e74-4c1f-a53c-4cc6c1117e2f",
             "attributes": {
               "coordinateTransformations": [
@@ -53,32 +53,6 @@
             "path": {
               "type": "zarr",
               "path": "./0"
-            }
-          },
-          {
-            "type": "singlescale",
-            "name": "low-res",
-            "id": "7ca5d0ed-e9e4-42dd-9525-e9d3d1f7fbe4",
-            "attributes": {
-              "coordinateTransformations": [
-                {
-                  "input": {
-                    "id": "7ca5d0ed-e9e4-42dd-9525-e9d3d1f7fbe4"
-                  },
-                  "output": {
-                    "id": "c4da537c-1651-4dae-8486-7db30d67b366"
-                  },
-                  "type": "scale",
-                  "scale": [
-                    2.0,
-                    2.0
-                  ]
-                }
-              ]
-            },
-            "path": {
-              "type": "zarr",
-              "path": "./1"
             }
           }
         ]
@@ -109,7 +83,7 @@
         "nodes": [
           {
             "type": "singlescale",
-            "name": "high-res",
+            "name": "s0",
             "id": "e2485bb6-6425-4e83-8de0-4a9e5640230e",
             "attributes": {
               "coordinateTransformations": [
@@ -131,32 +105,6 @@
             "path": {
               "type": "zarr",
               "path": "./0"
-            }
-          },
-          {
-            "type": "singlescale",
-            "name": "low-res",
-            "id": "633d6624-74ee-4fd8-b91d-f46412c32f37",
-            "attributes": {
-              "coordinateTransformations": [
-                {
-                  "input": {
-                    "id": "633d6624-74ee-4fd8-b91d-f46412c32f37"
-                  },
-                  "output": {
-                    "id": "c4da537c-1651-4dae-8486-7db30d67b366"
-                  },
-                  "type": "scale",
-                  "scale": [
-                    2.0,
-                    2.0
-                  ]
-                }
-              ]
-            },
-            "path": {
-              "type": "zarr",
-              "path": "./1"
             }
           }
         ]
@@ -187,7 +135,7 @@
         "nodes": [
           {
             "type": "singlescale",
-            "name": "high-res",
+            "name": "s0",
             "id": "d4e3fda5-1691-49e2-9611-516c30665bc3",
             "attributes": {
               "coordinateTransformations": [
@@ -209,32 +157,6 @@
             "path": {
               "type": "zarr",
               "path": "./0"
-            }
-          },
-          {
-            "type": "singlescale",
-            "name": "low-res",
-            "id": "e56a0eb1-0348-44bc-9d0f-5781a0d96ade",
-            "attributes": {
-              "coordinateTransformations": [
-                {
-                  "input": {
-                    "id": "e56a0eb1-0348-44bc-9d0f-5781a0d96ade"
-                  },
-                  "output": {
-                    "id": "c4da537c-1651-4dae-8486-7db30d67b366"
-                  },
-                  "type": "scale",
-                  "scale": [
-                    2.0,
-                    2.0
-                  ]
-                }
-              ]
-            },
-            "path": {
-              "type": "zarr",
-              "path": "./1"
             }
           }
         ]
@@ -265,7 +187,7 @@
         "nodes": [
           {
             "type": "singlescale",
-            "name": "high-res",
+            "name": "s0",
             "id": "d2f79e2f-b942-404e-8042-09378830fcc6",
             "attributes": {
               "coordinateTransformations": [
@@ -287,32 +209,6 @@
             "path": {
               "type": "zarr",
               "path": "./0"
-            }
-          },
-          {
-            "type": "singlescale",
-            "name": "low-res",
-            "id": "49a6dbed-a388-43b0-8f4a-38e6e8be44f2",
-            "attributes": {
-              "coordinateTransformations": [
-                {
-                  "input": {
-                    "id": "49a6dbed-a388-43b0-8f4a-38e6e8be44f2"
-                  },
-                  "output": {
-                    "id": "c4da537c-1651-4dae-8486-7db30d67b366"
-                  },
-                  "type": "scale",
-                  "scale": [
-                    2.0,
-                    2.0
-                  ]
-                }
-              ]
-            },
-            "path": {
-              "type": "zarr",
-              "path": "./1"
             }
           }
         ]
@@ -343,7 +239,7 @@
         "nodes": [
           {
             "type": "singlescale",
-            "name": "high-res",
+            "name": "s0",
             "id": "8b4ebb7f-3bbe-484b-b865-4db2a147123a",
             "attributes": {
               "coordinateTransformations": [
@@ -365,32 +261,6 @@
             "path": {
               "type": "zarr",
               "path": "./0"
-            }
-          },
-          {
-            "type": "singlescale",
-            "name": "low-res",
-            "id": "275cecdc-2d76-4558-bb0d-7d657bdb11b4",
-            "attributes": {
-              "coordinateTransformations": [
-                {
-                  "input": {
-                    "id": "275cecdc-2d76-4558-bb0d-7d657bdb11b4"
-                  },
-                  "output": {
-                    "id": "c4da537c-1651-4dae-8486-7db30d67b366"
-                  },
-                  "type": "scale",
-                  "scale": [
-                    2.0,
-                    2.0
-                  ]
-                }
-              ]
-            },
-            "path": {
-              "type": "zarr",
-              "path": "./1"
             }
           }
         ]
@@ -421,7 +291,7 @@
         "nodes": [
           {
             "type": "singlescale",
-            "name": "high-res",
+            "name": "s0",
             "id": "0299536a-0b4c-4837-b617-7fa8c06c250e",
             "attributes": {
               "coordinateTransformations": [
@@ -443,32 +313,6 @@
             "path": {
               "type": "zarr",
               "path": "./0"
-            }
-          },
-          {
-            "type": "singlescale",
-            "name": "low-res",
-            "id": "0560d4e0-3174-4bd3-b4d2-b828227d8219",
-            "attributes": {
-              "coordinateTransformations": [
-                {
-                  "input": {
-                    "id": "0560d4e0-3174-4bd3-b4d2-b828227d8219"
-                  },
-                  "output": {
-                    "id": "c4da537c-1651-4dae-8486-7db30d67b366"
-                  },
-                  "type": "scale",
-                  "scale": [
-                    2.0,
-                    2.0
-                  ]
-                }
-              ]
-            },
-            "path": {
-              "type": "zarr",
-              "path": "./1"
             }
           }
         ]

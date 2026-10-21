@@ -26,7 +26,7 @@ def _get_singlescales(coord_system_id: int) -> list:
         ngc.new_node(
             node_type="singlescale",
             id=s0_id,
-            name="high-res",
+            name="s0",
             ref=ngc.Reference(path=ngc.ZarrPath(path="./0")),
         ).set_attr(
             ngc.CoordinateTransformationsAttribute(
@@ -39,22 +39,22 @@ def _get_singlescales(coord_system_id: int) -> list:
                 ]
             )
         ),
-        ngc.new_node(
-            node_type="singlescale",
-            id=s1_id,
-            name="low-res",
-            ref=ngc.Reference(path=ngc.ZarrPath(path="./1")),
-        ).set_attr(
-            ngc.CoordinateTransformationsAttribute(
-                [
-                    ngc.ScaleTransformation(
-                        input=ngc.ReferenceObj(id=s1_id),
-                        output=ngc.ReferenceObj(id=coord_system_id),
-                        scale=[2.0, 2.0],
-                    )
-                ]
-            )
-        ),
+        # ngc.new_node(
+        #     node_type="singlescale",
+        #     id=s1_id,
+        #     name="low-res",
+        #     ref=ngc.Reference(path=ngc.ZarrPath(path="./1")),
+        # ).set_attr(
+        #     ngc.CoordinateTransformationsAttribute(
+        #         [
+        #             ngc.ScaleTransformation(
+        #                 input=ngc.ReferenceObj(id=s1_id),
+        #                 output=ngc.ReferenceObj(id=coord_system_id),
+        #                 scale=[2.0, 2.0],
+        #             )
+        #         ]
+        #     )
+        # ),
     ]
 
 
