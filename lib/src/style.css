@@ -261,11 +261,11 @@ Show the "sidebar" below the graph
   margin-right: 3px;
 }
 
-.ngff-rfc8-viewer-has-children.collapsed > button::before {
+.ngff-rfc8-viewer-has-children.ngff-rfc8-viewer-collapsed > button::before {
   transform: rotate(-90deg);
 }
 
-.ngff-rfc8-viewer-node-element.collapsed .ngff-rfc8-viewer-node-element {
+.ngff-rfc8-viewer-node-element.ngff-rfc8-viewer-collapsed .ngff-rfc8-viewer-node-element {
   display: none;
 }
 
