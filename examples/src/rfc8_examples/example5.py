@@ -104,6 +104,7 @@ def main():
         name="Well A1",
         id=get_uuid4(),
         children=[],
+        attributes={"well": {"column": {"id": "1"}, "row": {"id": "A"}}},
     ).add_ref(*images_A1_ref)
 
     url = str(root_collection_path / "plate/well-A1/well.json")
@@ -114,6 +115,13 @@ def main():
         name="Plate",
         id=get_uuid4(),
         children=[],
+        attributes={
+            "plate": {
+                "acquisitions": [],
+                "columns": [{"id": "1"}],
+                "rows": [{"id": "A"}],
+            }
+        },
     ).add_ref(well_A1_ref)
 
     url = str(root_collection_path / "plate/plate.json")

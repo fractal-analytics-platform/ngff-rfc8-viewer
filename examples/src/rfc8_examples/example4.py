@@ -126,6 +126,7 @@ def main():
         name="Well A1",
         id=get_uuid4(),
         children=[],
+        attributes={"well": {"column": {"id": "1"}, "row": {"id": "A"}}},
     ).add_ref(*images_A1_ref)
 
     well_A2 = ngc.new_node(
@@ -133,6 +134,7 @@ def main():
         name="Well A2",
         id=get_uuid4(),
         children=[],
+        attributes={"well": {"column": {"id": "2"}, "row": {"id": "A"}}},
     ).add_ref(*images_A2_ref)
 
     url = str(root_collection_path / "plate/well-A1/well.json")
@@ -145,6 +147,13 @@ def main():
         name="Plate",
         id=get_uuid4(),
         children=[],
+        attributes={
+            "plate": {
+                "acquisitions": [],
+                "columns": [{"id": "1"}, {"id": "2"}],
+                "rows": [{"id": "A"}],
+            }
+        },
     ).add_ref(well_A1_ref, well_A2_ref)
 
     url = str(root_collection_path / "plate/plate.json")

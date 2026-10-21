@@ -9,6 +9,24 @@
         "type": "collection",
         "name": "Plate",
         "id": "e56a0eb1-0348-44bc-9d0f-5781a0d96ade",
+        "attributes": {
+          "plate": {
+            "acquisitions": [],
+            "columns": [
+              {
+                "id": "1"
+              },
+              {
+                "id": "2"
+              }
+            ],
+            "rows": [
+              {
+                "id": "A"
+              }
+            ]
+          }
+        },
         "nodes": [
           {
             "type": "collection",

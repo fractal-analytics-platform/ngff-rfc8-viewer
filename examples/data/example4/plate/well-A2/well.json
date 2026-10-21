@@ -4,6 +4,16 @@
     "type": "collection",
     "name": "Well A2",
     "id": "d4e3fda5-1691-49e2-9611-516c30665bc3",
+    "attributes": {
+      "well": {
+        "column": {
+          "id": "2"
+        },
+        "row": {
+          "id": "A"
+        }
+      }
+    },
     "nodes": [
       {
         "type": "multiscale",

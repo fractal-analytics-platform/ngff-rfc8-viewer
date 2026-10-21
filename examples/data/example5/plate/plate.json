@@ -4,6 +4,21 @@
     "type": "collection",
     "name": "Plate",
     "id": "e81775f3-ca42-45f7-a051-e671246595df",
+    "attributes": {
+      "plate": {
+        "acquisitions": [],
+        "columns": [
+          {
+            "id": "1"
+          }
+        ],
+        "rows": [
+          {
+            "id": "A"
+          }
+        ]
+      }
+    },
     "nodes": [
       {
         "type": "collection",
