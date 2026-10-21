@@ -124,11 +124,20 @@ export class NGFFSidebar {
 
     // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type == 'multiscale') {
+      const prefix = this.graph.getLoader().getPrefix();
+      let resolvedPath = node.resolvedPath;
+      if ('path' in node.omeNode && node.omeNode.path?.path) {
+        resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
+      }
+      // Construct the base URL for the thumbnailZarr store
+      const baseUrl =
+        prefix + (resolvedPath.startsWith('./') ? resolvedPath.substring(1) : resolvedPath);
+
       if ('nodes' in node.omeNode) {
-        this.content.appendChild(createThumbnailImg(node, 150));
+        this.content.appendChild(createThumbnailImg(node, baseUrl, 150));
       } else {
         const children = this.graph.getChildren(node).map((child) => child.omeNode);
-        this.content.appendChild(createThumbnailImg(node, 150, children));
+        this.content.appendChild(createThumbnailImg(node, baseUrl, 150, children));
       }
     }
 

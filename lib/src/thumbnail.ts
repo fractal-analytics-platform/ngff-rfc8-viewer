@@ -7,6 +7,7 @@ const defaultWidth = 200;
 
 export function createThumbnailImg(
   node: D3Node,
+  baseUrl: string,
   width: number = defaultWidth,
   ssChildren?: OmeNode[]
 ): HTMLDivElement {
@@ -29,8 +30,7 @@ export function createThumbnailImg(
     container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
   }
 
-  const storePath = node.resolvedPath;
-  const store = new zarr.FetchStore(storePath);
+  const store = new zarr.FetchStore(baseUrl);
 
   const rfc8multiscales = node.omeNode;
   if (
@@ -52,12 +52,16 @@ export function createThumbnailImg(
   }
 
   function createDataset(node: SinglescaleOmeNode): omezarr.Dataset {
-    console.log('Creating dataset for node:', node);
     const scaleTransform = node.attributes.coordinateTransformations.find(
       (ct) => ct.type === 'scale'
     );
     if (!scaleTransform?.scale) {
-      throw new Error('No scale transformation found for node: ' + node.path!.path);
+      showError('No scale transformation found for node: ' + node.path!.path);
+      console.log('No scale transformation found for node: ' + node.path!.path);
+      return {
+        path: node.path!.path,
+        coordinateTransformations: []
+      };
     }
     return {
       path: node.path!.path,
@@ -99,6 +103,7 @@ Shapes from Scales: ${JSON.stringify(calcShapesInfo)}`;
     })
     .catch((error) => {
       // handle error by displaying a 'X' and add an error message to the tooltip
+      console.log('v05Attrs', v05Attrs);
       console.error('Error loading NGFF image:', error);
       imgElement.title = error.toString();
       container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);

@@ -31,6 +31,10 @@ export class NGFFGraph {
     this.computeExtraEdges = computeExtraEdges;
   }
 
+  getLoader() {
+    return this.loader;
+  }
+
   signalLoading(loading: boolean) {
     this.eventListeners['loading'].forEach((fn) => fn(loading));
   }
