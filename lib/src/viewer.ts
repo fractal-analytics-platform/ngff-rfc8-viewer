@@ -17,7 +17,7 @@ const exampleSources = [
   ],
   [
     'plate with multiple fields',
-    'https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example4/root.json'
   ]
 ];
 
