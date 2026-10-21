@@ -21,9 +21,9 @@ export class NGFFSidebar {
     this.graph = graph;
     this.validationEnabled = validate;
 
-    // Listen for loading events from the graph to refresh the sidebar if needed
+    // Listen for loading & update events from the graph to refresh the sidebar if needed
     graph.onLoading((loading) => {
-      if (!loading) {
+      if (!loading && this.isOpen()) {
         // If the current node is a multiscale node with remote children (now loaded),
         // showInfo() to display thumbnail
         if (
@@ -35,6 +35,12 @@ export class NGFFSidebar {
         }
       }
     });
+    graph.onNodeUpdated((node) => {
+      if (this.isOpen()) {
+        this.showInfo(node);
+      }
+    });
+
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
 
     this.buildResizer();

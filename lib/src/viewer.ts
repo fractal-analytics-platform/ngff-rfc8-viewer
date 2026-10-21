@@ -79,6 +79,7 @@ export default class NGFFViewer {
     try {
       const loader = new NGFFLoader(source);
       const graph = new NGFFGraph(loader, autoloadDepth);
+      // sidebar listens to graph update and load events
       const sidebarHandler = new NGFFSidebar(sidebar, validate, graph);
       const queryParams = new URLSearchParams(window.location.search);
       // Determine which view to use based on the query parameter
@@ -94,11 +95,6 @@ export default class NGFFViewer {
         window.location.hash = idsToNode;
       });
       view.onBackgroundClick(() => sidebarHandler.hide());
-      graph.onNodeUpdated((node) => {
-        if (sidebarHandler.isOpen()) {
-          sidebarHandler.showInfo(node);
-        }
-      });
       const control = new NGFFControlPanel(controlPanel, graph, view, sidebarHandler);
       graph.onLoading((loading) =>
         loading ? control.setLoadingState() : control.unsetLoadingState()
