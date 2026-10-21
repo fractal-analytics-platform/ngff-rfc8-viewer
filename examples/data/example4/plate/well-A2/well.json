@@ -4,6 +4,79 @@
     "type": "collection",
     "name": "Well A2",
     "id": "d4e3fda5-1691-49e2-9611-516c30665bc3",
-    "nodes": []
+    "nodes": [
+      {
+        "type": "multiscale",
+        "name": "0",
+        "id": "7ba35975-cd2e-4163-858c-2e6e57ed22d0",
+        "path": {
+          "type": "zarr",
+          "path": "./0"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "1",
+        "id": "f5e77d4d-cf30-4f2d-9097-a70286ee6241",
+        "path": {
+          "type": "zarr",
+          "path": "./1"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "0_corrected",
+        "id": "6f33f708-8343-4946-a56a-62c3c4ef7978",
+        "path": {
+          "type": "zarr",
+          "path": "./0_corrected"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "1_corrected",
+        "id": "d560f64b-e3dd-4ffa-98b4-85deaaaa1310",
+        "path": {
+          "type": "zarr",
+          "path": "./1_corrected"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "nuclei_0",
+        "id": "d8eb6412-0826-4069-8293-b3205fe0a658",
+        "path": {
+          "type": "zarr",
+          "path": "./nuclei_0"
+        }
+      },
+      {
+        "type": "multiscale",
+        "name": "nuclei_1",
+        "id": "7ca5d0ed-e9e4-42dd-9525-e9d3d1f7fbe4",
+        "path": {
+          "type": "zarr",
+          "path": "./nuclei_1"
+        }
+      },
+      {
+        "type": "table",
+        "name": "measurements_0_corrected",
+        "id": "e2485bb6-6425-4e83-8de0-4a9e5640230e",
+        "path": {
+          "type": "zarr",
+          "path": "./measurements_0_corrected"
+        }
+      },
+      {
+        "type": "table",
+        "name": "measurements_1_corrected",
+        "id": "633d6624-74ee-4fd8-b91d-f46412c32f37",
+        "path": {
+          "type": "zarr",
+          "path": "./measurements_1_corrected"
+        }
+      }
+    ]
   }
 }

@@ -98,15 +98,15 @@ def main():
     root_collection_path.mkdir(parents=True, exist_ok=True)
 
     images_A1 = _get_images(coord_system_id=coord_system_id)
-    images_A2 = _get_images(coord_system_id=coord_system_id)
     images_A1_ref = []
+    images_A2 = _get_images(coord_system_id=coord_system_id)
     images_A2_ref = []
     for image in images_A1:
         url = str(root_collection_path / f"plate/well-A1/{image.name}/zarr.json")
         images_A1_ref.append(ngc.create(url, image, overwrite=True))
     for image in images_A2:
         url = str(root_collection_path / f"plate/well-A2/{image.name}/zarr.json")
-        images_A1_ref.append(ngc.create(url, image, overwrite=True))
+        images_A2_ref.append(ngc.create(url, image, overwrite=True))
 
     well_A1 = ngc.new_node(
         "collection",
