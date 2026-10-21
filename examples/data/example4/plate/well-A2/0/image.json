@@ -1,0 +1,55 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "multiscale",
+    "name": "0",
+    "id": "7ba35975-cd2e-4163-858c-2e6e57ed22d0",
+    "attributes": {
+      "coordinateSystems": [
+        {
+          "id": "c4da537c-1651-4dae-8486-7db30d67b366",
+          "axes": [
+            {
+              "name": "y",
+              "type": "space",
+              "unit": "micrometer"
+            },
+            {
+              "name": "x",
+              "type": "space",
+              "unit": "micrometer"
+            }
+          ]
+        }
+      ]
+    },
+    "nodes": [
+      {
+        "type": "singlescale",
+        "name": "s0",
+        "id": "a3858cde-9be1-492e-923e-e3c934f4f040",
+        "attributes": {
+          "coordinateTransformations": [
+            {
+              "input": {
+                "id": "a3858cde-9be1-492e-923e-e3c934f4f040"
+              },
+              "output": {
+                "id": "c4da537c-1651-4dae-8486-7db30d67b366"
+              },
+              "type": "scale",
+              "scale": [
+                1.0,
+                1.0
+              ]
+            }
+          ]
+        },
+        "path": {
+          "type": "zarr",
+          "path": "./0"
+        }
+      }
+    ]
+  }
+}

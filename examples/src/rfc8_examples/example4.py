@@ -1,27 +1,13 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 import ngio_collections as ngc
 
 from rfc8_examples import BASE_PATH, get_uuid4
 
-import zarr
 
-
-def _create_zarr_array(path: str | Path) -> None:
-    zarr.zeros(
-        store=path,
-        shape=(100, 100),
-        chunks=(10, 10),
-        dtype="f4",
-        overwrite=True,
-    )
-
-
-def _get_singlescales(coord_system_id: int) -> list:
+def _get_singlescales(coord_system_id: int) -> list[ngc.Node]:
     s0_id = get_uuid4()
-    s1_id = get_uuid4()
-
     return [
         ngc.new_node(
             node_type="singlescale",
@@ -39,26 +25,10 @@ def _get_singlescales(coord_system_id: int) -> list:
                 ]
             )
         ),
-        # ngc.new_node(
-        #     node_type="singlescale",
-        #     id=s1_id,
-        #     name="low-res",
-        #     ref=ngc.Reference(path=ngc.ZarrPath(path="./1")),
-        # ).set_attr(
-        #     ngc.CoordinateTransformationsAttribute(
-        #         [
-        #             ngc.ScaleTransformation(
-        #                 input=ngc.ReferenceObj(id=s1_id),
-        #                 output=ngc.ReferenceObj(id=coord_system_id),
-        #                 scale=[2.0, 2.0],
-        #             )
-        #         ]
-        #     )
-        # ),
     ]
 
 
-def _get_image(name: str, coord_system_id: str):
+def _get_image(name: str, coord_system_id: str) -> ngc.Node:
     _image = ngc.new_node(
         node_type="multiscale",
         id=get_uuid4(),
@@ -80,6 +50,45 @@ def _get_image(name: str, coord_system_id: str):
     return _image
 
 
+def _get_images(coord_system_id: int) -> list[ngc.Node]:
+    return [
+        _get_image(
+            name="0",
+            coord_system_id=coord_system_id,
+        ),
+        _get_image(
+            name="1",
+            coord_system_id=coord_system_id,
+        ),
+        _get_image(
+            name="0_corrected",
+            coord_system_id=coord_system_id,
+        ),
+        _get_image(
+            name="1_corrected",
+            coord_system_id=coord_system_id,
+        ),
+        _get_image(
+            name="nuclei_0",
+            coord_system_id=coord_system_id,
+        ),
+        _get_image(
+            name="nuclei_1",
+            coord_system_id=coord_system_id,
+        ),
+        ngc.new_node(
+            node_type="table",
+            id=get_uuid4(),
+            name="measurements_0_corrected",
+        ),
+        ngc.new_node(
+            node_type="table",
+            id=get_uuid4(),
+            name="measurements_1_corrected",
+        ),
+    ]
+
+
 def main():
     coord_system_id = get_uuid4()
 
@@ -88,36 +97,30 @@ def main():
         shutil.rmtree(root_collection_path)
     root_collection_path.mkdir(parents=True, exist_ok=True)
 
+    images_A1 = _get_images(coord_system_id=coord_system_id)
+    images_A2 = _get_images(coord_system_id=coord_system_id)
+    images_A1_ref = []
+    images_A2_ref = []
+    for image in images_A1:
+        url = str(root_collection_path / f"plate/well-A1/{image.name}/image.json")
+        images_A1_ref.append(ngc.create(url, image, overwrite=True))
+    for image in images_A2:
+        url = str(root_collection_path / f"plate/well-A2/{image.name}/image.json")
+        images_A1_ref.append(ngc.create(url, image, overwrite=True))
+
     well_A1 = ngc.new_node(
         "collection",
         name="Well A1",
         id=get_uuid4(),
-        children=[
-            _get_image(name="0", coord_system_id=coord_system_id),
-            _get_image(name="1", coord_system_id=coord_system_id),
-            _get_image(name="0_corrected", coord_system_id=coord_system_id),
-            _get_image(name="1_corrected", coord_system_id=coord_system_id),
-            _get_image(name="nuclei_0", coord_system_id=coord_system_id),
-            _get_image(name="nuclei_1", coord_system_id=coord_system_id),
-            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_0_corrected"),
-            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_1_corrected"),
-        ],
-    )
+        children=[],
+    ).add_ref(*images_A1_ref)
+
     well_A2 = ngc.new_node(
         "collection",
         name="Well A2",
         id=get_uuid4(),
-        children=[
-            _get_image(name="0", coord_system_id=coord_system_id),
-            _get_image(name="1", coord_system_id=coord_system_id),
-            _get_image(name="0_corrected", coord_system_id=coord_system_id),
-            _get_image(name="1_corrected", coord_system_id=coord_system_id),
-            _get_image(name="nuclei_0", coord_system_id=coord_system_id),
-            _get_image(name="nuclei_1", coord_system_id=coord_system_id),
-            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_0_corrected"),
-            ngc.new_node(node_type="table", id=get_uuid4(), name="measurements_1_corrected"),
-        ],
-    )
+        children=[],
+    ).add_ref(*images_A2_ref)
 
     url = str(root_collection_path / "plate/well-A1/well.json")
     well_A1_ref = ngc.create(url, well_A1, overwrite=True)
