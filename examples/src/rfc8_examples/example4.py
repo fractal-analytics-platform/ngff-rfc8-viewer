@@ -28,11 +28,16 @@ def _get_singlescales(coord_system_id: int) -> list[ngc.Node]:
     ]
 
 
-def _get_image(name: str, coord_system_id: str) -> ngc.Node:
+def _get_image(
+    name: str,
+    coord_system_id: str,
+    attributes: dict | None = None,
+) -> ngc.Node:
     _image = ngc.new_node(
         node_type="multiscale",
         id=get_uuid4(),
         name=name,
+        attributes=attributes,
         children=_get_singlescales(coord_system_id=coord_system_id),
     ).set_attr(
         ngc.CoordinateSystemsAttribute(
@@ -55,36 +60,45 @@ def _get_images(coord_system_id: int) -> list[ngc.Node]:
         _get_image(
             name="0",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}},
         ),
         _get_image(
             name="1",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 1}},
         ),
         _get_image(
             name="0_corrected",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}},
         ),
         _get_image(
             name="1_corrected",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 1}},
         ),
         _get_image(
             name="nuclei_0",
             coord_system_id=coord_system_id,
+            attributes={"field": {"id": 0}},
         ),
         _get_image(
             name="nuclei_1",
-            coord_system_id=coord_system_id,
+            coord_system_id=coord_system_id,            attributes={"field": {"id": 1}},
+
         ),
         ngc.new_node(
             node_type="table",
             id=get_uuid4(),
             name="measurements_0_corrected",
+                        attributes={"field": {"id": 0}},
+
         ),
         ngc.new_node(
             node_type="table",
             id=get_uuid4(),
             name="measurements_1_corrected",
+            attributes={"field": {"id": 1}},
         ),
     ]
 

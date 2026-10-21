@@ -6,6 +6,9 @@
       "name": "nuclei_0",
       "id": "1a1f141b-72c5-4633-bb66-ecb350c1eb44",
       "attributes": {
+        "field": {
+          "id": 0
+        },
         "coordinateSystems": [
           {
             "id": "c4da537c-1651-4dae-8486-7db30d67b366",

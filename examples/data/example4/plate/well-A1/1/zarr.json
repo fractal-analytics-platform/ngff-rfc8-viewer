@@ -6,6 +6,9 @@
       "name": "1",
       "id": "573e8d77-550a-4889-8ff4-1e8d8944897c",
       "attributes": {
+        "field": {
+          "id": 1
+        },
         "coordinateSystems": [
           {
             "id": "c4da537c-1651-4dae-8486-7db30d67b366",
