@@ -4,7 +4,7 @@ from pathlib import Path
 import ngio_collections as ngc
 
 from rfc8_examples import BASE_PATH, get_uuid4
-
+from rfc8_examples.utils import create_zarr_array
 
 def _get_singlescales(coord_system_id: int, image_id: str) -> list[ngc.Node]:
     s0_id = get_uuid4(f"{image_id}-s0")
@@ -13,7 +13,7 @@ def _get_singlescales(coord_system_id: int, image_id: str) -> list[ngc.Node]:
             node_type="singlescale",
             id=s0_id,
             name="s0",
-            ref=ngc.Reference(path=ngc.ZarrPath(path="./0")),
+            ref=ngc.Reference(path=ngc.ZarrPath(path="./s0")),
         ).set_attr(
             ngc.CoordinateTransformationsAttribute(
                 [
@@ -56,7 +56,7 @@ def _get_image(
     return _image
 
 
-def _get_images(coord_system_id: int, well_label: str) -> list[ngc.Node]:
+def _get_images_and_tables(coord_system_id: int, well_label: str) -> list[ngc.Node]:
     return [
         _get_image(
             name="0",
@@ -111,16 +111,22 @@ def main():
         shutil.rmtree(root_collection_path)
     root_collection_path.mkdir(parents=True, exist_ok=True)
 
-    images_A1 = _get_images(coord_system_id=coord_system_id, well_label="A1")
-    images_A1_ref = []
-    images_A2 = _get_images(coord_system_id=coord_system_id, well_label="A2")
-    images_A2_ref = []
-    for image in images_A1:
-        url = str(root_collection_path / f"plate/well-A1/{image.name}/zarr.json")
-        images_A1_ref.append(ngc.create(url, image, overwrite=True))
-    for image in images_A2:
-        url = str(root_collection_path / f"plate/well-A2/{image.name}/zarr.json")
-        images_A2_ref.append(ngc.create(url, image, overwrite=True))
+    children_A1 = _get_images_and_tables(coord_system_id=coord_system_id, well_label="A1")
+    children_A1_ref = []
+    children_A2 = _get_images_and_tables(coord_system_id=coord_system_id, well_label="A2")
+    children_A2_ref = []
+    for child in children_A1:
+        url = str(root_collection_path / f"plate/well-A1/{child.name}/zarr.json")
+        children_A1_ref.append(ngc.create(url, child, overwrite=True))
+        if child.type == "multiscale":
+            url = str(root_collection_path / f"plate/well-A1/{child.name}/s0")
+            create_zarr_array(url)
+    for child in children_A2:
+        url = str(root_collection_path / f"plate/well-A2/{child.name}/zarr.json")
+        children_A2_ref.append(ngc.create(url, child, overwrite=True))
+        if child.type == "multiscale":
+            url = str(root_collection_path / f"plate/well-A1/{child.name}/s0")
+            create_zarr_array(url)
 
     well_A1 = ngc.new_node(
         "collection",
@@ -128,7 +134,7 @@ def main():
         id=get_uuid4("well-A1"),
         children=[],
         attributes={"well": {"column": {"id": "1"}, "row": {"id": "A"}}},
-    ).add_ref(*images_A1_ref)
+    ).add_ref(*children_A1_ref)
 
     well_A2 = ngc.new_node(
         "collection",
@@ -136,7 +142,7 @@ def main():
         id=get_uuid4("well-A2"),
         children=[],
         attributes={"well": {"column": {"id": "2"}, "row": {"id": "A"}}},
-    ).add_ref(*images_A2_ref)
+    ).add_ref(*children_A2_ref)
 
     url = str(root_collection_path / "plate/well-A1/well.json")
     well_A1_ref = ngc.create(url, well_A1, overwrite=True)
