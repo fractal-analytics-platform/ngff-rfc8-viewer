@@ -2,14 +2,17 @@ import hashlib
 import json
 import random
 import uuid
+from pathlib import Path
 
-rnd = random.Random()
-rnd.seed(12333222)
+import zarr
+
+_RND = random.Random()
+_RND.seed(1234567)
 
 
 def get_uuid4(source: str | bytes | dict | None = None) -> str:
     if source is None:
-        kwargs = {"int": rnd.getrandbits(128)}
+        kwargs = {"int": _RND.getrandbits(128)}
     elif isinstance(source, bytes):
         kwargs = {"hex": hashlib.shake_128(source).hexdigest(16)}
     elif isinstance(source, str):
@@ -25,3 +28,12 @@ def get_uuid4(source: str | bytes | dict | None = None) -> str:
     else:
         raise NotImplementedError(f"{type(source)=} is not supported")
     return str(uuid.UUID(**kwargs, version=4))
+
+def create_zarr_array(path: str | Path) -> None:
+    zarr.zeros(
+        store=path,
+        shape=(100, 100),
+        chunks=(10, 10),
+        dtype="f4",
+        overwrite=True,
+    )

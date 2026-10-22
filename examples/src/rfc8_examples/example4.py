@@ -6,8 +6,8 @@ import ngio_collections as ngc
 from rfc8_examples import BASE_PATH, get_uuid4
 
 
-def _get_singlescales(coord_system_id: int) -> list[ngc.Node]:
-    s0_id = get_uuid4()
+def _get_singlescales(coord_system_id: int, image_id: str) -> list[ngc.Node]:
+    s0_id = get_uuid4(f"{image_id}-s0")
     return [
         ngc.new_node(
             node_type="singlescale",
@@ -33,12 +33,13 @@ def _get_image(
     coord_system_id: str,
     attributes: dict | None = None,
 ) -> ngc.Node:
+    image_id = get_uuid4({"name": name, "attributes": attributes})
     _image = ngc.new_node(
         node_type="multiscale",
-        id=get_uuid4(),
+        id=image_id,
         name=name,
         attributes=attributes,
-        children=_get_singlescales(coord_system_id=coord_system_id),
+        children=_get_singlescales(coord_system_id=coord_system_id, image_id=image_id),
     ).set_attr(
         ngc.CoordinateSystemsAttribute(
             [
@@ -55,7 +56,7 @@ def _get_image(
     return _image
 
 
-def _get_images(coord_system_id: int) -> list[ngc.Node]:
+def _get_images(coord_system_id: int, well_label: str) -> list[ngc.Node]:
     return [
         _get_image(
             name="0",
@@ -89,13 +90,13 @@ def _get_images(coord_system_id: int) -> list[ngc.Node]:
         ),
         ngc.new_node(
             node_type="table",
-            id=get_uuid4(),
+            id=get_uuid4("measurements_0_corrected" + well_label),
             name="measurements_0_corrected",
             attributes={"field": {"id": 0}},
         ),
         ngc.new_node(
             node_type="table",
-            id=get_uuid4(),
+            id=get_uuid4("measurements_1_corrected" + well_label),
             name="measurements_1_corrected",
             attributes={"field": {"id": 1}},
         ),
@@ -103,16 +104,16 @@ def _get_images(coord_system_id: int) -> list[ngc.Node]:
 
 
 def main():
-    coord_system_id = get_uuid4()
+    coord_system_id = get_uuid4("coord-system")
 
     root_collection_path = BASE_PATH / "example4"
     if Path(root_collection_path).exists():
         shutil.rmtree(root_collection_path)
     root_collection_path.mkdir(parents=True, exist_ok=True)
 
-    images_A1 = _get_images(coord_system_id=coord_system_id)
+    images_A1 = _get_images(coord_system_id=coord_system_id, well_label="A1")
     images_A1_ref = []
-    images_A2 = _get_images(coord_system_id=coord_system_id)
+    images_A2 = _get_images(coord_system_id=coord_system_id, well_label="A2")
     images_A2_ref = []
     for image in images_A1:
         url = str(root_collection_path / f"plate/well-A1/{image.name}/zarr.json")
@@ -124,7 +125,7 @@ def main():
     well_A1 = ngc.new_node(
         "collection",
         name="Well A1",
-        id=get_uuid4(),
+        id=get_uuid4("well-A1"),
         children=[],
         attributes={"well": {"column": {"id": "1"}, "row": {"id": "A"}}},
     ).add_ref(*images_A1_ref)
@@ -132,7 +133,7 @@ def main():
     well_A2 = ngc.new_node(
         "collection",
         name="Well A2",
-        id=get_uuid4(),
+        id=get_uuid4("well-A2"),
         children=[],
         attributes={"well": {"column": {"id": "2"}, "row": {"id": "A"}}},
     ).add_ref(*images_A2_ref)
@@ -145,7 +146,7 @@ def main():
     plate = ngc.new_node(
         "collection",
         name="Plate",
-        id=get_uuid4(),
+        id=get_uuid4("collection"),
         children=[],
         attributes={
             "plate": {
@@ -162,7 +163,7 @@ def main():
     collection = ngc.new_node(
         "collection",
         name="My dataset",
-        id=get_uuid4(),
+        id=get_uuid4("dataset"),
         children=[plate],
     )
 

@@ -3,7 +3,7 @@
     "version": "0.x",
     "type": "collection",
     "name": "Plate",
-    "id": "e81775f3-ca42-45f7-a051-e671246595df",
+    "id": "2bfea9a6-e40a-4961-b5aa-7e1d76bd06f6",
     "attributes": {
       "plate": {
         "acquisitions": [],
@@ -23,7 +23,7 @@
       {
         "type": "collection",
         "name": "Well A1",
-        "id": "aac9912d-17bf-4b18-8b3c-354de7c834d3",
+        "id": "7a9ef4a4-f02e-4ac8-b789-154ba959a7bb",
         "path": {
           "type": "json",
           "path": "./well-A1/well.json"

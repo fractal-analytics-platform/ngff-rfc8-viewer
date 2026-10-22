@@ -3,7 +3,7 @@
     "version": "0.x",
     "type": "collection",
     "name": "Plate",
-    "id": "e56a0eb1-0348-44bc-9d0f-5781a0d96ade",
+    "id": "e65b4c99-6513-4177-acd1-97714d4a054f",
     "attributes": {
       "plate": {
         "acquisitions": [],
@@ -26,7 +26,7 @@
       {
         "type": "collection",
         "name": "Well A1",
-        "id": "042cc7c2-560b-4cb9-875b-693192bb2bfd",
+        "id": "1a08ccee-8411-47e8-a64b-be141b2813de",
         "path": {
           "type": "json",
           "path": "./well-A1/well.json"
@@ -35,7 +35,7 @@
       {
         "type": "collection",
         "name": "Well A2",
-        "id": "d4e3fda5-1691-49e2-9611-516c30665bc3",
+        "id": "4f4f1043-bbd7-402f-a683-2204853af683",
         "path": {
           "type": "json",
           "path": "./well-A2/well.json"

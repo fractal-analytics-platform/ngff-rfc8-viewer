@@ -10,8 +10,8 @@ NUM_SINGLESCALES = 3
 
 
 def main():
-    coord_system_id = get_uuid4()
-    collection_id = get_uuid4()
+    coord_system_id = get_uuid4("coord-system")
+    collection_id = get_uuid4("collection")
 
     root_collection_path = BASE_PATH / "3"
     shutil.rmtree(root_collection_path)
@@ -19,14 +19,16 @@ def main():
 
     collections_level1 = []
     for ind_collection_lev1 in range(NUM_COLLECTIONS):
-        collection_level1_id = get_uuid4()
+        collection_level1_id = get_uuid4(f"collection-lev1-{ind_collection_lev1}")
 
         collection_level1_path = root_collection_path / str(ind_collection_lev1)
         collection_level1_path.mkdir(parents=True, exist_ok=True)
 
         collections_level2 = []
         for ind_collection_lev2 in range(NUM_COLLECTIONS):
-            collection_level2_id = get_uuid4()
+            collection_level2_id = get_uuid4(
+                f"collection-lev1-{ind_collection_lev1}-lev2-{ind_collection_lev2}"
+            )
 
             collection_level2_path = collection_level1_path / str(ind_collection_lev2)
             collection_level2_path.mkdir(parents=True, exist_ok=True)
@@ -34,13 +36,22 @@ def main():
             multiscales = []
 
             for ind_multiscale in range(NUM_MULTISCALES):
-                multiscale_id = get_uuid4()
+                multiscale_id = get_uuid4(
+                    f"collection-lev1-{ind_collection_lev1}-"
+                    f"lev2-{ind_collection_lev2}-"
+                    f"multiscale-{ind_multiscale}"
+                )
                 multiscale_path = collection_level2_path / str(ind_multiscale)
                 multiscale_path.mkdir(parents=True, exist_ok=True)
 
                 singlescales = []
                 for ind_singlescale in range(NUM_SINGLESCALES):
-                    singlescale_id = get_uuid4()
+                    singlescale_id = get_uuid4(
+                        f"collection-lev1-{ind_collection_lev1}-"
+                        f"lev2-{ind_collection_lev2}-"
+                        f"multiscale-{ind_multiscale}"
+                        f"singlescale-{ind_singlescale}"
+                    )
                     singlescale_path = multiscale_path / str(ind_singlescale)
                     singlescale_path.mkdir(parents=True, exist_ok=True)
 
@@ -176,7 +187,7 @@ def main():
         "collection",
         name="root collection",
         id=collection_id,
-        ref=ngc.Reference(path=ngc.ZarrPath(path=f"./3")),
+        ref=ngc.Reference(path=ngc.ZarrPath(path="./3")),
     )
 
     collection_resolved = ngc.new_node(
