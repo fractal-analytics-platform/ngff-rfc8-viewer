@@ -73,7 +73,7 @@ export class ListView {
     nodeElement.style.opacity = isLoaded ? '1' : '0.5';
     nodeElement.style.paddingTop = isRemote ? '10px' : '2px';
     nodeElement.style.paddingBottom = isRemote ? '10px' : '2px';
-    nodeElement.className = `node-element ${isCollapsed ? 'collapsed' : ''} ${hasChildren ? 'has-children' : ''}`;
+    nodeElement.className = `${CSS_CLASS_PREFIX}node-element ${isCollapsed ? `${CSS_CLASS_PREFIX}collapsed` : ''} ${hasChildren ? `${CSS_CLASS_PREFIX}has-children` : ''}`;
 
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
@@ -83,7 +83,7 @@ export class ListView {
     button.onclick = async () => {
       this.selectNode(node);
       // Adding 'collapsed' class will hide child nodes etc.
-      nodeElement.classList.toggle('collapsed');
+      nodeElement.classList.toggle(`${CSS_CLASS_PREFIX}collapsed`);
       if (isLoaded) {
         // simply toggle collapsed - don't need to re-render the tree
         node.collapsed = !node.collapsed;

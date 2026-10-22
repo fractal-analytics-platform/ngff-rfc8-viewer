@@ -52,7 +52,9 @@ export type CoordinateTransformation = {
   type: string;
   input: OmeReference;
   output: OmeReference;
+  // translation OR scale transformation
   translation?: number[];
+  scale?: number[];
 };
 
 export type SinglescaleOmeNode = {

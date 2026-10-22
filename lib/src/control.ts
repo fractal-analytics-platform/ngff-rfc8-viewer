@@ -24,7 +24,11 @@ export default class NGFFControlPanel {
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
 
     this.spinner = document.createElement('div');
-    this.spinner.classList.add(`${CSS_CLASS_PREFIX}spinner`, `${CSS_CLASS_PREFIX}hide`);
+    this.spinner.classList.add(
+      `${CSS_CLASS_PREFIX}control-spinner`,
+      `${CSS_CLASS_PREFIX}spinner`,
+      `${CSS_CLASS_PREFIX}hide`
+    );
 
     function addButton(className: string, parent: HTMLElement, title: string, onClick: () => void) {
       const button = document.createElement('button');

@@ -1,20 +1,51 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
+import { NGFFGraph } from './graph';
+import { createThumbnailImg } from './thumbnail';
 
 const defaultWidth = 560;
 const minWidth = 150;
 const minSpace = 100;
 const smallScreenBreakpoint = 768;
+// validation errors to ignore for *unloaded* multiscale nodes only
+const IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE = [
+  "must have required property 'attributes'",
+  'must match "then" schema'
+];
 
 export class NGFFSidebar {
   private element: HTMLElement;
   private content: HTMLElement;
   private validationEnabled: boolean;
+  private node: D3Node | null = null;
+  private graph: NGFFGraph;
 
-  constructor(element: HTMLElement, validate: boolean) {
+  constructor(element: HTMLElement, validate: boolean, graph: NGFFGraph) {
     this.element = element;
+    this.graph = graph;
     this.validationEnabled = validate;
+
+    // Listen for loading & update events from the graph to refresh the sidebar if needed
+    graph.onLoading((loading) => {
+      if (!loading && this.isOpen()) {
+        // If the current node is a multiscale node with remote children (now loaded),
+        // showInfo() to display thumbnail
+        if (
+          this.node &&
+          this.node.omeNode.type == 'multiscale' &&
+          !('nodes' in this.node.omeNode)
+        ) {
+          this.showInfo(this.node);
+        }
+      }
+    });
+    graph.onNodeUpdated((node) => {
+      if (this.isOpen()) {
+        this.showInfo(node);
+      }
+    });
+
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
 
     this.buildResizer();
@@ -84,11 +115,31 @@ export class NGFFSidebar {
   }
 
   showInfo(node: D3Node) {
+    this.node = node;
     this.content.innerHTML = '';
 
     this.addKeyValue('Id', node.omeNode.id || '-');
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
+
+    // For multiscale nodes, display a thumbnail image
+    if (node.omeNode.type == 'multiscale') {
+      const prefix = this.graph.getLoader().getPrefix();
+      let resolvedPath = node.resolvedPath;
+      if ('path' in node.omeNode && node.omeNode.path?.path) {
+        resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
+      }
+      // Construct the base URL for the thumbnailZarr store
+      const baseUrl =
+        prefix + (resolvedPath.startsWith('./') ? resolvedPath.substring(1) : resolvedPath);
+
+      if ('nodes' in node.omeNode) {
+        this.content.appendChild(createThumbnailImg(node, baseUrl, 150));
+      } else {
+        const children = this.graph.getChildren(node).map((child) => child.omeNode);
+        this.content.appendChild(createThumbnailImg(node, baseUrl, 150, children));
+      }
+    }
 
     if ('path' in node.omeNode) {
       this.addKeyValue('Path', `${node.omeNode.path?.path} (type: ${node.omeNode.path?.type})`);
@@ -117,24 +168,39 @@ export class NGFFSidebar {
     } catch (err) {
       if (err instanceof Error) {
         const error = document.createElement('div');
-        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
         error.classList.add(`${CSS_CLASS_PREFIX}error`);
-        this.content.prepend(error);
+        let errorCount = 0;
         if (
           'schemaErrors' in err &&
           Array.isArray(err.schemaErrors) &&
           err.schemaErrors.length > 0
         ) {
+          const toIgnore =
+            !node.loaded && node.omeNode.type === 'multiscale'
+              ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
+              : [];
+
           error.innerText = 'Validation errors, see below';
-          for (const schemaError of err.schemaErrors) {
+          for (const schemaError of err.schemaErrors.filter(
+            (se) => !toIgnore.includes(se.message)
+          )) {
+            // we log in case node reloading causes the error to be lost
+            console.log('Schema Validation error:', schemaError);
             const error = document.createElement('pre');
             error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
             error.innerText = JSON.stringify(schemaError, null, 2);
             this.content.appendChild(error);
+            errorCount++;
           }
         } else {
           error.innerText = err.message;
+          errorCount++;
         }
+        if (errorCount === 0) {
+          return;
+        }
+        this.content.prepend(error);
+        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
       }
     }
   }
