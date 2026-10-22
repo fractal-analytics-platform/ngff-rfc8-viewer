@@ -36,7 +36,7 @@ def create_zarr_array(path: str | Path) -> None:
     z = zarr.create_array(
         store=path,
         shape=(100, 100),
-        chunks=(50, 50),
+        chunks=(100, 100),
         dtype="f4",
         overwrite=True,
     )
