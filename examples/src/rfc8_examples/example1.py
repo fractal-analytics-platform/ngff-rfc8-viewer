@@ -1,27 +1,16 @@
-from pathlib import Path
 
 import ngio_collections as ngc
-import zarr
 
 from rfc8_examples import BASE_PATH, get_uuid4
-
-
-def _create_zarr_array(path: str | Path) -> None:
-    zarr.zeros(
-        store=path,
-        shape=(100, 100),
-        chunks=(10, 10),
-        dtype="f4",
-        overwrite=True,
-    )
+from rfc8_examples.utils import create_zarr_array
 
 
 def main():
-    coord_system_id = get_uuid4()
-    singlescale_1_id = get_uuid4()
-    singlescale_2_id = get_uuid4()
-    multiscale_id = get_uuid4()
-    collection_id = get_uuid4()
+    coord_system_id = get_uuid4("coord-sysnte-id")
+    singlescale_1_id = get_uuid4("singlescale-1")
+    singlescale_2_id = get_uuid4("singlescale-2")
+    multiscale_id = get_uuid4("multiscale")
+    collection_id = get_uuid4("collection")
 
     singlescale_1 = ngc.new_node(
         node_type="singlescale",
@@ -88,8 +77,8 @@ def main():
     url = str(base_dir / "root.json")
     ngc.create(url, collection, overwrite=True)
 
-    _create_zarr_array(base_dir / "1")
-    _create_zarr_array(base_dir / "2")
+    create_zarr_array(base_dir / "1")
+    create_zarr_array(base_dir / "2")
 
 
 if __name__ == "__main__":

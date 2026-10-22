@@ -3,7 +3,7 @@
     "version": "0.x",
     "type": "collection",
     "name": "Well A2",
-    "id": "d4e3fda5-1691-49e2-9611-516c30665bc3",
+    "id": "4f4f1043-bbd7-402f-a683-2204853af683",
     "attributes": {
       "well": {
         "column": {
@@ -18,7 +18,7 @@
       {
         "type": "multiscale",
         "name": "0",
-        "id": "7ba35975-cd2e-4163-858c-2e6e57ed22d0",
+        "id": "6eba37ae-9161-4cc2-a73c-663726e19fa3",
         "path": {
           "type": "zarr",
           "path": "./0"
@@ -27,7 +27,7 @@
       {
         "type": "multiscale",
         "name": "1",
-        "id": "f5e77d4d-cf30-4f2d-9097-a70286ee6241",
+        "id": "6773c15f-c17b-4cfb-8b08-d271bc1f491c",
         "path": {
           "type": "zarr",
           "path": "./1"
@@ -36,7 +36,7 @@
       {
         "type": "multiscale",
         "name": "0_corrected",
-        "id": "6f33f708-8343-4946-a56a-62c3c4ef7978",
+        "id": "40cdabd0-df2d-4a08-83e5-9f70066281bf",
         "path": {
           "type": "zarr",
           "path": "./0_corrected"
@@ -45,7 +45,7 @@
       {
         "type": "multiscale",
         "name": "1_corrected",
-        "id": "d560f64b-e3dd-4ffa-98b4-85deaaaa1310",
+        "id": "5b319662-004f-4fdb-90c7-4ff1d04d721b",
         "path": {
           "type": "zarr",
           "path": "./1_corrected"
@@ -54,7 +54,7 @@
       {
         "type": "multiscale",
         "name": "nuclei_0",
-        "id": "d8eb6412-0826-4069-8293-b3205fe0a658",
+        "id": "d2b9bb7d-2da6-4ecb-b4f5-62a441ddfc76",
         "path": {
           "type": "zarr",
           "path": "./nuclei_0"
@@ -63,7 +63,7 @@
       {
         "type": "multiscale",
         "name": "nuclei_1",
-        "id": "7ca5d0ed-e9e4-42dd-9525-e9d3d1f7fbe4",
+        "id": "1ff8fd49-6c97-4383-add5-9ab9d44e58ab",
         "path": {
           "type": "zarr",
           "path": "./nuclei_1"
@@ -72,7 +72,7 @@
       {
         "type": "table",
         "name": "measurements_0_corrected",
-        "id": "e2485bb6-6425-4e83-8de0-4a9e5640230e",
+        "id": "fbdebb0b-a040-4da1-b872-5f73bee8c6e2",
         "path": {
           "type": "zarr",
           "path": "./measurements_0_corrected"
@@ -81,7 +81,7 @@
       {
         "type": "table",
         "name": "measurements_1_corrected",
-        "id": "633d6624-74ee-4fd8-b91d-f46412c32f37",
+        "id": "bc0a8d8c-3a14-4a9c-a1e7-9c90a8358f59",
         "path": {
           "type": "zarr",
           "path": "./measurements_1_corrected"

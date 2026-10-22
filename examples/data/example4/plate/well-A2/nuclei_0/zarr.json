@@ -4,14 +4,14 @@
       "version": "0.x",
       "type": "multiscale",
       "name": "nuclei_0",
-      "id": "d8eb6412-0826-4069-8293-b3205fe0a658",
+      "id": "d2b9bb7d-2da6-4ecb-b4f5-62a441ddfc76",
       "attributes": {
         "field": {
           "id": 0
         },
         "coordinateSystems": [
           {
-            "id": "c4da537c-1651-4dae-8486-7db30d67b366",
+            "id": "83df17e0-a789-4033-85fc-49bf303502b9",
             "axes": [
               {
                 "name": "y",
@@ -31,15 +31,15 @@
         {
           "type": "singlescale",
           "name": "s0",
-          "id": "b9cfda65-2e74-4c1f-a53c-4cc6c1117e2f",
+          "id": "829814ef-a0a8-4b15-b913-f9cbca1e4b86",
           "attributes": {
             "coordinateTransformations": [
               {
                 "input": {
-                  "id": "b9cfda65-2e74-4c1f-a53c-4cc6c1117e2f"
+                  "id": "829814ef-a0a8-4b15-b913-f9cbca1e4b86"
                 },
                 "output": {
-                  "id": "c4da537c-1651-4dae-8486-7db30d67b366"
+                  "id": "83df17e0-a789-4033-85fc-49bf303502b9"
                 },
                 "type": "scale",
                 "scale": [
@@ -51,7 +51,7 @@
           },
           "path": {
             "type": "zarr",
-            "path": "./0"
+            "path": "./s0"
           }
         }
       ]

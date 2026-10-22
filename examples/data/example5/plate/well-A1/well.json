@@ -3,7 +3,7 @@
     "version": "0.x",
     "type": "collection",
     "name": "Well A1",
-    "id": "aac9912d-17bf-4b18-8b3c-354de7c834d3",
+    "id": "7a9ef4a4-f02e-4ac8-b789-154ba959a7bb",
     "attributes": {
       "well": {
         "column": {
@@ -18,7 +18,7 @@
       {
         "type": "multiscale",
         "name": "0",
-        "id": "d6a82a95-1b92-4e0a-843c-def36840ff07",
+        "id": "66892638-7a38-4814-ba6a-bae3ad3cf4d0",
         "path": {
           "type": "zarr",
           "path": "./0"
@@ -27,7 +27,7 @@
       {
         "type": "multiscale",
         "name": "1",
-        "id": "573e8d77-550a-4889-8ff4-1e8d8944897c",
+        "id": "f9da0288-5dbf-4e17-90b8-326cf3437e91",
         "path": {
           "type": "zarr",
           "path": "./1"
@@ -36,7 +36,7 @@
       {
         "type": "multiscale",
         "name": "1_registered",
-        "id": "b3a1f131-5573-4e2d-8f9b-34c95653d4bd",
+        "id": "e4eeab00-5b5c-4165-a0f3-a662b8d28114",
         "path": {
           "type": "zarr",
           "path": "./1_registered"
@@ -45,7 +45,7 @@
       {
         "type": "multiscale",
         "name": "nuclei",
-        "id": "e0edeaf1-166d-4683-8609-dcba6fafc520",
+        "id": "6e2f5c72-125a-45ea-b145-21193c90f217",
         "path": {
           "type": "zarr",
           "path": "./nuclei"
@@ -54,7 +54,7 @@
       {
         "type": "table",
         "name": "nuclei_measurements",
-        "id": "1a1f141b-72c5-4633-bb66-ecb350c1eb44",
+        "id": "f9fa8fc0-4253-4f74-8e8f-4096ca8898a0",
         "path": {
           "type": "zarr",
           "path": "./nuclei_measurements"

@@ -4,7 +4,7 @@
       "version": "0.x",
       "type": "multiscale",
       "name": "1",
-      "id": "573e8d77-550a-4889-8ff4-1e8d8944897c",
+      "id": "f9da0288-5dbf-4e17-90b8-326cf3437e91",
       "attributes": {
         "field": {
           "id": 0
@@ -12,7 +12,7 @@
         "acquisition": 1,
         "coordinateSystems": [
           {
-            "id": "c4da537c-1651-4dae-8486-7db30d67b366",
+            "id": "83df17e0-a789-4033-85fc-49bf303502b9",
             "axes": [
               {
                 "name": "y",
@@ -32,15 +32,15 @@
         {
           "type": "singlescale",
           "name": "s0",
-          "id": "2293202c-28df-4298-8d49-6d4bda22594f",
+          "id": "6b1231ce-7f54-4b06-8691-eb31a283529e",
           "attributes": {
             "coordinateTransformations": [
               {
                 "input": {
-                  "id": "2293202c-28df-4298-8d49-6d4bda22594f"
+                  "id": "6b1231ce-7f54-4b06-8691-eb31a283529e"
                 },
                 "output": {
-                  "id": "c4da537c-1651-4dae-8486-7db30d67b366"
+                  "id": "83df17e0-a789-4033-85fc-49bf303502b9"
                 },
                 "type": "scale",
                 "scale": [
@@ -52,7 +52,7 @@
           },
           "path": {
             "type": "zarr",
-            "path": "./0"
+            "path": "./s0"
           }
         }
       ]
