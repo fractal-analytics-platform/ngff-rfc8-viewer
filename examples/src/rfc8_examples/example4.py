@@ -6,6 +6,7 @@ import ngio_collections as ngc
 from rfc8_examples import BASE_PATH, get_uuid4
 from rfc8_examples.utils import create_zarr_array
 
+
 def _get_singlescales(coord_system_id: int, image_id: str) -> list[ngc.Node]:
     s0_id = get_uuid4(f"{image_id}-s0")
     return [

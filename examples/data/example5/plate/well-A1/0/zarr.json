@@ -52,7 +52,7 @@
           },
           "path": {
             "type": "zarr",
-            "path": "./0"
+            "path": "./s0"
           }
         }
       ]
