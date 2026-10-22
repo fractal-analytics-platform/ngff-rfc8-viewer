@@ -114,6 +114,18 @@ export default class NGFFControlPanel {
     );
 
     element.appendChild(this.spinner);
+
+    // spacer
+    const spacer = document.createElement('div');
+    spacer.style.flexGrow = '1';
+    element.appendChild(spacer);
+
+    // GitHub link
+    const githubLink = document.createElement('a');
+    githubLink.href = 'https://github.com/fractal-analytics-platform/ngff-rfc8-viewer';
+    githubLink.target = '_blank';
+    githubLink.classList.add(`${CSS_CLASS_PREFIX}github`, `${CSS_CLASS_PREFIX}bi`);
+    element.appendChild(githubLink);
   }
 
   async loadAll() {
