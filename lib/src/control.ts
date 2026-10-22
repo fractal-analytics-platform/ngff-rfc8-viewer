@@ -70,21 +70,14 @@ export default class NGFFControlPanel {
     btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
     element.appendChild(btnGroup);
 
-    this.loadAllBtn = document.createElement('button');
-    this.loadAllBtn.textContent = 'Load All';
-    this.loadAllBtn.style.lineHeight = '16.5px';
-    this.loadAllBtn.title = 'Load all nodes';
-    this.loadAllBtn.setAttribute('type', 'button');
-    this.loadAllBtn.addEventListener('click', () => this.loadAll());
-    btnGroup.appendChild(this.loadAllBtn);
+    this.loadNextBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load next level', () =>
+      this.loadNext()
+    );
 
-    this.loadNextBtn = document.createElement('button');
-    this.loadNextBtn.textContent = '+1';
-    this.loadNextBtn.style.lineHeight = '16.5px';
-    this.loadNextBtn.title = 'Load next level';
-    this.loadNextBtn.setAttribute('type', 'button');
-    this.loadNextBtn.addEventListener('click', () => this.loadNext());
-    btnGroup.appendChild(this.loadNextBtn);
+    this.loadAllBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load all nodes', () =>
+      this.loadAll()
+    );
+    this.loadAllBtn.textContent = '++';
 
     // Button group for view buttons
     btnGroup = document.createElement('div');
