@@ -37,7 +37,7 @@ def create_zarr_array(path: str | Path) -> None:
         store=path,
         shape=(10, 10),
         chunks=(10, 10),
-        dtype="f4",
+        dtype="uint8",
         overwrite=True,
     )
     z[:, :] = np.random.random((100, 100))

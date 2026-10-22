@@ -3,7 +3,7 @@
     10,
     10
   ],
-  "data_type": "float32",
+  "data_type": "uint8",
   "chunk_grid": {
     "name": "regular",
     "configuration": {
@@ -19,13 +19,10 @@
       "separator": "/"
     }
   },
-  "fill_value": 0.0,
+  "fill_value": 0,
   "codecs": [
     {
-      "name": "bytes",
-      "configuration": {
-        "endian": "little"
-      }
+      "name": "bytes"
     },
     {
       "name": "zstd",
