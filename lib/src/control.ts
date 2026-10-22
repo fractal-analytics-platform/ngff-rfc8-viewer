@@ -77,7 +77,8 @@ export default class NGFFControlPanel {
     this.loadAllBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load all nodes', () =>
       this.loadAll()
     );
-    this.loadAllBtn.textContent = '++';
+    this.loadAllBtn.classList.add(`${CSS_CLASS_PREFIX}icon-margin`);
+    this.loadAllBtn.textContent = 'all';
 
     // Button group for view buttons
     btnGroup = document.createElement('div');
