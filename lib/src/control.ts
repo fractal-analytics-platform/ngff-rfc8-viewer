@@ -10,8 +10,6 @@ export default class NGFFControlPanel {
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
-  private viewTreeButton: HTMLButtonElement;
-  private viewListButton: HTMLButtonElement;
 
   constructor(
     element: HTMLElement,
@@ -28,39 +26,88 @@ export default class NGFFControlPanel {
     this.spinner = document.createElement('div');
     this.spinner.classList.add(`${CSS_CLASS_PREFIX}spinner`, `${CSS_CLASS_PREFIX}hide`);
 
+    function addButton(className: string, parent: HTMLElement, title: string, onClick: () => void) {
+      const button = document.createElement('button');
+      button.classList.add(className, `${CSS_CLASS_PREFIX}bi`);
+      button.setAttribute('type', 'button');
+      if (title) {
+        button.title = title;
+      }
+      button.addEventListener('click', onClick);
+      parent.appendChild(button);
+      return button;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    // Button group for home buttons
+    let btnGroup = document.createElement('div');
+    btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
+    element.appendChild(btnGroup);
+
+    addButton(`${CSS_CLASS_PREFIX}house-door-fill`, btnGroup, 'Home', () => {
+      window.location.hash = '';
+      params.delete('source');
+      window.location.search = params.toString();
+    });
+
+    addButton(
+      `${CSS_CLASS_PREFIX}arrow-left-square`,
+      btnGroup,
+      'Back to root of current collection',
+      () => {
+        window.location.hash = '';
+        window.location.reload();
+      }
+    );
+
+    // Button group for load buttons
+    btnGroup = document.createElement('div');
+    btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
+    element.appendChild(btnGroup);
+
     this.loadAllBtn = document.createElement('button');
-    this.loadAllBtn.textContent = 'Load all nodes';
+    this.loadAllBtn.textContent = 'Load All';
+    this.loadAllBtn.style.lineHeight = '16.5px';
+    this.loadAllBtn.title = 'Load all nodes';
     this.loadAllBtn.setAttribute('type', 'button');
     this.loadAllBtn.addEventListener('click', () => this.loadAll());
-    element.appendChild(this.loadAllBtn);
+    btnGroup.appendChild(this.loadAllBtn);
 
     this.loadNextBtn = document.createElement('button');
-    this.loadNextBtn.textContent = 'Load next level';
+    this.loadNextBtn.textContent = '+1';
+    this.loadNextBtn.style.lineHeight = '16.5px';
+    this.loadNextBtn.title = 'Load next level';
     this.loadNextBtn.setAttribute('type', 'button');
     this.loadNextBtn.addEventListener('click', () => this.loadNext());
-    element.appendChild(this.loadNextBtn);
+    btnGroup.appendChild(this.loadNextBtn);
 
-    this.viewTreeButton = document.createElement('button');
-    this.viewTreeButton.textContent = 'View Tree';
-    this.viewTreeButton.setAttribute('type', 'button');
-    this.viewTreeButton.addEventListener('click', () => {
-      window.location.search = new URLSearchParams({
-        ...Object.fromEntries(new URLSearchParams(window.location.search)),
-        view: 'tree'
-      }).toString();
-    });
-    element.appendChild(this.viewTreeButton);
+    // Button group for view buttons
+    btnGroup = document.createElement('div');
+    btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
+    element.appendChild(btnGroup);
 
-    this.viewListButton = document.createElement('button');
-    this.viewListButton.textContent = 'View List';
-    this.viewListButton.setAttribute('type', 'button');
-    this.viewListButton.addEventListener('click', () => {
-      window.location.search = new URLSearchParams({
-        ...Object.fromEntries(new URLSearchParams(window.location.search)),
-        view: 'list'
-      }).toString();
+    addButton(`${CSS_CLASS_PREFIX}diagram-3-fill`, btnGroup, 'View Tree', () => {
+      params.set('view', 'tree');
+      window.location.search = params.toString();
     });
-    element.appendChild(this.viewListButton);
+
+    addButton(`${CSS_CLASS_PREFIX}list-nested`, btnGroup, 'View List', () => {
+      params.set('view', 'list');
+      window.location.search = params.toString();
+    });
+
+    // Validate button - toggle true/false
+    const validate = params.get('validate') == 'true';
+    addButton(
+      validate ? `${CSS_CLASS_PREFIX}shield-fill-check` : `${CSS_CLASS_PREFIX}shield-check`,
+      element,
+      'Validate selected node with JSON Schema',
+      () => {
+        params.set('validate', validate ? 'false' : 'true');
+        window.location.search = params.toString();
+      }
+    );
 
     element.appendChild(this.spinner);
   }
