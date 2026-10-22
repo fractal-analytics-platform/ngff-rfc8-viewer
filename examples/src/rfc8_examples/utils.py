@@ -35,8 +35,8 @@ def create_zarr_array(path: str | Path) -> None:
     np.random.seed(seed=1234567)
     z = zarr.create_array(
         store=path,
-        shape=(10, 10),
-        chunks=(10, 10),
+        shape=(100, 100),
+        chunks=(50, 50),
         dtype="f4",
         overwrite=True,
     )
