@@ -1,19 +1,8 @@
-from pathlib import Path
 
 import ngio_collections as ngc
-import zarr
 
 from rfc8_examples import BASE_PATH, get_uuid4
-
-
-def _create_zarr_array(path: str | Path) -> None:
-    zarr.zeros(
-        store=path,
-        shape=(100, 100),
-        chunks=(10, 10),
-        dtype="f4",
-        overwrite=True,
-    )
+from rfc8_examples.utils import create_zarr_array
 
 
 def main():
@@ -88,8 +77,8 @@ def main():
     url = str(base_dir / "root.json")
     ngc.create(url, collection, overwrite=True)
 
-    _create_zarr_array(base_dir / "1")
-    _create_zarr_array(base_dir / "2")
+    create_zarr_array(base_dir / "1")
+    create_zarr_array(base_dir / "2")
 
 
 if __name__ == "__main__":

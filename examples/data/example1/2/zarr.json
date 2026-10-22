@@ -1,7 +1,7 @@
 {
   "shape": [
-    100,
-    100
+    10,
+    10
   ],
   "data_type": "float32",
   "chunk_grid": {

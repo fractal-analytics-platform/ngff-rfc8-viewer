@@ -4,6 +4,7 @@ import random
 import uuid
 from pathlib import Path
 
+import numpy as np
 import zarr
 
 _RND = random.Random()
@@ -29,11 +30,14 @@ def get_uuid4(source: str | bytes | dict | None = None) -> str:
         raise NotImplementedError(f"{type(source)=} is not supported")
     return str(uuid.UUID(**kwargs, version=4))
 
+
 def create_zarr_array(path: str | Path) -> None:
-    zarr.zeros(
+    np.random.seed(seed=1234567)
+    z = zarr.create_array(
         store=path,
-        shape=(100, 100),
+        shape=(10, 10),
         chunks=(10, 10),
         dtype="f4",
         overwrite=True,
     )
+    z[:, :] = np.random.random((100, 100))
