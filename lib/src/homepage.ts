@@ -27,11 +27,22 @@ export function createHomepage(): HTMLDivElement {
   const container = document.createElement('div');
   container.classList.add(`${CSS_CLASS_PREFIX}homepage`);
   container.appendChild(document.createElement('h1')).textContent = 'ngff-rfc8-viewer';
-  const list = document.createElement('ul');
-  container.appendChild(list);
 
   const queryParams = new URLSearchParams(window.location.search);
   const currentUrl = window.location.href;
+
+  const form = document.createElement('form');
+  container.appendChild(form);
+  const input = document.createElement('input');
+  input.placeholder = 'Enter source URL...';
+  input.name = 'source';
+  form.method = 'get';
+  form.action = currentUrl.split('?')[0];
+  form.appendChild(input);
+
+  // Add a list of example sources
+  const list = document.createElement('ul');
+  container.appendChild(list);
 
   function createLink(url: string, text: string, parent: HTMLElement): HTMLAnchorElement {
     const link = document.createElement('a');

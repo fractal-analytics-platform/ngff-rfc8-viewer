@@ -21,6 +21,12 @@
 .ngff-rfc8-viewer-homepage h1 {
   text-align: center;
 }
+.ngff-rfc8-viewer-homepage input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: solid grey 1px;
+}
 
 .ngff-rfc8-viewer-graph-container {
   flex-grow: 1;
