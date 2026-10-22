@@ -12,10 +12,12 @@ export class NGFFGraph {
 
   private hierarchy: d3.HierarchyNode<D3Node> | undefined;
 
-  private signalLoading: (loading: boolean) => void = () => {};
-  private signalError: (message: string | null) => void = () => {};
-  private signalNodeUpdated: (node: D3Node) => void = () => {};
-  private signalChange: () => void = () => {};
+  private eventListeners = {
+    loading: [] as Array<(loading: boolean) => void>,
+    error: [] as Array<(message: string | null) => void>,
+    nodeUpdated: [] as Array<(node: D3Node) => void>,
+    change: [] as Array<() => void>
+  };
 
   private lastGeneratedId = 0;
 
@@ -29,24 +31,41 @@ export class NGFFGraph {
     this.computeExtraEdges = computeExtraEdges;
   }
 
+  getLoader() {
+    return this.loader;
+  }
+
+  signalLoading(loading: boolean) {
+    this.eventListeners['loading'].forEach((fn) => fn(loading));
+  }
+
+  signalError(message: string | null) {
+    this.eventListeners['error'].forEach((fn) => fn(message));
+  }
+
+  signalNodeUpdated(node: D3Node) {
+    this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
+  }
+
+  signalChange() {
+    this.eventListeners['change'].forEach((fn) => fn());
+  }
+
+  // Convenience methods for adding event listeners
   onLoading(fn: (loading: boolean) => void) {
-    this.signalLoading = fn;
+    this.eventListeners['loading'].push(fn);
   }
 
   onError(fn: (message: string | null) => void) {
-    this.signalError = fn;
-  }
-
-  reportError(message: string) {
-    this.signalError(message);
+    this.eventListeners['error'].push(fn);
   }
 
   onNodeUpdated(fn: (node: D3Node) => void) {
-    this.signalNodeUpdated = fn;
+    this.eventListeners['nodeUpdated'].push(fn);
   }
 
   onChange(fn: () => void) {
-    this.signalChange = fn;
+    this.eventListeners['change'].push(fn);
   }
 
   getHierarchy(): d3.HierarchyNode<D3Node> {
@@ -104,9 +123,6 @@ export class NGFFGraph {
 
   private getBasicOmeNode(node: OmeNode): OmeNode {
     const nodeCopy = { ...node };
-    if ('nodes' in nodeCopy) {
-      nodeCopy.nodes = [];
-    }
     if ('generatedId' in nodeCopy) {
       delete nodeCopy['generatedId'];
     }
@@ -138,6 +154,10 @@ export class NGFFGraph {
 
   getNodeId(node: D3Node): string {
     return node.omeNode.id || node.omeNode?.name;
+  }
+
+  getChildren(node: D3Node): Array<D3Node> {
+    return this.nodes.filter((n) => n.parentId === node.id);
   }
 
   getParentsIds(node: D3Node): Array<string> {

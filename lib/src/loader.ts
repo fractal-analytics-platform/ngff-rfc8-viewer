@@ -16,6 +16,10 @@ export class NGFFLoader {
       : this.source;
   }
 
+  getPrefix() {
+    return this.prefix;
+  }
+
   async loadGraphData(): Promise<OmeNode> {
     let url: URL;
     try {
