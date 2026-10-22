@@ -125,7 +125,7 @@ def main():
         url = str(root_collection_path / f"plate/well-A2/{child.name}/zarr.json")
         children_A2_ref.append(ngc.create(url, child, overwrite=True))
         if child.type == "multiscale":
-            url = str(root_collection_path / f"plate/well-A1/{child.name}/s0")
+            url = str(root_collection_path / f"plate/well-A2/{child.name}/s0")
             create_zarr_array(url)
 
     well_A1 = ngc.new_node(
