@@ -55,6 +55,7 @@ export class ImagesView {
     const msg = document.createElement('div');
     msg.textContent = `Only LOADED multiscale nodes are shown.
     If some images are missing, use the "Load All" or "Load Next" buttons above.`;
+    msg.style.marginBottom = '1em';
     this.rootElement.appendChild(msg);
     const descendants = this.graph.getHierarchy().descendants();
     descendants.forEach((d) => {

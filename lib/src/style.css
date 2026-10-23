@@ -389,6 +389,7 @@ Show the "sidebar" below the graph
   position: absolute;
 }
 
+/* images view */
 .ngff-rfc8-viewer-image-row {
   display: flex;
   flex-direction: row;
@@ -404,4 +405,7 @@ Show the "sidebar" below the graph
 .ngff-rfc8-viewer-image-row h2 {
   margin: 5px 0;
   font-size: 1.25em;
+}
+.ngff-rfc8-viewer-image-row .ngff-rfc8-viewer-thumbnail-container {
+  flex-shrink: 0;
 }
