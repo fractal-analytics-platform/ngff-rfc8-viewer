@@ -28,6 +28,10 @@ export class NGFFLoader {
     this.addTrustedDomain(url.hostname);
   }
 
+  getPrefix() {
+    return this.prefix;
+  }
+
   async loadGraphData(): Promise<OmeNode> {
     return await this.loadNode(this.source);
   }

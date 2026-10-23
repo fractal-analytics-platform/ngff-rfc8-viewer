@@ -17,7 +17,7 @@ const exampleSources = [
   ],
   [
     'plate with multiple fields',
-    'https://raw.githubusercontent.com/tcompa/example-collections/refs/heads/main/plate/dataset/dataset.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example4/root.json'
   ]
 ];
 
@@ -67,7 +67,6 @@ export default class NGFFViewer {
     graphContainer.id = `${element.id}-graph-container`;
 
     const sidebar = document.createElement('div');
-    const sidebarHandler = new NGFFSidebar(sidebar, validate);
 
     const controlPanel = document.createElement('div');
     graphContainer.append(controlPanel);
@@ -80,6 +79,8 @@ export default class NGFFViewer {
     try {
       const loader = new NGFFLoader(source);
       const graph = new NGFFGraph(loader, autoloadDepth);
+      // sidebar listens to graph update and load events
+      const sidebarHandler = new NGFFSidebar(sidebar, validate, graph);
       const queryParams = new URLSearchParams(window.location.search);
       // Determine which view to use based on the query parameter
       const view =
@@ -94,11 +95,6 @@ export default class NGFFViewer {
         window.location.hash = idsToNode;
       });
       view.onBackgroundClick(() => sidebarHandler.hide());
-      graph.onNodeUpdated((node) => {
-        if (sidebarHandler.isOpen()) {
-          sidebarHandler.showInfo(node);
-        }
-      });
       const control = new NGFFControlPanel(controlPanel, graph, view, sidebarHandler);
       graph.onLoading((loading) =>
         loading ? control.setLoadingState() : control.unsetLoadingState()
@@ -114,7 +110,7 @@ export default class NGFFViewer {
           view.selectNode(node);
           view.renderTree();
         } catch (err) {
-          graph.reportError(err instanceof Error ? err.message : 'Unexpected error');
+          graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
         }
       }
     } catch (err) {
