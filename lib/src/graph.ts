@@ -1,6 +1,6 @@
 import * as d3 from 'd3';
 import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
-import type { NGFFLoader } from './loader';
+import { UntrustedDomainError, type NGFFLoader } from './loader';
 
 export class NGFFGraph {
   private loader: NGFFLoader;
@@ -267,6 +267,20 @@ export class NGFFGraph {
           break;
       }
     } catch (err) {
+      if (err instanceof UntrustedDomainError) {
+        node.loading = false;
+        if (
+          window.confirm(
+            `The viewer is trying to load resources from ${err.domain}. Do you want to trust this domain?`
+          )
+        ) {
+          this.loader.addTrustedDomain(err.domain);
+          await this.loadNode(node);
+        } else {
+          this.signalError(err.message);
+        }
+        return;
+      }
       node.loaded = false;
       node.error = true;
       console.error(err);
