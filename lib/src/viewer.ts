@@ -6,6 +6,7 @@ import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 import { TreeView } from './views/tree';
 import { ListView } from './views/list';
+import { ImagesView } from './views/images';
 
 export default class NGFFViewer {
   constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
@@ -55,10 +56,17 @@ export default class NGFFViewer {
       const sidebarHandler = new NGFFSidebar(sidebar, validate, graph);
       const queryParams = new URLSearchParams(window.location.search);
       // Determine which view to use based on the query parameter
-      const view =
-        queryParams.get('view') === 'list'
-          ? new ListView(graph, graphContainer.id)
-          : new TreeView(graph, graphContainer.id);
+      let view;
+      switch (queryParams.get('view')) {
+        case 'images':
+          view = new ImagesView(graph, graphContainer.id);
+          break;
+        case 'list':
+          view = new ListView(graph, graphContainer.id);
+          break;
+        default:
+          view = new TreeView(graph, graphContainer.id);
+      }
       view.onNodeSelect((node) => {
         sidebarHandler.showInfo(node);
 
