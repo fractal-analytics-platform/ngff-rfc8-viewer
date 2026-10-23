@@ -15,6 +15,7 @@ updates:
     # Look for `package.json` and `lock` files in the following directories
     directories:
       - '/'
+      - 'lib'
     # Check the npm registry for updates every day (weekdays)
     schedule:
       interval: 'monthly'
