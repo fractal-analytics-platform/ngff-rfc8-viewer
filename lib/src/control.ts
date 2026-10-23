@@ -95,6 +95,11 @@ export default class NGFFControlPanel {
       window.location.search = params.toString();
     });
 
+    addButton(`${CSS_CLASS_PREFIX}ui-checks`, btnGroup, 'View Images', () => {
+      params.set('view', 'images');
+      window.location.search = params.toString();
+    });
+
     // Validate button - toggle true/false
     const validate = params.get('validate') == 'true';
     addButton(
