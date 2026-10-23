@@ -1,8 +1,8 @@
-* {
+.ngff-rfc8-viewer-body * {
   box-sizing: border-box;
 }
 
-body {
+.ngff-rfc8-viewer-body {
   font-family: Arial, sans-serif;
 }
 
@@ -11,6 +11,21 @@ body {
   width: 100%;
   height: 100%;
   display: flex;
+}
+
+.ngff-rfc8-viewer-homepage {
+  padding: 20px;
+  width: fit-content;
+  margin: 0 auto;
+}
+.ngff-rfc8-viewer-homepage h1 {
+  text-align: center;
+}
+.ngff-rfc8-viewer-homepage input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: solid grey 1px;
 }
 
 .ngff-rfc8-viewer-graph-container {
