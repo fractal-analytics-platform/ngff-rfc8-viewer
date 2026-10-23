@@ -32,7 +32,7 @@ export function createThumbnailImg(
 
   const store = new zarr.FetchStore(baseUrl);
 
-  const rfc8multiscales = node.omeNode;
+  const rfc8multiscales: Partial<OmeNode> = node.omeNode;
   if (
     (!('nodes' in rfc8multiscales) || rfc8multiscales.nodes?.length === 0) &&
     !(ssChildren && ssChildren.length > 0)
@@ -74,42 +74,56 @@ export function createThumbnailImg(
     };
   }
 
-  const ms: omezarr.Multiscale = {
-    axes: rfc8multiscales.attributes?.coordinateSystems[0].axes,
-    datasets: ssNodes.map(createDataset) as [omezarr.Dataset, ...omezarr.Dataset[]]
-  };
+  if (
+    rfc8multiscales.attributes &&
+    'coordinateSystems' in rfc8multiscales.attributes &&
+    Array.isArray(rfc8multiscales.attributes.coordinateSystems) &&
+    rfc8multiscales.attributes.coordinateSystems.length > 0 &&
+    Array.isArray(rfc8multiscales.attributes.coordinateSystems[0].axes)
+  ) {
+    const ms: omezarr.Multiscale = {
+      axes: rfc8multiscales.attributes.coordinateSystems[0].axes,
+      datasets: ssNodes.map(createDataset) as [omezarr.Dataset, ...omezarr.Dataset[]]
+    };
 
-  const v05Attrs = {
-    ome: {
-      version: '0.5',
-      multiscales: [ms] as [omezarr.Multiscale, ...omezarr.Multiscale[]]
-    }
-  };
+    const v05Attrs = {
+      ome: {
+        version: '0.5',
+        multiscales: [ms] as [omezarr.Multiscale, ...omezarr.Multiscale[]]
+      }
+    };
 
-  omezarr.NgffImage.load(store, { attrs: v05Attrs })
-    .then(async (ngffImg) => {
-      // render the thumbnail image
-      const rfc8Src = await ngffImg.render({ targetSize: 200, autoBoost: true });
-      imgElement.src = rfc8Src;
-      container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
-      // add other info to tooltip
-      const scaleInfo = await ngffImg.getScales();
-      const shapeInfo = await ngffImg.getShape();
-      const calcShapesInfo = await ngffImg.calcShapes();
-      const tooltip = `Full-size Shape: ${JSON.stringify(shapeInfo)}
+    omezarr.NgffImage.load(store, { attrs: v05Attrs })
+      .then(async (ngffImg) => {
+        // render the thumbnail image
+        const rfc8Src = await ngffImg.render({ targetSize: 200, autoBoost: true });
+        imgElement.src = rfc8Src;
+        container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
+        // add other info to tooltip
+        const scaleInfo = ngffImg.getScales();
+        const shapeInfo = await ngffImg.getShape();
+        const calcShapesInfo = await ngffImg.calcShapes();
+        const tooltip = `Full-size Shape: ${JSON.stringify(shapeInfo)}
 Scales: ${JSON.stringify(scaleInfo)}
 Shapes from Scales: ${JSON.stringify(calcShapesInfo)}`;
-      imgElement.title = tooltip;
-    })
-    .catch((error) => {
-      // handle error by displaying a 'X' and add an error message to the tooltip
-      console.log('v05Attrs', v05Attrs);
-      console.error('Error loading NGFF image:', error);
-      imgElement.title = error.toString();
-      container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
-      container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-error`);
-      container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
-    });
+        imgElement.title = tooltip;
+      })
+      .catch((error) => {
+        // handle error by displaying a 'X' and add an error message to the tooltip
+        console.log('v05Attrs', v05Attrs);
+        console.error('Error loading NGFF image:', error);
+        showThumbnailError(container, error.toString());
+      });
+  } else {
+    showThumbnailError(container, 'No coordinateSystems[0].axes list found');
+  }
 
   return container;
+}
+
+function showThumbnailError(container: HTMLDivElement, message: string) {
+  container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
+  container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-error`);
+  container.title = message;
+  container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
 }
