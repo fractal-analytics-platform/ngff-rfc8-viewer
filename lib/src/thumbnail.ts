@@ -112,18 +112,18 @@ Shapes from Scales: ${JSON.stringify(calcShapesInfo)}`;
         // handle error by displaying a 'X' and add an error message to the tooltip
         console.log('v05Attrs', v05Attrs);
         console.error('Error loading NGFF image:', error);
-        imgElement.title = error.toString();
-        showThumbnailError(container);
+        showThumbnailError(container, error.toString());
       });
   } else {
-    showThumbnailError(container);
+    showThumbnailError(container, 'No coordinateSystems[0].axes list found');
   }
 
   return container;
 }
 
-function showThumbnailError(container: HTMLDivElement) {
+function showThumbnailError(container: HTMLDivElement, message: string) {
   container.classList.remove(`${CSS_CLASS_PREFIX}spinner`);
   container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-error`);
+  container.title = message;
   container.appendChild(document.createElement('div')).innerHTML = '&#10005;';
 }
