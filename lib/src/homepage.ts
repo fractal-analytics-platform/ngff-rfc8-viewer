@@ -58,11 +58,18 @@ export function createHomepage(): HTMLDivElement {
     link.href = `${currentUrl.split('?')[0]}?${queryParams.toString()}`;
     link.textContent = text;
     parent.appendChild(link);
+    const jsonLink = document.createElement('a');
+    jsonLink.href = url;
+    jsonLink.target = '_blank';
+    jsonLink.style.marginLeft = '20px';
+    jsonLink.textContent = '[view json]';
+    parent.appendChild(jsonLink);
     return link;
   }
 
   for (const [text, url] of exampleSources) {
     const listItem = document.createElement('li');
+    listItem.style.marginBottom = '10px';
     createLink(url, text, listItem);
     list.appendChild(listItem);
   }
