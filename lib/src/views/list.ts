@@ -35,6 +35,9 @@ export class ListView {
     graph.onError((message) =>
       message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
     );
+
+    // initial render
+    this.renderTree();
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
@@ -50,6 +53,7 @@ export class ListView {
   }
 
   renderTree() {
+    console.log('LIST: renderTree()');
     this.rootElement.innerHTML = '';
 
     const descendants = this.graph.getHierarchy().descendants();
@@ -98,6 +102,13 @@ export class ListView {
       document.getElementById(`node-${parentId}`)?.appendChild(nodeElement);
     } else {
       this.rootElement.appendChild(nodeElement);
+    }
+  }
+
+  destroy() {
+    // TODO: cleanup and remove event listeners if any
+    if (this.rootElement) {
+      this.rootElement.remove();
     }
   }
 

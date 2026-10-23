@@ -35,36 +35,45 @@ export class NGFFGraph {
     return this.loader;
   }
 
+  // When a node is loaded or recursive load
   signalLoading(loading: boolean) {
+    console.log('NGFFGraph: signalLoading', loading);
     this.eventListeners['loading'].forEach((fn) => fn(loading));
   }
-
-  signalError(message: string | null) {
-    this.eventListeners['error'].forEach((fn) => fn(message));
-  }
-
-  signalNodeUpdated(node: D3Node) {
-    this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
-  }
-
-  signalChange() {
-    this.eventListeners['change'].forEach((fn) => fn());
-  }
-
-  // Convenience methods for adding event listeners
+  // handled by control (spinner) and sidebar (update thumbnail)
   onLoading(fn: (loading: boolean) => void) {
     this.eventListeners['loading'].push(fn);
   }
 
+  // called when loading fails
+  signalError(message: string | null) {
+    console.log('NGFFGraph: signalError', message);
+    console.trace(message); // to enable debugging of where the error originated
+    this.eventListeners['error'].forEach((fn) => fn(message));
+  }
+  // called when loading fails
   onError(fn: (message: string | null) => void) {
     this.eventListeners['error'].push(fn);
   }
 
+  // When a node is loaded and extra attibutes are added
+  signalNodeUpdated(node: D3Node) {
+    console.log('NGFFGraph: signalNodeUpdated', node);
+    this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
+  }
+  // handled by sidebar.showInfo()
   onNodeUpdated(fn: (node: D3Node) => void) {
     this.eventListeners['nodeUpdated'].push(fn);
   }
 
+  // only called by loadRoot() -> render()
+  signalChange() {
+    console.log('NGFFGraph: signalChange');
+    this.eventListeners['change'].forEach((fn) => fn());
+  }
+  // views.renderTree()
   onChange(fn: () => void) {
+    console.log('NGFFGraph: onChange - listening...');
     this.eventListeners['change'].push(fn);
   }
 

@@ -1,25 +1,22 @@
 import { CSS_CLASS_PREFIX } from './constants';
 import type { NGFFGraph } from './graph';
-import type { NGFFSidebar } from './sidebar';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
-  private view: { renderTree: () => void };
-  private sidebar: NGFFSidebar;
 
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
+  private viewer: { refreshView: () => void };
 
-  constructor(
-    element: HTMLElement,
-    graph: NGFFGraph,
-    view: { renderTree: () => void },
-    sidebar: NGFFSidebar
-  ) {
+  constructor(element: HTMLElement, graph: NGFFGraph, viewer: { refreshView: () => void }) {
+    // We listen for events on the graph...
     this.graph = graph;
-    this.view = view;
-    this.sidebar = sidebar;
+    // ...and we call viewer.refreshView() when necessary
+    this.viewer = viewer;
+    this.graph.onLoading((loading) =>
+      loading ? this.setLoadingState() : this.unsetLoadingState()
+    );
 
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
 
@@ -85,19 +82,21 @@ export default class NGFFControlPanel {
     btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
     element.appendChild(btnGroup);
 
+    // All the view buttons update the URL and refresh the viewer accordingly
     addButton(`${CSS_CLASS_PREFIX}diagram-3-fill`, btnGroup, 'View Tree', () => {
       params.set('view', 'tree');
-      window.location.search = params.toString();
+      history.pushState(null, '', `?${params.toString()}`);
+      this.viewer.refreshView();
     });
-
     addButton(`${CSS_CLASS_PREFIX}list-nested`, btnGroup, 'View List', () => {
       params.set('view', 'list');
-      window.location.search = params.toString();
+      history.pushState(null, '', `?${params.toString()}`);
+      this.viewer.refreshView();
     });
-
     addButton(`${CSS_CLASS_PREFIX}ui-checks`, btnGroup, 'View Images', () => {
       params.set('view', 'images');
-      window.location.search = params.toString();
+      history.pushState(null, '', `?${params.toString()}`);
+      this.viewer.refreshView();
     });
 
     // Validate button - toggle true/false
@@ -128,22 +127,22 @@ export default class NGFFControlPanel {
   }
 
   async loadAll() {
-    this.sidebar.hide();
+    // this.sidebar.hide();
     this.setLoadingState();
     try {
       await this.graph.recursiveLoad(Infinity);
-      this.view.renderTree();
+      // this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }
   }
 
   async loadNext() {
-    this.sidebar.hide();
+    // this.sidebar.hide();
     this.setLoadingState();
     try {
       await this.graph.recursiveLoad(1);
-      this.view.renderTree();
+      // this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }

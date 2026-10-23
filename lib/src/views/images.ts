@@ -36,6 +36,8 @@ export class ImagesView {
     graph.onError((message) =>
       message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
     );
+    // initial render of the tree
+    this.renderTree();
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
@@ -51,6 +53,7 @@ export class ImagesView {
   }
 
   renderTree() {
+    console.log('IMAGES: renderTree()');
     this.rootElement.innerHTML = '';
     const unloadedCollections = this.graph.countUnloadedNodes('collection');
     const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
@@ -123,6 +126,11 @@ export class ImagesView {
     };
 
     this.rootElement.appendChild(nodeElement);
+  }
+
+  destroy() {
+    // TODO: cleanup and remove event listeners if any
+    this.rootElement.remove();
   }
 
   showErrorAlert(message: string) {

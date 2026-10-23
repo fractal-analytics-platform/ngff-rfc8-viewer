@@ -10,6 +10,7 @@ const MAX_EXPORT_SIZE = 16384;
 
 export class TreeView {
   private graph: NGFFGraph;
+  private containerId: string;
   private width: number = 0;
   private height: number = 0;
   private currentZoom: any;
@@ -24,7 +25,9 @@ export class TreeView {
   private backgroundClickHandler: () => void = () => {};
 
   constructor(graph: NGFFGraph, containerId: string) {
+    console.log('TREE: constructor: containerId', containerId);
     this.graph = graph;
+    this.containerId = containerId;
 
     this.errorAlert = d3
       .select('body')
@@ -73,6 +76,9 @@ export class TreeView {
       .append('button')
       .text('Export PNG')
       .on('click', () => this.exportPNG());
+
+    // initial render of the tree
+    this.renderTree();
   }
 
   onNodeSelect(fn: (node: D3Node) => void) {
@@ -88,6 +94,7 @@ export class TreeView {
   }
 
   renderTree() {
+    console.log('TREE: renderTree()');
     const hierarchy = this.graph.getHierarchy();
     this.width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
     this.height = Math.max(1, hierarchy.height) * NODE_SPACING;
@@ -381,5 +388,14 @@ export class TreeView {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  destroy() {
+    // TODO: cleanup and remove event listeners if any
+    // remove the svg element created in constructor
+    const el = document.getElementById(this.containerId + '-graph');
+    if (el) {
+      el.remove();
+    }
   }
 }

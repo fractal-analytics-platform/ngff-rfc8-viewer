@@ -9,6 +9,10 @@ import { ListView } from './views/list';
 import { ImagesView } from './views/images';
 
 export default class NGFFViewer {
+  private graph: NGFFGraph | null = null;
+  private graphContainerId: string | null = null;
+  private view: TreeView | ListView | ImagesView | null = null;
+
   constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
     const element = document.getElementById(elementId);
     element?.classList.add(`${CSS_CLASS_PREFIX}body`);
@@ -18,6 +22,49 @@ export default class NGFFViewer {
     }
 
     this.load(element, source, autoloadDepth, validate);
+
+    this.initHistory();
+  }
+
+  initHistory() {
+    window.addEventListener('popstate', () => {
+      console.log('NGFFViewer: popstate event triggered');
+      this.refreshView();
+    });
+  }
+
+  refreshView() {
+    console.log('NGFFViewer: refreshView()');
+    if (this.view) {
+      this.view.destroy();
+    }
+
+    const queryParams = new URLSearchParams(window.location.search);
+    // Determine which view to use based on the query parameter
+
+    switch (queryParams.get('view')) {
+      case 'images':
+        this.view = new ImagesView(this.graph!, this.graphContainerId!);
+        break;
+      case 'list':
+        this.view = new ListView(this.graph!, this.graphContainerId!);
+        break;
+      default:
+        this.view = new TreeView(this.graph!, this.graphContainerId!);
+    }
+    // this.view.onNodeSelect((node) => {
+    //   sidebarHandler.showInfo(node);
+
+    //   // Update the URL hash with hierarchy path of the selected node
+    //   const idsToNode = graph.getParentsIds(node).join('/');
+    //   window.location.hash = idsToNode;
+    // });
+    // view.onBackgroundClick(() => sidebarHandler.hide());
+    // const control = new NGFFControlPanel(document.getElementById(`${graphContainerId}-control-panel`)!, graph, view, sidebarHandler);
+    // graph.onLoading((loading) =>
+    //   loading ? control.setLoadingState() : control.unsetLoadingState()
+    // );
+    // return view;
   }
 
   async load(
@@ -26,6 +73,7 @@ export default class NGFFViewer {
     autoloadDepth: number,
     validate: boolean
   ) {
+    console.log('NGFFViewer: load()');
     if (!source) {
       element.innerHTML = '';
       element.appendChild(createHomepage());
@@ -37,7 +85,8 @@ export default class NGFFViewer {
 
     const graphContainer = document.createElement('div');
     graphContainer.classList.add(`${CSS_CLASS_PREFIX}graph-container`);
-    graphContainer.id = `${element.id}-graph-container`;
+    this.graphContainerId = `${element.id}-graph-container`;
+    graphContainer.id = this.graphContainerId;
 
     const sidebar = document.createElement('div');
 
@@ -51,46 +100,23 @@ export default class NGFFViewer {
 
     try {
       const loader = new NGFFLoader(source);
-      const graph = new NGFFGraph(loader, autoloadDepth);
+      this.graph = new NGFFGraph(loader, autoloadDepth);
       // sidebar listens to graph update and load events
-      const sidebarHandler = new NGFFSidebar(sidebar, validate, graph);
-      const queryParams = new URLSearchParams(window.location.search);
-      // Determine which view to use based on the query parameter
-      let view;
-      switch (queryParams.get('view')) {
-        case 'images':
-          view = new ImagesView(graph, graphContainer.id);
-          break;
-        case 'list':
-          view = new ListView(graph, graphContainer.id);
-          break;
-        default:
-          view = new TreeView(graph, graphContainer.id);
-      }
-      view.onNodeSelect((node) => {
-        sidebarHandler.showInfo(node);
+      new NGFFSidebar(sidebar, validate, this.graph);
 
-        // Update the URL hash with hierarchy path of the selected node
-        const idsToNode = graph.getParentsIds(node).join('/');
-        window.location.hash = idsToNode;
-      });
-      view.onBackgroundClick(() => sidebarHandler.hide());
-      const control = new NGFFControlPanel(controlPanel, graph, view, sidebarHandler);
-      graph.onLoading((loading) =>
-        loading ? control.setLoadingState() : control.unsetLoadingState()
-      );
+      // control listens to graph events and calls viewer.refreshView() when necessary
+      new NGFFControlPanel(controlPanel, this.graph, this);
 
       // When page loads, we first load the graph's root...
-      const rootLoaded = await graph.loadRoot();
+      console.log('graph root loading...');
+      const rootLoaded = await this.graph.loadRoot();
       const selectedPath = window.location.hash.slice(1);
       // ...the handle any hash of nodeIds e.g. #root/child/grandchild
       if (rootLoaded && selectedPath) {
         try {
-          const node = await graph.loadNodeAtPath(decodeURIComponent(selectedPath));
-          view.selectNode(node);
-          view.renderTree();
+          await this.graph.loadNodeAtPath(decodeURIComponent(selectedPath));
         } catch (err) {
-          graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
+          this.graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
         }
       }
     } catch (err) {
@@ -98,6 +124,10 @@ export default class NGFFViewer {
       const error = err instanceof Error ? err.message : 'Unexpected error';
       this.showAlert(element, error, 'error');
     }
+
+    // finally we create the View
+    console.log('NGFFViewer: initializing view');
+    this.refreshView();
   }
 
   showAlert(element: HTMLElement, message: string, type: 'warning' | 'error') {
