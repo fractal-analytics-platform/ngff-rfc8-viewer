@@ -1,29 +1,16 @@
 import { CSS_CLASS_PREFIX } from './constants';
 import NGFFControlPanel from './control';
 import { NGFFGraph } from './graph';
+import { createHomepage } from './homepage';
 import { NGFFLoader } from './loader';
 import { NGFFSidebar } from './sidebar';
 import { TreeView } from './views/tree';
 import { ListView } from './views/list';
 
-const exampleSources = [
-  [
-    'basic example',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json'
-  ],
-  [
-    'many images',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json'
-  ],
-  [
-    'plate with multiple fields',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example4/root.json'
-  ]
-];
-
 export default class NGFFViewer {
   constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
     const element = document.getElementById(elementId);
+    element?.classList.add(`${CSS_CLASS_PREFIX}body`);
     if (!element) {
       console.warn(`Unable to find element with id ${elementId}`);
       return;
@@ -39,23 +26,8 @@ export default class NGFFViewer {
     validate: boolean
   ) {
     if (!source) {
-      const queryParams = new URLSearchParams(window.location.search);
-      const currentUrl = window.location.href;
-
-      const linksHtml = exampleSources
-        .map(([name, url]) => {
-          queryParams.set('source', url);
-          const link = document.createElement('a');
-          link.href = `${currentUrl.split('?')[0]}?${queryParams.toString()}`;
-          link.textContent = name;
-          return link.outerHTML;
-        })
-        .join('<br>');
-      this.showAlert(
-        element,
-        `Missing source parameter. Try one of the examples:<br>${linksHtml}`,
-        'warning'
-      );
+      element.innerHTML = '';
+      element.appendChild(createHomepage());
       return;
     }
 
