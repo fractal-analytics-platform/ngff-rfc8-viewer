@@ -20,6 +20,14 @@ const exampleSources = [
   [
     'Basic example of invalid attributes (click on multiscale node)',
     'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/invalid/missing-multiscale-coordinate-systems.json'
+  ],
+  [
+    'IDR v0.5 images converted to RFC-8',
+    'https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/refs/heads/main/examples/data/v05_idr_multi_doc/collection.json'
+  ],
+  [
+    'Plate with 6 Wells as separate files',
+    'https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/refs/heads/main/examples/data/v05_plate_to_multi_doc/collection.json'
   ]
 ];
 
