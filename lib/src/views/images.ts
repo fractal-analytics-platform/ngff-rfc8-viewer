@@ -9,9 +9,6 @@ export class ImagesView {
   private rootElement: HTMLDivElement;
   private errorAlert: HTMLDivElement;
 
-  private nodeSelectHandler: (node: D3Node) => void = () => {};
-  private backgroundClickHandler: () => void = () => {};
-
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
     this.containerId = containerId;
@@ -27,8 +24,9 @@ export class ImagesView {
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}images-graph-root`);
     this.rootElement.onclick = (event) => {
-      if (event.target !== this.rootElement) return;
-      this.backgroundClickHandler();
+      if (event.target == this.rootElement) {
+        this.selectNode();
+      }
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
@@ -40,16 +38,8 @@ export class ImagesView {
     this.renderTree();
   }
 
-  onNodeSelect(fn: (node: D3Node) => void) {
-    this.nodeSelectHandler = fn;
-  }
-
-  selectNode(node: D3Node) {
-    this.nodeSelectHandler(node);
-  }
-
-  onBackgroundClick(fn: () => void) {
-    this.backgroundClickHandler = fn;
+  selectNode(node?: D3Node) {
+    this.graph.selectNode(node!);
   }
 
   renderTree() {

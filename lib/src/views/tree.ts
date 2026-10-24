@@ -21,9 +21,6 @@ export class TreeView {
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
   private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
 
-  private nodeSelectHandler: (node: D3Node) => void = () => {};
-  private backgroundClickHandler: () => void = () => {};
-
   constructor(graph: NGFFGraph, containerId: string) {
     console.log('TREE: constructor: containerId', containerId);
     this.graph = graph;
@@ -47,7 +44,7 @@ export class TreeView {
       .style('touch-action', 'none')
       .on('click', (event) => {
         if (!(event.target instanceof SVGCircleElement)) {
-          this.backgroundClickHandler();
+          this.selectNode();
         }
       });
 
@@ -81,16 +78,8 @@ export class TreeView {
     this.renderTree();
   }
 
-  onNodeSelect(fn: (node: D3Node) => void) {
-    this.nodeSelectHandler = fn;
-  }
-
-  selectNode(node: D3Node) {
-    this.nodeSelectHandler(node);
-  }
-
-  onBackgroundClick(fn: () => void) {
-    this.backgroundClickHandler = fn;
+  selectNode(node?: D3Node) {
+    this.graph.selectNode(node!);
   }
 
   renderTree() {

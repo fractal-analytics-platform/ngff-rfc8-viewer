@@ -106,6 +106,7 @@ export type D3Node = {
   loaded: boolean;
   error: boolean;
   collapsed: boolean;
+  selected: boolean;
 };
 
 export type ExtraEdgesFn = (

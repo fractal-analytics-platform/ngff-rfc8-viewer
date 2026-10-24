@@ -45,6 +45,14 @@ export class NGFFSidebar {
         this.showInfo(node);
       }
     });
+    graph.onNodeSelected((node) => {
+      if (node) {
+        this.showInfo(node);
+      } else {
+        this.content.innerHTML = '';
+        this.hide();
+      }
+    });
 
     element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
 

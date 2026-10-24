@@ -8,9 +8,6 @@ export class ListView {
   private rootElement: HTMLDivElement;
   private errorAlert: HTMLDivElement;
 
-  private nodeSelectHandler: (node: D3Node) => void = () => {};
-  private backgroundClickHandler: () => void = () => {};
-
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
     this.containerId = containerId;
@@ -27,7 +24,7 @@ export class ListView {
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}list-graph-root`);
     this.rootElement.onclick = (event) => {
       if (event.target !== this.rootElement) return;
-      this.backgroundClickHandler();
+      this.selectNode();
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
@@ -40,16 +37,8 @@ export class ListView {
     this.renderTree();
   }
 
-  onNodeSelect(fn: (node: D3Node) => void) {
-    this.nodeSelectHandler = fn;
-  }
-
-  selectNode(node: D3Node) {
-    this.nodeSelectHandler(node);
-  }
-
-  onBackgroundClick(fn: () => void) {
-    this.backgroundClickHandler = fn;
+  selectNode(node?: D3Node) {
+    this.graph.selectNode(node);
   }
 
   renderTree() {

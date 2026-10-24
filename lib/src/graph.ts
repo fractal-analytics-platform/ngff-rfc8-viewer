@@ -16,6 +16,7 @@ export class NGFFGraph {
     loading: [] as Array<(loading: boolean) => void>,
     error: [] as Array<(message: string | null) => void>,
     nodeUpdated: [] as Array<(node: D3Node) => void>,
+    nodeSelected: [] as Array<(node?: D3Node) => void>,
     change: [] as Array<() => void>
   };
 
@@ -51,12 +52,12 @@ export class NGFFGraph {
     console.trace(message); // to enable debugging of where the error originated
     this.eventListeners['error'].forEach((fn) => fn(message));
   }
-  // called when loading fails
+  // handled by viewer showing an error
   onError(fn: (message: string | null) => void) {
     this.eventListeners['error'].push(fn);
   }
 
-  // When a node is loaded and extra attibutes are added
+  // When a node is loaded and extra attributes are added
   signalNodeUpdated(node: D3Node) {
     console.log('NGFFGraph: signalNodeUpdated', node);
     this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
@@ -64,6 +65,16 @@ export class NGFFGraph {
   // handled by sidebar.showInfo()
   onNodeUpdated(fn: (node: D3Node) => void) {
     this.eventListeners['nodeUpdated'].push(fn);
+  }
+
+  // When a node is selected
+  signalNodeSelected(node?: D3Node) {
+    console.log('NGFFGraph: signalNodeSelected', node);
+    this.eventListeners['nodeSelected'].forEach((fn) => fn(node));
+  }
+  // handled by sidebar.showInfo()
+  onNodeSelected(fn: (node?: D3Node) => void) {
+    this.eventListeners['nodeSelected'].push(fn);
   }
 
   // only called by loadRoot() -> render()
@@ -96,6 +107,15 @@ export class NGFFGraph {
     }
   }
 
+  selectNode(node?: D3Node) {
+    // clear selected state of all nodes
+    this.nodes.forEach((n) => (n.selected = false));
+    if (node) {
+      node.selected = true;
+    }
+    this.signalNodeSelected(node);
+  }
+
   walk(
     nodes: Array<D3Node>,
     node: OmeNode & { generatedId?: string },
@@ -116,7 +136,8 @@ export class NGFFGraph {
       loaded: !('path' in node),
       resolvedPath,
       error: false,
-      collapsed: false
+      collapsed: false,
+      selected: false
     });
 
     if (this.computeExtraEdges) {
