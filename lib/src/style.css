@@ -317,17 +317,22 @@ Show the "sidebar" below the graph
   animation: ngff-rfc8-viewer-rotate-dash 0.5s linear infinite;
 }
 
-.ngff-rfc8-viewer-list-graph-root {
+.ngff-rfc8-viewer-list-graph-root,
+.ngff-rfc8-viewer-images-graph-root {
   padding: 65px 15px 15px 15px;
   height: 100%;
   box-sizing: border-box;
   overflow: auto;
+}
+
+.ngff-rfc8-viewer-images-graph-root {
   width: fit-content;
   margin: 0 auto;
 }
 
 .ngff-rfc8-viewer-node-element {
   padding: 2px 2px 2px 20px;
+  width: fit-content;
 }
 
 .ngff-rfc8-viewer-node-element button {

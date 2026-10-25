@@ -25,7 +25,7 @@ export class ImagesView {
     document.getElementById(this.containerId)?.appendChild(this.errorAlert);
 
     this.rootElement = document.createElement('div');
-    this.rootElement.classList.add(`${CSS_CLASS_PREFIX}list-graph-root`);
+    this.rootElement.classList.add(`${CSS_CLASS_PREFIX}images-graph-root`);
     this.rootElement.onclick = (event) => {
       if (event.target !== this.rootElement) return;
       this.backgroundClickHandler();
@@ -65,7 +65,7 @@ export class ImagesView {
     if (message) {
       const msg = document.createElement('div');
       msg.textContent = message;
-      msg.style.marginBottom = '1em';
+      msg.style.margin = '0 0 1em 0';
       msg.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}warning`);
       this.rootElement.appendChild(msg);
     }
