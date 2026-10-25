@@ -52,11 +52,23 @@ export class ImagesView {
 
   renderTree() {
     this.rootElement.innerHTML = '';
-    const msg = document.createElement('div');
-    msg.textContent = `Only LOADED multiscale nodes are shown.
-    If some images are missing, use the "Load All" or "Load Next" buttons above.`;
-    msg.style.marginBottom = '1em';
-    this.rootElement.appendChild(msg);
+    const unloadedCollections = this.graph.countUnloadedNodes('collection');
+    const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
+    let message = '';
+    if (unloadedCollections > 0) {
+      message = `${unloadedCollections} collections are not loaded.
+      Not all images are shown. Click the "Load All Nodes" button above.`;
+    } else if (unloadedMultiscales > 0) {
+      message = `Some multiscale nodes are not loaded.
+      Thumbnails won't be displayed. Click nodes below to load.`;
+    }
+    if (message) {
+      const msg = document.createElement('div');
+      msg.textContent = message;
+      msg.style.marginBottom = '1em';
+      msg.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}warning`);
+      this.rootElement.appendChild(msg);
+    }
     const descendants = this.graph.getHierarchy().descendants();
     descendants.forEach((d) => {
       this.renderNode(d.data);
@@ -81,7 +93,7 @@ export class ImagesView {
       prefix + (resolvedPath.startsWith('./') ? resolvedPath.substring(1) : resolvedPath);
     // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
     if ('nodes' in node.omeNode) {
-      thumbnailElement = createThumbnailImg(node, baseUrl, 150);
+      thumbnailElement = createThumbnailImg(node, baseUrl, 100);
     } else {
       // or traverse the graph to get child nodes (will get empty list if node not loaded)
       const children = this.graph.getChildren(node).map((child) => child.omeNode);
