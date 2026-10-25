@@ -1,5 +1,5 @@
 import type { D3Node, OmeNode, OmePath } from './../types';
-import { CSS_CLASS_PREFIX, NODE_COLORS } from './../constants';
+import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 
 export class ListView {
@@ -7,6 +7,7 @@ export class ListView {
   private containerId: string;
   private rootElement: HTMLDivElement;
   private errorAlert: HTMLDivElement;
+  private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
@@ -28,9 +29,27 @@ export class ListView {
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
-    graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    // This is triggered when tree is first loaded
+    this.unsubscribers.push(graph.addChangeListener(this.renderTree));
+    // Re-render when loading completes
+    this.unsubscribers.push(
+      graph.addLoadingListener((isLoading) => {
+        if (!isLoading) {
+          this.renderTree();
+        }
+      })
+    );
+    this.unsubscribers.push(
+      graph.addErrorListener((message) =>
+        message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+      )
+    );
+    // re-render the tree when a node is selected
+    this.unsubscribers.push(
+      graph.addNodeSelectedListener(() => {
+        // setTimeout(() => this.renderTree(), 1000);;
+        this.renderTree();
+      })
     );
 
     // initial render
@@ -70,22 +89,23 @@ export class ListView {
 
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
-    button.style.borderColor = NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
+    button.style.borderColor = node.selected
+      ? STROKE_COLORS.selected
+      : NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
+    button.style.borderWidth = node.selected ? '3px' : '1px';
     button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
+      console.log('Node clicked:', node.id, 'collapsed:', node.collapsed);
       this.selectNode(node);
-      // Adding 'collapsed' class will hide child nodes etc.
-      nodeElement.classList.toggle(`${CSS_CLASS_PREFIX}collapsed`);
-      if (isLoaded) {
-        // simply toggle collapsed - don't need to re-render the tree
+      // unloaded nodes are actually expanded already - don't toggle collapsed. Just load...
+      if (node.loaded) {
         node.collapsed = !node.collapsed;
-        return;
       }
       await this.graph.loadNodeWithSignal(
         node as D3Node & { omeNode: OmeNode & { path: OmePath } }
       );
-      this.renderTree();
+      return false;
     };
     if (parentId) {
       document.getElementById(`node-${parentId}`)?.appendChild(nodeElement);
@@ -95,7 +115,8 @@ export class ListView {
   }
 
   destroy() {
-    // TODO: cleanup and remove event listeners if any
+    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribers = [];
     if (this.rootElement) {
       this.rootElement.remove();
     }

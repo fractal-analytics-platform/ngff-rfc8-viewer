@@ -2,6 +2,8 @@ import * as d3 from 'd3';
 import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
 import { UntrustedDomainError, type NGFFLoader } from './loader';
 
+type Unsubscribe = () => void;
+
 export class NGFFGraph {
   private loader: NGFFLoader;
   private autoloadDepth: number;
@@ -32,60 +34,69 @@ export class NGFFGraph {
     this.computeExtraEdges = computeExtraEdges;
   }
 
+  // adds fn to the list and returns a function that removes it again
+  private addListener<T extends (...args: any[]) => void>(list: T[], fn: T): Unsubscribe {
+    list.push(fn);
+    return () => {
+      const index = list.indexOf(fn);
+      if (index !== -1) list.splice(index, 1);
+    };
+  }
+
   getLoader() {
     return this.loader;
   }
 
-  // When a node is loaded or recursive load
+  // When a node is loaded
   signalLoading(loading: boolean) {
-    console.log('NGFFGraph: signalLoading', loading);
+    console.log('NGFFGraph: signalLoading', loading, this.eventListeners['loading'].length);
     this.eventListeners['loading'].forEach((fn) => fn(loading));
   }
   // handled by control (spinner) and sidebar (update thumbnail)
-  onLoading(fn: (loading: boolean) => void) {
-    this.eventListeners['loading'].push(fn);
+  addLoadingListener(fn: (loading: boolean) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['loading'], fn);
   }
 
   // called when loading fails
   signalError(message: string | null) {
-    console.log('NGFFGraph: signalError', message);
+    console.log('NGFFGraph: signalError', message, this.eventListeners['error'].length);
     console.trace(message); // to enable debugging of where the error originated
     this.eventListeners['error'].forEach((fn) => fn(message));
   }
   // handled by viewer showing an error
-  onError(fn: (message: string | null) => void) {
-    this.eventListeners['error'].push(fn);
+  addErrorListener(fn: (message: string | null) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['error'], fn);
   }
 
   // When a node is loaded and extra attributes are added
   signalNodeUpdated(node: D3Node) {
-    console.log('NGFFGraph: signalNodeUpdated', node);
+    console.log('NGFFGraph: signalNodeUpdated', node, this.eventListeners['nodeUpdated'].length);
     this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
   }
   // handled by sidebar.showInfo()
-  onNodeUpdated(fn: (node: D3Node) => void) {
-    this.eventListeners['nodeUpdated'].push(fn);
+  addNodeUpdatedListener(fn: (node: D3Node) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['nodeUpdated'], fn);
   }
 
   // When a node is selected
   signalNodeSelected(node?: D3Node) {
-    console.log('NGFFGraph: signalNodeSelected', node);
+    console.log('NGFFGraph: signalNodeSelected', node, this.eventListeners['nodeSelected'].length);
     this.eventListeners['nodeSelected'].forEach((fn) => fn(node));
   }
   // handled by sidebar.showInfo()
-  onNodeSelected(fn: (node?: D3Node) => void) {
-    this.eventListeners['nodeSelected'].push(fn);
+  addNodeSelectedListener(fn: (node?: D3Node) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['nodeSelected'], fn);
   }
 
-  // only called by loadRoot() -> render()
+  // only called by loadRoot() -> render() and recursive load
   signalChange() {
-    console.log('NGFFGraph: signalChange');
+    console.log('NGFFGraph: signalChange', this.eventListeners['change'].length);
     this.eventListeners['change'].forEach((fn) => fn());
   }
   // views.renderTree()
-  onChange(fn: () => void) {
+  addChangeListener(fn: () => void): Unsubscribe {
     console.log('NGFFGraph: onChange - listening...');
-    this.eventListeners['change'].push(fn);
+    return this.addListener(this.eventListeners['change'], fn);
   }
 
   getHierarchy(): d3.HierarchyNode<D3Node> {
@@ -257,6 +268,7 @@ export class NGFFGraph {
         await this.recursiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
       }
     }
+    this.signalChange();
   }
 
   buildHierarchy() {
@@ -267,7 +279,7 @@ export class NGFFGraph {
     if (node.loading || node.loaded || node.error || node.omeNode.type == 'singlescale') {
       return;
     }
-    this.signalError(null);
+    // this.signalError(null);
     node.loading = true;
     try {
       switch (node.omeNode.path.type) {

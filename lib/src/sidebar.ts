@@ -27,7 +27,7 @@ export class NGFFSidebar {
     this.validationEnabled = validate;
 
     // Listen for loading & update events from the graph to refresh the sidebar if needed
-    graph.onLoading((loading) => {
+    graph.addLoadingListener((loading) => {
       if (!loading && this.isOpen()) {
         // If the current node is a multiscale node with remote children (now loaded),
         // showInfo() to display thumbnail
@@ -40,12 +40,12 @@ export class NGFFSidebar {
         }
       }
     });
-    graph.onNodeUpdated((node) => {
+    graph.addNodeUpdatedListener((node) => {
       if (this.isOpen()) {
         this.showInfo(node);
       }
     });
-    graph.onNodeSelected((node) => {
+    graph.addNodeSelectedListener((node) => {
       if (node) {
         this.showInfo(node);
       } else {

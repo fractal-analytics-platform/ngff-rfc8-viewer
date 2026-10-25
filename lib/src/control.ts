@@ -14,7 +14,7 @@ export default class NGFFControlPanel {
     this.graph = graph;
     // ...and we call viewer.refreshView() when necessary
     this.viewer = viewer;
-    this.graph.onLoading((loading) =>
+    this.graph.addLoadingListener((loading) =>
       loading ? this.setLoadingState() : this.unsetLoadingState()
     );
 

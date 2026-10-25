@@ -20,6 +20,7 @@ export class TreeView {
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
   private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
+  private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     console.log('TREE: constructor: containerId', containerId);
@@ -54,9 +55,11 @@ export class TreeView {
       .attr('class', `${CSS_CLASS_PREFIX}tree-tooltip`)
       .style('opacity', 0);
 
-    graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
+    this.unsubscribers.push(
+      graph.addErrorListener((message) =>
+        message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+      )
     );
 
     const exportButtons = d3
@@ -74,6 +77,7 @@ export class TreeView {
       .text('Export PNG')
       .on('click', () => this.exportPNG());
 
+    this.unsubscribers.push(this.graph.addNodeSelectedListener(() => this.renderTree()));
     // initial render of the tree
     this.renderTree();
   }
@@ -197,9 +201,11 @@ export class TreeView {
       .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
       .attr('opacity', (d) => (d.data.loaded ? 1 : 0.4))
       .style('cursor', 'pointer')
-      .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
+      .attr('stroke', (d) =>
+        d.data.selected ? STROKE_COLORS.selected : d.data.loaded ? 'none' : STROKE_COLORS.inlining
+      )
       .attr('stroke-dasharray', (d) => (d.data.loaded ? 'none' : '10,5'))
-      .attr('stroke-width', 2)
+      .attr('stroke-width', (d) => (d.data.selected ? 5 : 2))
       .on('click', async (event, d) => {
         const node = d.data;
         this.selectNode(node);
@@ -218,7 +224,7 @@ export class TreeView {
       })
       .on('mouseenter', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', STROKE_COLORS.selection);
+          d3.select(event.target).attr('stroke', STROKE_COLORS.hover);
           this.tooltip?.style('opacity', 1).html(`
             <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
             <strong>Name: </strong>${d.data.omeNode.name}<br>
@@ -231,7 +237,16 @@ export class TreeView {
       })
       .on('mouseleave', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', d.data.loaded ? 'none' : STROKE_COLORS.inlining);
+          d3.select(event.target)
+            .attr(
+              'stroke',
+              d.data.selected
+                ? STROKE_COLORS.selected
+                : d.data.loaded
+                  ? 'none'
+                  : STROKE_COLORS.inlining
+            )
+            .attr('stroke-width', d.data.selected ? 5 : 2);
           this.tooltip?.style('opacity', 0);
         }
       });
@@ -380,7 +395,8 @@ export class TreeView {
   }
 
   destroy() {
-    // TODO: cleanup and remove event listeners if any
+    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribers = [];
     // remove the svg element created in constructor
     const el = document.getElementById(this.containerId + '-graph');
     if (el) {

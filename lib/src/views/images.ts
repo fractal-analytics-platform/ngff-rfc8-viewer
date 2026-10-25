@@ -1,5 +1,5 @@
 import type { D3Node, OmeNode, OmePath } from './../types';
-import { CSS_CLASS_PREFIX } from './../constants';
+import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
 
@@ -8,6 +8,7 @@ export class ImagesView {
   private containerId: string;
   private rootElement: HTMLDivElement;
   private errorAlert: HTMLDivElement;
+  private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
@@ -30,9 +31,27 @@ export class ImagesView {
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
-    graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
+    this.unsubscribers.push(
+      graph.addNodeSelectedListener(() => {
+        const descendants = this.graph.getHierarchy().descendants();
+        descendants.forEach((d) => {
+          if (d.data.omeNode.type == 'multiscale') {
+            const nodeElement = document.getElementById(`image-row-node-${d.data.id}`);
+            if (nodeElement) {
+              nodeElement.style.borderColor = d.data.selected
+                ? STROKE_COLORS.selected
+                : 'transparent';
+            }
+          }
+        });
+      })
+    );
+
+    this.unsubscribers.push(
+      graph.addErrorListener((message) =>
+        message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+      )
     );
     // initial render of the tree
     this.renderTree();
@@ -74,6 +93,8 @@ export class ImagesView {
 
     const nodeElement = document.createElement('div');
     nodeElement.classList.add(`${CSS_CLASS_PREFIX}image-row`);
+    nodeElement.id = `image-row-node-${node.id}`;
+    nodeElement.style.borderColor = node.selected ? STROKE_COLORS.selected : 'transparent';
 
     // Add Thumbnail for the node
     const prefix = this.graph.getLoader().getPrefix();
@@ -103,10 +124,12 @@ export class ImagesView {
     // Click on row to select node. If not loaded, load it and update the thumbnail.
     nodeElement.onclick = async () => {
       this.selectNode(node);
-      if (!node.loaded) {
-        await this.graph.loadNodeWithSignal(
-          node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-        );
+      const isLoaded = node.loaded;
+      // even if loaded, the signal causes re-render to update selection
+      await this.graph.loadNodeWithSignal(
+        node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+      );
+      if (!isLoaded) {
         // try again to show thumbnail...
         thumbnailElement.remove();
         const children = this.graph.getChildren(node).map((child) => child.omeNode);
@@ -119,7 +142,8 @@ export class ImagesView {
   }
 
   destroy() {
-    // TODO: cleanup and remove event listeners if any
+    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribers = [];
     this.rootElement.remove();
   }
 
