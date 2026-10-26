@@ -42,7 +42,7 @@ def main():
                     )
                 )
             )
-            create_zarr_array(base_dir / f"{relative_path}")
+            create_zarr_array(base_dir / f"{relative_path}", seed=(ind_multiscale*100+ind_singlescale))
         multiscales.append(
             ngc.new_node(
                 node_type="multiscale",

@@ -105,6 +105,7 @@ def _get_images_and_tables(coord_system_id: int, well_label: str) -> list[ngc.No
 
 
 def main():
+    counter = 0
     coord_system_id = get_uuid4("coord-system")
 
     root_collection_path = BASE_PATH / "example4"
@@ -121,14 +122,16 @@ def main():
         children_A1_ref.append(ngc.create(url, child, overwrite=True))
         if child.type == "multiscale":
             url = str(root_collection_path / f"plate/well-A1/{child.name}/s0")
-            create_zarr_array(url)
+            create_zarr_array(url, seed=counter)
+            counter += 1
     for child in children_A2:
         url = str(root_collection_path / f"plate/well-A2/{child.name}/zarr.json")
         children_A2_ref.append(ngc.create(url, child, overwrite=True))
         if child.type == "multiscale":
             url = str(root_collection_path / f"plate/well-A2/{child.name}/s0")
-            create_zarr_array(url)
-
+            create_zarr_array(url, seed=counter)
+            counter += 1
+            
     well_A1 = ngc.new_node(
         "collection",
         name="Well A1",
