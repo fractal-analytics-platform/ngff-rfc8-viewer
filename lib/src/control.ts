@@ -1,5 +1,8 @@
 import { CSS_CLASS_PREFIX } from './constants';
 import type { NGFFGraph } from './graph';
+import { ImagesView } from './views/images';
+import { ListView } from './views/list';
+import { TreeView } from './views/tree';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
@@ -7,13 +10,14 @@ export default class NGFFControlPanel {
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
   private loadNextBtn: HTMLButtonElement;
-  private viewer: { refreshView: () => void };
+  private view: TreeView | ListView | ImagesView | null = null;
+  private graphContainerId: string;
 
-  constructor(element: HTMLElement, graph: NGFFGraph, viewer: { refreshView: () => void }) {
+  constructor(element: HTMLElement, graph: NGFFGraph, containerId: string) {
+    this.graphContainerId = containerId;
     // We listen for events on the graph...
     this.graph = graph;
     // ...and we call viewer.refreshView() when necessary
-    this.viewer = viewer;
     this.graph.addLoadingListener((loading) =>
       loading ? this.setLoadingState() : this.unsetLoadingState()
     );
@@ -86,17 +90,17 @@ export default class NGFFControlPanel {
     addButton(`${CSS_CLASS_PREFIX}diagram-3-fill`, btnGroup, 'View Tree', () => {
       params.set('view', 'tree');
       history.pushState(null, '', `?${params.toString()}`);
-      this.viewer.refreshView();
+      this.refreshView();
     });
     addButton(`${CSS_CLASS_PREFIX}list-nested`, btnGroup, 'View List', () => {
       params.set('view', 'list');
       history.pushState(null, '', `?${params.toString()}`);
-      this.viewer.refreshView();
+      this.refreshView();
     });
     addButton(`${CSS_CLASS_PREFIX}ui-checks`, btnGroup, 'View Images', () => {
       params.set('view', 'images');
       history.pushState(null, '', `?${params.toString()}`);
-      this.viewer.refreshView();
+      this.refreshView();
     });
 
     // Validate button - toggle true/false
@@ -124,6 +128,40 @@ export default class NGFFControlPanel {
     githubLink.target = '_blank';
     githubLink.classList.add(`${CSS_CLASS_PREFIX}github`, `${CSS_CLASS_PREFIX}bi`);
     element.appendChild(githubLink);
+
+    // initial refreshView...
+    this.refreshView();
+
+    // start listening to popstate events for browser navigation
+    this.initHistory();
+  }
+
+  initHistory() {
+    window.addEventListener('popstate', () => {
+      console.log('NGFFViewer: popstate event triggered');
+      this.refreshView();
+    });
+  }
+
+  refreshView() {
+    console.log('NGFFViewer: refreshView()');
+    if (this.view) {
+      this.view.destroy();
+    }
+
+    const queryParams = new URLSearchParams(window.location.search);
+    // Determine which view to use based on the query parameter
+
+    switch (queryParams.get('view')) {
+      case 'images':
+        this.view = new ImagesView(this.graph!, this.graphContainerId!);
+        break;
+      case 'list':
+        this.view = new ListView(this.graph!, this.graphContainerId!);
+        break;
+      default:
+        this.view = new TreeView(this.graph!, this.graphContainerId!);
+    }
   }
 
   async loadAll() {
