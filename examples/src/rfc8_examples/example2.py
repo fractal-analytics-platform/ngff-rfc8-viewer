@@ -4,7 +4,7 @@ import ngio_collections as ngc
 from rfc8_examples import BASE_PATH, get_uuid4
 from rfc8_examples.utils import create_zarr_array
 
-NUM_MULTISCALES = 20
+NUM_MULTISCALES = 10
 NUM_SINGLESCALES = 5
 
 
