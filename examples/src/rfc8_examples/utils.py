@@ -31,8 +31,8 @@ def get_uuid4(source: str | bytes | dict | None = None) -> str:
     return str(uuid.UUID(**kwargs, version=4))
 
 
-def create_zarr_array(path: str | Path) -> None:
-    np.random.seed(seed=1234567)
+def create_zarr_array(path: str | Path, seed: int = 1234567) -> None:
+    np.random.seed(seed=seed)
     z = zarr.create_array(
         store=path,
         shape=(100, 100),
