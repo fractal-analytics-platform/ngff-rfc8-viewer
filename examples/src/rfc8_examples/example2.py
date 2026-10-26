@@ -23,12 +23,13 @@ def main():
         for ind_singlescale in range(NUM_SINGLESCALES):
             singlescale_id = get_uuid4(f"multiscale-{ind_multiscale}-singlescale-{ind_singlescale}")
             scale_factor = 2.0**ind_singlescale
+            relative_path = f"image-{ind_multiscale:02d}/{ind_singlescale}"
             singlescales.append(
                 ngc.new_node(
                     node_type="singlescale",
                     id=singlescale_id,
                     name=f"resolution {ind_singlescale}",
-                    ref=ngc.Reference(path=ngc.ZarrPath(path=f"./{ind_singlescale}")),
+                    ref=ngc.Reference(path=ngc.ZarrPath(path=f"./{relative_path}")),
                 ).set_attr(
                     ngc.CoordinateTransformationsAttribute(
                         [
@@ -41,7 +42,7 @@ def main():
                     )
                 )
             )
-            create_zarr_array(base_dir / f"{ind_singlescale}")
+            create_zarr_array(base_dir / f"{relative_path}")
         multiscales.append(
             ngc.new_node(
                 node_type="multiscale",
