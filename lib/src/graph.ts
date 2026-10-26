@@ -305,7 +305,10 @@ export class NGFFGraph {
     }
     parentPath = parentPath.replace(/^\.\//, '').replace(/\/$/, '');
     path = path.replace(/^\.\//, '').replace(/\/$/, '');
-    return parentPath ? `./${parentPath}/${path}` : `./${path}`;
+    if (!parentPath?.startsWith('http')) {
+      parentPath = `./${parentPath}`;
+    }
+    return parentPath ? `${parentPath}/${path}` : `./${path}`;
   }
 
   appendSubtree(ome: OmeNode, resolvedPath: string) {
