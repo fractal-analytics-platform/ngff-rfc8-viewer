@@ -247,6 +247,7 @@ export class NGFFGraph {
     }
 
     // Finally, let's load the target node
+    this.selectNode(currentNode);
     await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
 
     return currentNode!;

@@ -12,6 +12,7 @@ export default class NGFFControlPanel {
   private loadNextBtn: HTMLButtonElement;
   private view: TreeView | ListView | ImagesView | null = null;
   private graphContainerId: string;
+  private ignoreEvents: boolean = false;
 
   constructor(element: HTMLElement, graph: NGFFGraph, containerId: string) {
     this.graphContainerId = containerId;
@@ -43,16 +44,16 @@ export default class NGFFControlPanel {
       return button;
     }
 
-    const params = new URLSearchParams(window.location.search);
-
     // Button group for home buttons
     let btnGroup = document.createElement('div');
     btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
     element.appendChild(btnGroup);
 
     addButton(`${CSS_CLASS_PREFIX}house-door-fill`, btnGroup, 'Home', () => {
+      const params = new URLSearchParams(window.location.search);
       window.location.hash = '';
       params.delete('source');
+      params.delete('select');
       window.location.search = params.toString();
     });
 
@@ -88,28 +89,32 @@ export default class NGFFControlPanel {
 
     // All the view buttons update the URL and refresh the viewer accordingly
     addButton(`${CSS_CLASS_PREFIX}diagram-3-fill`, btnGroup, 'View Tree', () => {
+      const params = new URLSearchParams(window.location.search);
       params.set('view', 'tree');
       history.pushState(null, '', `?${params.toString()}`);
       this.refreshView();
     });
     addButton(`${CSS_CLASS_PREFIX}list-nested`, btnGroup, 'View List', () => {
+      const params = new URLSearchParams(window.location.search);
       params.set('view', 'list');
       history.pushState(null, '', `?${params.toString()}`);
       this.refreshView();
     });
     addButton(`${CSS_CLASS_PREFIX}ui-checks`, btnGroup, 'View Images', () => {
+      const params = new URLSearchParams(window.location.search);
       params.set('view', 'images');
       history.pushState(null, '', `?${params.toString()}`);
       this.refreshView();
     });
 
     // Validate button - toggle true/false
-    const validate = params.get('validate') == 'true';
+    const validate = new URLSearchParams(window.location.search).get('validate') == 'true';
     addButton(
       validate ? `${CSS_CLASS_PREFIX}shield-fill-check` : `${CSS_CLASS_PREFIX}shield-check`,
       element,
       'Validate selected node with JSON Schema',
       () => {
+        const params = new URLSearchParams(window.location.search);
         params.set('validate', validate ? 'false' : 'true');
         window.location.search = params.toString();
       }
@@ -129,11 +134,34 @@ export default class NGFFControlPanel {
     githubLink.classList.add(`${CSS_CLASS_PREFIX}github`, `${CSS_CLASS_PREFIX}bi`);
     element.appendChild(githubLink);
 
+    this.init();
+  }
+
+  async init() {
     // initial refreshView...
     this.refreshView();
 
     // start listening to popstate events for browser navigation
     this.initHistory();
+
+    // start listening to node selection events
+    this.initListeners();
+  }
+
+  initListeners() {
+    this.graph.addNodeSelectedListener((node) => {
+      if (this.ignoreEvents) {
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      let idsToNode = '';
+      if (node) {
+        idsToNode = this.graph.getParentsIds(node).join('/');
+      }
+      console.log('Selected node path:', idsToNode);
+      params.set('select', idsToNode);
+      history.pushState(null, '', `?${params.toString()}`);
+    });
   }
 
   initHistory() {
@@ -143,8 +171,21 @@ export default class NGFFControlPanel {
     });
   }
 
-  refreshView() {
+  async refreshView() {
+    // we don't want graph events to add to history while we're refreshing the view
+    this.ignoreEvents = true;
+
     console.log('NGFFViewer: refreshView()');
+    const selectedPath = new URLSearchParams(window.location.search).get('select');
+    console.log('Selected path from URL:', selectedPath);
+    if (selectedPath) {
+      try {
+        await this.graph.loadNodeAtPath(decodeURIComponent(selectedPath));
+      } catch (err) {
+        this.graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
+      }
+    }
+
     if (this.view) {
       this.view.destroy();
     }
@@ -162,6 +203,7 @@ export default class NGFFControlPanel {
       default:
         this.view = new TreeView(this.graph!, this.graphContainerId!);
     }
+    this.ignoreEvents = false;
   }
 
   async loadAll() {

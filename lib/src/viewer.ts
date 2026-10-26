@@ -59,21 +59,10 @@ export default class NGFFViewer {
       new NGFFSidebar(sidebar, validate, this.graph);
 
       // When page loads, we first load the graph's root...
-      console.log('graph root loading...');
       await this.graph.loadRoot();
 
       // control listens to graph events and calls viewer.refreshView() when necessary
       new NGFFControlPanel(controlPanel, this.graph, this.graphContainerId);
-
-      // const selectedPath = window.location.hash.slice(1);
-      // ...the handle any hash of nodeIds e.g. #root/child/grandchild
-      // if (rootLoaded && selectedPath) {
-      //   try {
-      //     await this.graph.loadNodeAtPath(decodeURIComponent(selectedPath));
-      //   } catch (err) {
-      //     this.graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
-      //   }
-      // }
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';
