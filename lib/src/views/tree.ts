@@ -1,7 +1,8 @@
 import * as d3 from 'd3';
-import type { D3Node, OmeNode, OmePath } from '../types';
+import type { D3Node } from '../types';
 import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from '../constants';
 import type { NGFFGraph } from '../graph';
+import { displayName } from '../nodes';
 
 const NODE_SPACING = 160;
 const CIRCLE_RADIUS = 24;
@@ -160,10 +161,10 @@ export class TreeView {
       })
       // if the child (target) has a path, it is considered "remote" (different file from it's parent)
       .attr('stroke', (d) =>
-        'path' in d.target.data.omeNode ? STROKE_COLORS.remote : STROKE_COLORS.local
+        d.target.data.omeNode.path ? STROKE_COLORS.remote : STROKE_COLORS.local
       )
       .attr('fill', (d) =>
-        'path' in d.target.data.omeNode ? STROKE_COLORS.remote : STROKE_COLORS.local
+        d.target.data.omeNode.path ? STROKE_COLORS.remote : STROKE_COLORS.local
       )
       .attr('marker-end', 'url(#arrow)');
 
@@ -171,10 +172,13 @@ export class TreeView {
     const nodeMap = new Map();
     descendants.forEach((d) => nodeMap.set(d.data.id, d));
 
-    const resolvedExtraEdges = this.graph.getExtraEdges().map((link) => ({
-      source: nodeMap.get(link.sourceId),
-      target: nodeMap.get(link.targetId)
-    }));
+    const resolvedExtraEdges = this.graph
+      .getExtraEdges()
+      .map((link) => ({
+        source: nodeMap.get(link.sourceId),
+        target: nodeMap.get(link.targetId)
+      }))
+      .filter((link) => link.source && link.target);
 
     tree
       .selectAll('line.source')
@@ -207,13 +211,11 @@ export class TreeView {
       .on('click', async (event, d) => {
         const node = d.data;
         this.selectNode(node);
-        if ('path' in node.omeNode && node.omeNode.path) {
+        if (node.targetUrl && !node.loaded) {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
           }
-          await this.graph.loadNodeWithSignal(
-            node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-          );
+          await this.graph.loadNodeWithSignal(node);
           this.renderTree();
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.remove('ngff-rfc8-viewer-rotating-dash');
@@ -224,8 +226,8 @@ export class TreeView {
         if (event.target instanceof SVGCircleElement) {
           d3.select(event.target).attr('stroke', STROKE_COLORS.selection);
           this.tooltip?.style('opacity', 1).html(`
-            <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
-            <strong>Name: </strong>${d.data.omeNode.name}<br>
+            <strong>Id: </strong>${d.data.omeNode.id}<br>
+            <strong>Name: </strong>${d.data.omeNode.name ?? '-'}<br>
             <strong>Type: </strong> ${d.data.omeNode.type}
           `);
         }
@@ -262,7 +264,7 @@ export class TreeView {
       .each(function (d) {
         // split long labels on multiple lines
         const charsPerLine = 15;
-        const name = d.data.omeNode.name;
+        const name = displayName(d.data.omeNode);
 
         for (let i = 0; i < name.length; i += charsPerLine) {
           const line = name.substring(i, i + charsPerLine);

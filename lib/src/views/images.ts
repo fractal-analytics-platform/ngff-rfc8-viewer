@@ -1,7 +1,8 @@
-import type { D3Node, OmeNode, OmePath } from './../types';
+import type { D3Node } from './../types';
 import { CSS_CLASS_PREFIX } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
+import { displayName } from './../nodes';
 
 export class ImagesView {
   private graph: NGFFGraph;
@@ -82,30 +83,17 @@ export class ImagesView {
     const nodeElement = document.createElement('div');
     nodeElement.classList.add(`${CSS_CLASS_PREFIX}image-row`);
 
-    // Add Thumbnail for the node
-    const prefix = this.graph.getLoader().getPrefix();
-    let resolvedPath = node.resolvedPath;
-    if ('path' in node.omeNode && node.omeNode.path?.path) {
-      resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
-    }
-    let thumbnailElement: HTMLElement;
-    // resolvedPath either starts with './' or is an absolute URL
-    const baseUrl = resolvedPath.startsWith('./')
-      ? prefix + resolvedPath.substring(1)
-      : resolvedPath;
-    // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
-    if ('nodes' in node.omeNode) {
-      thumbnailElement = createThumbnailImg(node, baseUrl, 100);
-    } else {
-      // or traverse the graph to get child nodes (will get empty list if node not loaded)
-      const children = this.graph.getChildren(node).map((child) => child.omeNode);
-      thumbnailElement = createThumbnailImg(node, baseUrl, 100, children);
-    }
+    // Add Thumbnail for the node (the multiscale document must be loaded to know its scales)
+    let thumbnailElement: HTMLElement = node.loaded
+      ? createThumbnailImg(node, 100)
+      : this.createPlaceholder(100);
     nodeElement.appendChild(thumbnailElement);
 
-    // Add image info (ID and parent IDs)
+    // Add image info (name, ID and parent IDs)
     const imgInfoElement = document.createElement('div');
-    imgInfoElement.appendChild(document.createElement('h2')).textContent = node.omeNode?.id || '';
+    imgInfoElement.appendChild(document.createElement('h2')).textContent = displayName(
+      node.omeNode
+    );
     imgInfoElement.appendChild(document.createTextNode(this.graph.getParentsIds(node).join('/')));
     nodeElement.appendChild(imgInfoElement);
 
@@ -113,18 +101,24 @@ export class ImagesView {
     nodeElement.onclick = async () => {
       this.selectNode(node);
       if (!node.loaded) {
-        await this.graph.loadNodeWithSignal(
-          node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-        );
+        await this.graph.loadNodeWithSignal(node);
         // try again to show thumbnail...
         thumbnailElement.remove();
-        const children = this.graph.getChildren(node).map((child) => child.omeNode);
-        thumbnailElement = createThumbnailImg(node, baseUrl, 100, children);
+        thumbnailElement = createThumbnailImg(node, 100);
         nodeElement.prepend(thumbnailElement);
       }
     };
 
     this.rootElement.appendChild(nodeElement);
+  }
+
+  private createPlaceholder(width: number): HTMLDivElement {
+    const container = document.createElement('div');
+    container.style.width = `${width}px`;
+    container.style.height = `${width}px`;
+    container.classList.add(`${CSS_CLASS_PREFIX}thumbnail-container`);
+    container.title = 'Click to load the multiscale document';
+    return container;
   }
 
   showErrorAlert(message: string) {

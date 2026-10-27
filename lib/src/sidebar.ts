@@ -3,6 +3,7 @@ import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
+import { displayName, isExtensionType } from './nodes';
 
 const defaultWidth = 560;
 const minWidth = 150;
@@ -31,11 +32,7 @@ export class NGFFSidebar {
       if (!loading && this.isOpen()) {
         // If the current node is a multiscale node with remote children (now loaded),
         // showInfo() to display thumbnail
-        if (
-          this.node &&
-          this.node.omeNode.type == 'multiscale' &&
-          !('nodes' in this.node.omeNode)
-        ) {
+        if (this.node && this.node.omeNode.type == 'multiscale' && this.node.loaded) {
           this.showInfo(this.node);
         }
       }
@@ -118,43 +115,43 @@ export class NGFFSidebar {
     this.node = node;
     this.content.innerHTML = '';
 
-    this.addKeyValue('Id', node.omeNode.id || '-');
-    this.addKeyValue('Name', node.omeNode.name);
+    this.addKeyValue('Id', node.omeNode.id);
+    this.addKeyValue('Name', node.omeNode.name ?? `(no name) ${displayName(node.omeNode)}`);
     this.addKeyValue('Type', node.omeNode.type);
+    if (isExtensionType(node.omeNode.type)) {
+      const entry = this.graph.findManifestEntry(node.omeNode.type);
+      this.addKeyValue(
+        'Extension',
+        entry
+          ? `${entry.name ?? entry.id} (version ${entry.version})`
+          : 'not declared in any extension_manifest'
+      );
+    }
 
     // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type == 'multiscale') {
-      const prefix = this.graph.getLoader().getPrefix();
-      let resolvedPath = node.resolvedPath;
-      if ('path' in node.omeNode && node.omeNode.path?.path) {
-        resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
-      }
-      // Construct the base URL for the thumbnailZarr store
-      // resolvedPath either starts with './' or is an absolute URL
-      const baseUrl = resolvedPath.startsWith('./')
-        ? prefix + resolvedPath.substring(1)
-        : resolvedPath;
-      // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
-      if ('nodes' in node.omeNode) {
-        this.content.appendChild(createThumbnailImg(node, baseUrl, 150));
+      if (node.loaded) {
+        this.content.appendChild(createThumbnailImg(node, 150));
       } else {
-        // otherwise we need to traverse the graph to get child nodes
-        const children = this.graph.getChildren(node).map((child) => child.omeNode);
-        this.content.appendChild(createThumbnailImg(node, baseUrl, 150, children));
+        this.addKeyValue('Thumbnail', 'click the node to load the multiscale document');
       }
     }
 
-    if ('path' in node.omeNode) {
-      this.addKeyValue('Path', `${node.omeNode.path?.path} (type: ${node.omeNode.path?.type})`);
+    if (node.omeNode.path) {
+      const path = node.omeNode.path;
+      this.addKeyValue('Path', `${path.href} (type: ${path.type}, format: ${path.format})`);
+      if (node.targetUrl) {
+        this.addKeyValue('Resolves to', node.targetUrl);
+      }
     }
 
-    if (node.omeNode.attributes) {
-      this.addTitle('Attributes');
+    if (node.omeNode.traits && node.omeNode.traits.length > 0) {
+      this.addTitle('Traits');
       const pre = document.createElement('pre');
-      pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
+      pre.innerText = JSON.stringify(node.omeNode.traits, null, 2);
       this.content.appendChild(pre);
     } else {
-      this.addKeyValue('Attributes', '-');
+      this.addKeyValue('Traits', '-');
     }
 
     if (this.validationEnabled) {
