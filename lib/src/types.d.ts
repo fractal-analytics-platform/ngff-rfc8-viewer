@@ -89,7 +89,9 @@ export type MultiscaleOmeNode = {
     }
 );
 
-export type OmeNode = BaseOmeNode | CollectionOmeNode | SinglescaleOmeNode | MultiscaleOmeNode;
+export type OmeNode = (BaseOmeNode | CollectionOmeNode | SinglescaleOmeNode | MultiscaleOmeNode) & {
+  generatedId?: string;
+};
 
 export type Collection = {
   ome: OmeNode & {
