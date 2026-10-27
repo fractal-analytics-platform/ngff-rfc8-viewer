@@ -148,10 +148,15 @@ export class NGFFGraph {
     }
   }
 
-  /** Copy of the node without its children (which are represented by the hierarchy). */
+  /**
+   * Copy of the node without its children (represented by the hierarchy) and without the
+   * document-level keys (`version`, `extension_manifest`, kept on the D3Node as `manifest`).
+   */
   private getBasicOmeNode(node: OmeNode): OmeNode {
     const nodeCopy = { ...node };
     delete nodeCopy.nodes;
+    delete (nodeCopy as Partial<OmeDocument>).version;
+    delete (nodeCopy as Partial<OmeDocument>).extension_manifest;
     return nodeCopy;
   }
 

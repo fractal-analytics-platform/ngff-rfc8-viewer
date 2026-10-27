@@ -159,6 +159,8 @@ describe('NGFFGraph', () => {
     expect(root.targetUrl).toBeUndefined();
     expect(root.manifest).toHaveLength(2);
     expect(root.omeNode.nodes).toBeUndefined();
+    expect(root.omeNode.version).toBeUndefined();
+    expect(root.omeNode.extension_manifest).toBeUndefined();
 
     const raw = byOmeId(graph, RAW_ID);
     expect(raw.parentId).toBe(root.id);
