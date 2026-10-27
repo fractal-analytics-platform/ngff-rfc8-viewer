@@ -1,51 +1,51 @@
+"""Example 3: a standalone JSON collection whose nodes point to the other examples over http.
+
+Each entry shares the UUID of the document it points to (RFC-8 revision 1 requires it), so the
+ids are imported from the scripts that generate those documents.
+"""
+
 import json
-import shutil
 
-from rfc8_examples import BASE_PATH
-
-DATA = {
-    "ome": {
-        "version": "0.x",
-        "type": "collection",
-        "name": "http_collection",
-        "id": "http_collection",
-        "nodes": [
-            {
-                "type": "collection",
-                "name": "example1",
-                "id": "example1",
-                "path": {
-                    "type": "json",
-                    "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json",
-                },
-            },
-            {
-                "type": "collection",
-                "name": "example2",
-                "id": "example2",
-                "path": {
-                    "type": "json",
-                    "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json",
-                },
-            },
-            {
-                "type": "collection",
-                "name": "example4",
-                "id": "example4",
-                "path": {
-                    "type": "json",
-                    "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example4/root.json",
-                },
-            },
-        ],
-    }
-}
+from rfc8_examples import BASE_PATH, RAW_BASE_URL, get_uuid4
+from rfc8_examples.example1 import ROOT_ID as EXAMPLE1_ID
+from rfc8_examples.example2 import ROOT_ID as EXAMPLE2_ID
+from rfc8_examples.example4 import ROOT_ID as EXAMPLE4_ID
+from rfc8_examples.utils import reset_dir
 
 
 def main():
-    root_path = BASE_PATH / "example3/root.json"
-    if root_path.parent.exists():
-        shutil.rmtree(root_path.parent)
-    root_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(root_path, "w") as f:
-        json.dump(DATA, f, indent=2)
+    base = reset_dir(BASE_PATH / "example3")
+    nodes = []
+    for name, node_id in (
+        ("example1", EXAMPLE1_ID),
+        ("example2", EXAMPLE2_ID),
+        ("example4", EXAMPLE4_ID),
+    ):
+        nodes.append(
+            {
+                "type": "collection",
+                "id": node_id,
+                "name": name,
+                "path": {
+                    "type": "zarr",
+                    "format": "http",
+                    "href": f"{RAW_BASE_URL}/{name}",
+                },
+            }
+        )
+    data = {
+        "ome": {
+            "version": "0.x",
+            "type": "collection",
+            "id": get_uuid4("example3"),
+            "name": "http_collection",
+            "nodes": nodes,
+        }
+    }
+    with open(base / "root.json", "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+
+
+if __name__ == "__main__":
+    main()

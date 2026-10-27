@@ -1,0 +1,149 @@
+{
+  "attributes": {
+    "ome": {
+      "version": "0.x",
+      "extension_manifest": [
+        {
+          "id": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/training/",
+          "version": "0.1",
+          "schemas": [
+            {
+              "type": "jsonschema",
+              "url": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/training/dataset.schema.json"
+            }
+          ],
+          "name": "Training dataset",
+          "homepage": "https://github.com/BioVisionCenter/ngio-collections/tree/main/examples/schemas"
+        },
+        {
+          "id": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/fractal/",
+          "version": "0.1",
+          "schemas": [
+            {
+              "type": "jsonschema",
+              "url": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/fractal/provenance.schema.json"
+            },
+            {
+              "type": "jsonschema",
+              "url": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/fractal/table.schema.json"
+            }
+          ],
+          "name": "Fractal",
+          "homepage": "https://github.com/BioVisionCenter/ngio-collections/tree/main/examples/schemas"
+        }
+      ],
+      "type": "collection",
+      "id": "e7b203e5-b963-4e9a-a580-ea98c282fe84",
+      "name": "plate-001",
+      "traits": [
+        {
+          "type": "plate",
+          "rows": [
+            {
+              "name": "A"
+            }
+          ],
+          "columns": [
+            {
+              "name": "1"
+            }
+          ],
+          "acquisitions": []
+        },
+        {
+          "type": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/training/dataset",
+          "task": "segmentation",
+          "samples": [
+            {
+              "image": {
+                "type": "multiscale",
+                "ref": "f62a078b-582a-4044-83bc-3c8597a28a35"
+              },
+              "labels": {
+                "type": "multiscale",
+                "ref": "4e0690d5-ac03-4607-b222-65ded04de732"
+              },
+              "split": "train"
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "type": "collection",
+          "id": "ac70f3dd-9d06-4c66-a5db-f0dc283a69f1",
+          "name": "A1",
+          "traits": [
+            {
+              "type": "well",
+              "row_index": 0,
+              "column_index": 0
+            }
+          ],
+          "nodes": [
+            {
+              "type": "multiscale",
+              "id": "f62a078b-582a-4044-83bc-3c8597a28a35",
+              "name": "fov0",
+              "path": {
+                "type": "zarr",
+                "format": "relative",
+                "href": "./A/1/0"
+              }
+            },
+            {
+              "type": "multiscale",
+              "id": "4e0690d5-ac03-4607-b222-65ded04de732",
+              "name": "nuclei",
+              "path": {
+                "type": "zarr",
+                "format": "relative",
+                "href": "./A/1/nuclei"
+              },
+              "traits": [
+                {
+                  "type": "labels",
+                  "source": [
+                    {
+                      "type": "multiscale",
+                      "ref": "f62a078b-582a-4044-83bc-3c8597a28a35"
+                    }
+                  ],
+                  "label_attributes": []
+                },
+                {
+                  "type": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/fractal/provenance",
+                  "task": "cellpose-segmentation",
+                  "version": "3.0.0",
+                  "inputs": [
+                    {
+                      "type": "multiscale",
+                      "ref": "f62a078b-582a-4044-83bc-3c8597a28a35"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/fractal/table",
+              "id": "a37df006-ae33-49de-9176-9fd41dedbc34",
+              "name": "regionprops",
+              "path": {
+                "type": "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/fractal/csv",
+                "format": "relative",
+                "href": "./A/1/regionprops.csv"
+              },
+              "columns": [
+                "label",
+                "area",
+                "mean_intensity"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}

@@ -1,84 +1,69 @@
+"""Example 1: a collection with two images in a scene, one being a label image.
+
+    hela-nuclei-experiment (collection, scene trait)
+    ├── raw    -> ./raw    (multiscale, 2 scales)
+    └── nuclei -> ./nuclei (multiscale, 2 scales; labels trait on its entry -> raw)
+"""
 
 import ngio_collections as ngc
 
 from rfc8_examples import BASE_PATH, get_uuid4
-from rfc8_examples.utils import create_zarr_array
+from rfc8_examples.utils import (
+    coordinate_system_id,
+    create_image,
+    multiscale,
+    reset_dir,
+    yx_axes,
+)
+
+ROOT_ID = get_uuid4("example1")
 
 
 def main():
-    coord_system_id = get_uuid4("coord-sysnte-id")
-    singlescale_1_id = get_uuid4("singlescale-1")
-    singlescale_2_id = get_uuid4("singlescale-2")
-    multiscale_id = get_uuid4("multiscale")
-    collection_id = get_uuid4("collection")
+    base = reset_dir(BASE_PATH / "example1")
 
-    singlescale_1 = ngc.new_node(
-        node_type="singlescale",
-        id=singlescale_1_id,
-        name="high-res",
-        ref=ngc.Reference(path=ngc.ZarrPath(path="./1")),
-    ).set_attr(
-        ngc.CoordinateTransformationsAttribute(
-            [
-                ngc.ScaleTransformation(
-                    input=ngc.ReferenceObj(id=singlescale_1_id),
-                    output=ngc.ReferenceObj(id=coord_system_id),
-                    scale=[1.0, 1.0],
-                )
-            ]
+    raw = create_image(base / "raw", multiscale("raw", "example1-raw"), levels=2, seed=1)
+    nuclei = create_image(
+        base / "nuclei",
+        multiscale("nuclei", "example1-nuclei"),
+        levels=2,
+        seed=2,
+        dtype="u2",
+    )
+    # The labels trait sits on the entry in the collection, not in the image document.
+    nuclei = nuclei.set_trait(
+        ngc.LabelsTrait(
+            source=[ngc.ReferenceObj(type="multiscale", ref=raw.id)],
+            label_attributes=[
+                ngc.LabelObj(label_value=1, rgba=[255, 0, 0, 255]),
+                ngc.LabelObj(label_value=2, rgba=[0, 255, 0, 255]),
+            ],
         )
     )
 
-    singlescale_2 = ngc.new_node(
-        node_type="singlescale",
-        id=singlescale_2_id,
-        name="low-res",
-        ref=ngc.Reference(path=ngc.ZarrPath(path="./2")),
-    ).set_attr(
-        ngc.CoordinateTransformationsAttribute(
-            [
-                ngc.ScaleTransformation(
-                    input=ngc.ReferenceObj(id=singlescale_2_id),
-                    output=ngc.ReferenceObj(id=coord_system_id),
-                    scale=[2.0, 2.0],
-                )
-            ]
-        )
+    scene_cs = get_uuid4("example1-scene-cs")
+    scene = ngc.SceneTrait(
+        coordinate_systems=[ngc.CoordinateSystem(id=scene_cs, name="scene", axes=yx_axes())],
+        coordinate_transformations=[
+            ngc.TranslationTransformation(
+                translation=translation,
+                input=ngc.ReferenceObj(
+                    type="coordinate_system",
+                    ref=coordinate_system_id(key),
+                    path=ngc.ZarrPath(href=href),
+                ),
+                output=ngc.ReferenceObj(type="coordinate_system", ref=scene_cs),
+            )
+            for key, href, translation in (
+                ("example1-raw", "./raw", [0.0, 0.0]),
+                ("example1-nuclei", "./nuclei", [0.0, 0.0]),
+            )
+        ],
     )
-
-    multiscale = ngc.new_node(
-        node_type="multiscale",
-        id=multiscale_id,
-        name="my multiscale",
-        children=(singlescale_1, singlescale_2),
-    ).set_attr(
-        ngc.CoordinateSystemsAttribute(
-            [
-                ngc.CoordinateSystem(
-                    id=coord_system_id,
-                    axes=[
-                        ngc.Axis(name="y", type="space", unit="micrometer"),
-                        ngc.Axis(name="x", type="space", unit="micrometer"),
-                    ],
-                )
-            ]
-        )
-    )
-
-    collection = ngc.new_node(
-        "collection",
-        name="my collection",
-        id=collection_id,
-        children=(multiscale,),
-    )
-
-    base_dir = BASE_PATH / "example1"
-    base_dir.mkdir(parents=True, exist_ok=True)
-    url = str(base_dir / "root.json")
-    ngc.create(url, collection, overwrite=True)
-
-    create_zarr_array(base_dir / "1", seed=1111)
-    create_zarr_array(base_dir / "2", seed=2222)
+    root = ngc.new_collection(
+        id=ROOT_ID, name="hela-nuclei-experiment", traits=[scene]
+    ).add_external(raw, nuclei)
+    ngc.create(str(base / "zarr.json"), root, overwrite=True)
 
 
 if __name__ == "__main__":
