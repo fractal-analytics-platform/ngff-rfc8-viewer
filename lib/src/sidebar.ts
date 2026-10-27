@@ -1,4 +1,3 @@
-import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
 import { NGFFGraph } from './graph';
@@ -9,11 +8,13 @@ const defaultWidth = 560;
 const minWidth = 150;
 const minSpace = 100;
 const smallScreenBreakpoint = 768;
-// validation errors to ignore for *unloaded* multiscale nodes only
-const IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE = [
-  "must have required property 'attributes'",
-  'must match "then" schema'
-];
+/**
+ * Shown when validation is requested: the external JSON Schema validator
+ * (ngff-rfc8-validator) targets the pre-revision RFC-8 schema and there is no
+ * revision 1 schema yet, so only the viewer's structural checks are applied.
+ */
+export const VALIDATION_UNAVAILABLE_MESSAGE =
+  'JSON Schema validation is not available for RFC-8 revision 1 documents yet; only structural checks were applied while loading.';
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -155,70 +156,18 @@ export class NGFFSidebar {
     }
 
     if (this.validationEnabled) {
-      this.showValidation(node);
+      this.showValidation();
     }
 
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);
   }
 
-  private showValidation(node: D3Node) {
+  private showValidation() {
     this.element.classList.remove(`${CSS_CLASS_PREFIX}has-error`);
-    try {
-      validate(this.buildValidatableNode(node));
-    } catch (err) {
-      if (err instanceof Error) {
-        const error = document.createElement('div');
-        error.classList.add(`${CSS_CLASS_PREFIX}error`);
-        let errorCount = 0;
-        if (
-          'schemaErrors' in err &&
-          Array.isArray(err.schemaErrors) &&
-          err.schemaErrors.length > 0
-        ) {
-          const toIgnore =
-            !node.loaded && node.omeNode.type === 'multiscale'
-              ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
-              : [];
-
-          error.innerText = 'Validation errors, see below';
-          for (const schemaError of err.schemaErrors.filter(
-            (se) => !toIgnore.includes(se.message)
-          )) {
-            // we log in case node reloading causes the error to be lost
-            console.log('Schema Validation error:', schemaError);
-            const error = document.createElement('pre');
-            error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
-            error.innerText = JSON.stringify(schemaError, null, 2);
-            this.content.appendChild(error);
-            errorCount++;
-          }
-        } else {
-          error.innerText = err.message;
-          errorCount++;
-        }
-        if (errorCount === 0) {
-          return;
-        }
-        this.content.prepend(error);
-        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
-      }
-    }
-  }
-
-  private buildValidatableNode(node: D3Node) {
-    const omeNode: any = { ...node.omeNode };
-    if (node.parentId && !('version' in omeNode)) {
-      // Add dummy version for validating non-root nodes
-      omeNode.version = '0.x';
-    }
-    if (
-      !('path' in omeNode) &&
-      !('nodes' in omeNode) &&
-      ['collection', 'multiscale'].includes(omeNode.type)
-    ) {
-      omeNode.nodes = [];
-    }
-    return { ome: omeNode };
+    const notice = document.createElement('div');
+    notice.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}warning`);
+    notice.textContent = VALIDATION_UNAVAILABLE_MESSAGE;
+    this.content.prepend(notice);
   }
 
   private addTitle(value: string) {
