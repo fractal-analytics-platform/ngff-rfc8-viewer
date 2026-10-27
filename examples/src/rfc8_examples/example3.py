@@ -28,6 +28,15 @@ DATA = {
                     "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json",
                 },
             },
+            {
+                "type": "collection",
+                "name": "example4",
+                "id": "example4",
+                "path": {
+                    "type": "json",
+                    "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example4/root.json",
+                },
+            },
         ],
     }
 }
