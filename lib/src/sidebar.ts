@@ -17,14 +17,12 @@ const IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE = [
 export class NGFFSidebar {
   private element: HTMLElement;
   private content: HTMLElement;
-  private validationEnabled: boolean;
   private node: D3Node | null = null;
   private graph: NGFFGraph;
 
-  constructor(element: HTMLElement, validate: boolean, graph: NGFFGraph) {
+  constructor(element: HTMLElement, graph: NGFFGraph) {
     this.element = element;
     this.graph = graph;
-    this.validationEnabled = validate;
 
     // Listen for loading & update events from the graph to refresh the sidebar if needed
     graph.addLoadingListener((loading) => {
@@ -163,8 +161,10 @@ export class NGFFSidebar {
       this.addKeyValue('Attributes', '-');
     }
 
-    if (this.validationEnabled) {
+    if (this.graph.getValidation()) {
       this.showValidation(node);
+    } else {
+      this.element.classList.remove(`${CSS_CLASS_PREFIX}has-error`);
     }
 
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);

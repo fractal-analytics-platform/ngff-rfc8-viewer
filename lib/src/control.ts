@@ -51,7 +51,6 @@ export default class NGFFControlPanel {
 
     addButton(`${CSS_CLASS_PREFIX}house-door-fill`, btnGroup, 'Home', () => {
       const params = new URLSearchParams(window.location.search);
-      window.location.hash = '';
       params.delete('source');
       params.delete('select');
       window.location.search = params.toString();
@@ -62,8 +61,10 @@ export default class NGFFControlPanel {
       btnGroup,
       'Back to root of current collection',
       () => {
-        window.location.hash = '';
-        window.location.reload();
+        const params = new URLSearchParams(window.location.search);
+        params.delete('select');
+        // reloads the page to reset the collection to unloaded state
+        window.location.search = params.toString();
       }
     );
 
@@ -109,16 +110,18 @@ export default class NGFFControlPanel {
 
     // Validate button - toggle true/false
     const validate = new URLSearchParams(window.location.search).get('validate') == 'true';
-    addButton(
+    const vBtn = addButton(
       validate ? `${CSS_CLASS_PREFIX}shield-fill-check` : `${CSS_CLASS_PREFIX}shield-check`,
       element,
       'Validate selected node with JSON Schema',
       () => {
         const params = new URLSearchParams(window.location.search);
-        params.set('validate', validate ? 'false' : 'true');
-        window.location.search = params.toString();
+        params.set('validate', params.get('validate') == 'true' ? 'false' : 'true');
+        history.pushState(null, '', `?${params.toString()}`);
+        this.refreshView();
       }
     );
+    vBtn.id = `${CSS_CLASS_PREFIX}validate-btn`;
 
     element.appendChild(this.spinner);
 
@@ -172,11 +175,15 @@ export default class NGFFControlPanel {
   }
 
   async refreshView() {
+    // Update the UI based on the current URL query parameters...
+
     // we don't want graph events to add to history while we're refreshing the view
     this.ignoreEvents = true;
 
-    console.log('NGFFViewer: refreshView()');
-    const selectedPath = new URLSearchParams(window.location.search).get('select');
+    const queryParams = new URLSearchParams(window.location.search);
+
+    // 'select' -> set selected Node
+    const selectedPath = queryParams.get('select');
     console.log('Selected path from URL:', selectedPath);
     if (selectedPath) {
       try {
@@ -188,27 +195,49 @@ export default class NGFFControlPanel {
       this.graph.selectNode();
     }
 
-    const queryParams = new URLSearchParams(window.location.search);
-    // Determine which view to use based on the query parameter
+    // 'validate' -> set the appropriate validation state
+    const validate = queryParams.get('validate') == 'true';
+    const valBtn = document.getElementById(`${CSS_CLASS_PREFIX}validate-btn`);
+    // change of validation state...
+    if (valBtn) {
+      valBtn.classList.remove(
+        `${CSS_CLASS_PREFIX}shield-fill-check`,
+        `${CSS_CLASS_PREFIX}shield-check`
+      );
+      valBtn.classList.add(
+        validate ? `${CSS_CLASS_PREFIX}shield-fill-check` : `${CSS_CLASS_PREFIX}shield-check`
+      );
+    }
+    this.graph.setValidation(validate);
 
+    // 'view' -> set the appropriate view (images, list, tree)
+    console.log("VIEW queryParams.get('view')", queryParams.get('view'));
     switch (queryParams.get('view')) {
       case 'images':
-        if (this.view && !(this.view instanceof ImagesView)) {
-          this.view.destroy();
+        // If the current view exists and is ImagesView - do nothing, otherwise...
+        if (!(this.view && this.view instanceof ImagesView)) {
+          // destroy if different view exists
+          if (this.view) {
+            this.view.destroy();
+          }
+          this.view = new ImagesView(this.graph!, this.graphContainerId!);
         }
-        this.view = new ImagesView(this.graph!, this.graphContainerId!);
         break;
       case 'list':
-        if (this.view && !(this.view instanceof ListView)) {
-          this.view.destroy();
+        if (!(this.view && this.view instanceof ListView)) {
+          if (this.view) {
+            this.view.destroy();
+          }
+          this.view = new ListView(this.graph!, this.graphContainerId!);
         }
-        this.view = new ListView(this.graph!, this.graphContainerId!);
         break;
       default:
-        if (this.view && !(this.view instanceof TreeView)) {
-          this.view.destroy();
+        if (!(this.view && this.view instanceof TreeView)) {
+          if (this.view) {
+            this.view.destroy();
+          }
+          this.view = new TreeView(this.graph!, this.graphContainerId!);
         }
-        this.view = new TreeView(this.graph!, this.graphContainerId!);
     }
     this.ignoreEvents = false;
   }

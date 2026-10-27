@@ -13,6 +13,7 @@ export class NGFFGraph {
   private extraEdges: Array<{ sourceId: string; targetId: string }> = [];
 
   private hierarchy: d3.HierarchyNode<D3Node> | undefined;
+  private validation: boolean = false;
 
   private eventListeners = {
     loading: [] as Array<(loading: boolean) => void>,
@@ -125,6 +126,23 @@ export class NGFFGraph {
       node.selected = true;
     }
     this.signalNodeSelected(node);
+  }
+
+  getSelectedNode(): D3Node | undefined {
+    return this.nodes.find((n) => n.selected);
+  }
+
+  setValidation(validate: boolean) {
+    if (validate == this.validation) {
+      return;
+    }
+    this.validation = validate;
+    if (this.getSelectedNode()) {
+      this.signalNodeUpdated(this.getSelectedNode()!);
+    }
+  }
+  getValidation(): boolean {
+    return this.validation;
   }
 
   walk(

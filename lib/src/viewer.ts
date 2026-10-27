@@ -55,8 +55,10 @@ export default class NGFFViewer {
     try {
       const loader = new NGFFLoader(source);
       this.graph = new NGFFGraph(loader, autoloadDepth);
+      this.graph.setValidation(validate);
+
       // sidebar listens to graph update and load events
-      new NGFFSidebar(sidebar, validate, this.graph);
+      new NGFFSidebar(sidebar, this.graph);
 
       // When page loads, we first load the graph's root...
       await this.graph.loadRoot();

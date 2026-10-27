@@ -61,6 +61,14 @@ export class TreeView {
         message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
       )
     );
+    // Also re-render when loading completes
+    this.unsubscribers.push(
+      graph.addLoadingListener((isLoading) => {
+        if (!isLoading) {
+          this.renderTree();
+        }
+      })
+    );
 
     const exportButtons = d3
       .select(`#${containerId}`)
