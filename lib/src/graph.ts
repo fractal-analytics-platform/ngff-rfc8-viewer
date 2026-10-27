@@ -305,6 +305,9 @@ export class NGFFGraph {
     }
     parentPath = parentPath.replace(/^\.\//, '').replace(/\/$/, '');
     path = path.replace(/^\.\//, '').replace(/\/$/, '');
+    if (parentPath.startsWith('http')) {
+      return `${parentPath}/${path}`;
+    }
     return parentPath ? `./${parentPath}/${path}` : `./${path}`;
   }
 

@@ -130,8 +130,10 @@ export class NGFFSidebar {
         resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
       }
       // Construct the base URL for the thumbnailZarr store
-      const baseUrl =
-        prefix + (resolvedPath.startsWith('./') ? resolvedPath.substring(1) : resolvedPath);
+      // resolvedPath either starts with './' or is an absolute URL
+      const baseUrl = resolvedPath.startsWith('./')
+        ? prefix + resolvedPath.substring(1)
+        : resolvedPath;
       // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
       if ('nodes' in node.omeNode) {
         this.content.appendChild(createThumbnailImg(node, baseUrl, 150));

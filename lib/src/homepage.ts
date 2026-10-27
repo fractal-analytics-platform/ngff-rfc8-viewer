@@ -14,6 +14,10 @@ const exampleSources = [
     'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example4/root.json'
   ],
   [
+    'Use https paths to add the examples above into 1 collection',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example3/root.json'
+  ],
+  [
     'Plate with multiple acquisitions of the same field',
     'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example5/root.json'
   ],
