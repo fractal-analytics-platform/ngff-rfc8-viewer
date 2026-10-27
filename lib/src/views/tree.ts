@@ -1,8 +1,8 @@
 import * as d3 from 'd3';
 import type { D3Node } from '../types';
-import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from '../constants';
+import { CSS_CLASS_PREFIX, getNodeColor, STROKE_COLORS } from '../constants';
 import type { NGFFGraph } from '../graph';
-import { displayName } from '../nodes';
+import { displayName, shortTypeName } from '../nodes';
 
 const NODE_SPACING = 160;
 const CIRCLE_RADIUS = 24;
@@ -202,7 +202,7 @@ export class TreeView {
       .attr('cx', (d) => Number(d.x))
       .attr('cy', (d) => Number(d.y))
       .attr('r', CIRCLE_RADIUS)
-      .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
+      .attr('fill', (d) => getNodeColor(d.data.omeNode.type))
       .attr('opacity', (d) => (d.data.loaded ? 1 : 0.4))
       .style('cursor', 'pointer')
       .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
@@ -228,7 +228,8 @@ export class TreeView {
           this.tooltip?.style('opacity', 1).html(`
             <strong>Id: </strong>${d.data.omeNode.id}<br>
             <strong>Name: </strong>${d.data.omeNode.name ?? '-'}<br>
-            <strong>Type: </strong> ${d.data.omeNode.type}
+            <strong>Type: </strong> ${d.data.omeNode.type}<br>
+            <strong>Traits: </strong> ${this.traitLabels(d.data).join(', ') || '-'}
           `);
         }
       })
@@ -278,6 +279,23 @@ export class TreeView {
         }
       });
 
+    // Trait badges under the label
+    tree
+      .selectAll('text.trait-label')
+      .data(descendants.filter((d) => this.traitLabels(d.data).length > 0))
+      .enter()
+      .append('text')
+      .attr('class', 'trait-label')
+      .attr('x', (d) => Number(d.x))
+      .attr('y', (d) => {
+        const nameLines = Math.max(1, Math.ceil(displayName(d.data.omeNode).length / 15));
+        return Number(d.y) + 2 * CIRCLE_RADIUS + 5 + nameLines * 18;
+      })
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '12px')
+      .attr('fill', '#777')
+      .text((d) => this.traitLabels(d.data).join(' · '));
+
     // Compute initial zoom level
     if (!this.currentZoom) {
       const k = Math.max(minZoom, maxZoom / 3);
@@ -288,6 +306,18 @@ export class TreeView {
     }
 
     this.svg.call(zoom.transform, this.currentZoom);
+  }
+
+  /** Short names of the traits of a node, for badges and tooltips. */
+  private traitLabels(node: D3Node): string[] {
+    return (node.omeNode.traits ?? []).map((trait) =>
+      shortTypeName(
+        trait.type,
+        this.graph.findManifestEntry(trait.type)
+          ? [this.graph.findManifestEntry(trait.type)!]
+          : undefined
+      )
+    );
   }
 
   showErrorAlert(message: string) {

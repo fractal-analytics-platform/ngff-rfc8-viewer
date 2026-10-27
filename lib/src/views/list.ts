@@ -1,7 +1,7 @@
 import type { D3Node } from './../types';
-import { CSS_CLASS_PREFIX, NODE_COLORS } from './../constants';
+import { CSS_CLASS_PREFIX, getNodeColor } from './../constants';
 import type { NGFFGraph } from './../graph';
-import { displayName } from './../nodes';
+import { displayName, shortTypeName } from './../nodes';
 
 export class ListView {
   private graph: NGFFGraph;
@@ -79,8 +79,16 @@ export class ListView {
 
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
-    button.style.borderColor = NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
+    button.style.borderColor = getNodeColor(node.omeNode.type);
     button.textContent = displayName(node.omeNode);
+    for (const trait of node.omeNode.traits ?? []) {
+      const badge = document.createElement('span');
+      badge.classList.add(`${CSS_CLASS_PREFIX}trait-badge`);
+      const entry = this.graph.findManifestEntry(trait.type);
+      badge.textContent = shortTypeName(trait.type, entry ? [entry] : undefined);
+      badge.title = trait.type;
+      button.appendChild(badge);
+    }
     nodeElement.appendChild(button);
     button.onclick = async () => {
       this.selectNode(node);

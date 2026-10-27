@@ -3,9 +3,15 @@ export const CSS_CLASS_PREFIX = 'ngff-rfc8-viewer-';
 export const NODE_COLORS: Record<string, string> = {
   collection: '#4f81bd',
   multiscale: '#9bbb59',
-  singlescale: '#c0504d',
+  /** extension node types (URIs) */
+  extension: '#8e6cb0',
   default: '#999'
 };
+
+/** Colour of a node: built-in types have their own, URI types share the extension colour. */
+export function getNodeColor(type: string): string {
+  return NODE_COLORS[type] ?? (type.includes('://') ? NODE_COLORS.extension : NODE_COLORS.default);
+}
 
 export const STROKE_COLORS: Record<string, string> = {
   selection: '#333',
