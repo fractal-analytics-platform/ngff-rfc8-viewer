@@ -151,7 +151,7 @@ export class NGFFSidebar {
     if (node.omeNode.attributes) {
       this.addTitle('Attributes');
       const pre = document.createElement('pre');
-      pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
+      pre.textContent = JSON.stringify(node.omeNode.attributes, null, 2);
       this.content.appendChild(pre);
     } else {
       this.addKeyValue('Attributes', '-');
@@ -183,7 +183,7 @@ export class NGFFSidebar {
               ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
               : [];
 
-          error.innerText = 'Validation errors, see below';
+          error.textContent = 'Validation errors, see below';
           for (const schemaError of err.schemaErrors.filter(
             (se) => !toIgnore.includes(se.message)
           )) {
@@ -191,12 +191,12 @@ export class NGFFSidebar {
             console.log('Schema Validation error:', schemaError);
             const error = document.createElement('pre');
             error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
-            error.innerText = JSON.stringify(schemaError, null, 2);
+            error.textContent = JSON.stringify(schemaError, null, 2);
             this.content.appendChild(error);
             errorCount++;
           }
         } else {
-          error.innerText = err.message;
+          error.textContent = err.message;
           errorCount++;
         }
         if (errorCount === 0) {
@@ -227,7 +227,7 @@ export class NGFFSidebar {
   private addTitle(value: string) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
-    title.innerText = value;
+    title.textContent = value;
     p.appendChild(title);
     this.content.appendChild(p);
   }
@@ -236,8 +236,8 @@ export class NGFFSidebar {
     const p = document.createElement('p');
     const title = document.createElement('strong');
     const text = document.createElement('span');
-    title.innerText = `${key}: `;
-    text.innerText = value || '-';
+    title.textContent = `${key}: `;
+    text.textContent = value || '-';
     p.appendChild(title);
     p.appendChild(text);
     this.content.appendChild(p);
