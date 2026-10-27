@@ -1,5 +1,5 @@
-import { createReadStream, existsSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { createReadStream, existsSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * Serves `examples/data` as plain static files during `npm run dev`.
@@ -8,11 +8,11 @@ import { join } from 'node:path';
  */
 function serveExampleData() {
   return {
-    name: 'serve-example-data',
+    name: "serve-example-data",
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        const url = (req.url || '').split('?')[0];
-        if (!url.startsWith('/examples/data/')) {
+        const url = (req.url || "").split("?")[0];
+        if (!url.startsWith("/examples/data/")) {
           return next();
         }
         const file = join(server.config.root, decodeURIComponent(url));
@@ -20,21 +20,23 @@ function serveExampleData() {
           return next();
         }
         res.setHeader(
-          'Content-Type',
-          file.endsWith('.json') ? 'application/json' : 'application/octet-stream'
+          "Content-Type",
+          file.endsWith(".json")
+            ? "application/json"
+            : "application/octet-stream",
         );
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader("Access-Control-Allow-Origin", "*");
         createReadStream(file).pipe(res);
       });
-    }
+    },
   };
 }
 
 export default {
   plugins: [serveExampleData()],
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets'
+    outDir: "dist",
+    assetsDir: "assets",
   },
-  base: './'
+  base: "./",
 };
