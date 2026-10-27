@@ -410,5 +410,9 @@ export class TreeView {
     if (el) {
       el.remove();
     }
+    const exportBtns = document.querySelector(`#${this.containerId} .export-buttons`);
+    if (exportBtns) {
+      exportBtns.remove();
+    }
   }
 }

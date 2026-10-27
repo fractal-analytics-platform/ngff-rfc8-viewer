@@ -137,8 +137,10 @@ export class NGFFGraph {
       return;
     }
     this.validation = validate;
-    if (this.getSelectedNode()) {
-      this.signalNodeUpdated(this.getSelectedNode()!);
+    const selectedNode = this.getSelectedNode();
+    if (selectedNode) {
+      // trigger sidebar.showInfo()
+      this.signalNodeUpdated(selectedNode);
     }
   }
   getValidation(): boolean {
