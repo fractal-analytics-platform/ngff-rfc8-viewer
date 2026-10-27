@@ -184,10 +184,8 @@ export default class NGFFControlPanel {
       } catch (err) {
         this.graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
       }
-    }
-
-    if (this.view) {
-      this.view.destroy();
+    } else {
+      this.graph.selectNode();
     }
 
     const queryParams = new URLSearchParams(window.location.search);
@@ -195,12 +193,21 @@ export default class NGFFControlPanel {
 
     switch (queryParams.get('view')) {
       case 'images':
+        if (this.view && !(this.view instanceof ImagesView)) {
+          this.view.destroy();
+        }
         this.view = new ImagesView(this.graph!, this.graphContainerId!);
         break;
       case 'list':
+        if (this.view && !(this.view instanceof ListView)) {
+          this.view.destroy();
+        }
         this.view = new ListView(this.graph!, this.graphContainerId!);
         break;
       default:
+        if (this.view && !(this.view instanceof TreeView)) {
+          this.view.destroy();
+        }
         this.view = new TreeView(this.graph!, this.graphContainerId!);
     }
     this.ignoreEvents = false;
