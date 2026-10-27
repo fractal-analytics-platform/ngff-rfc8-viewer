@@ -317,4 +317,8 @@ export class NGFFGraph {
     }
     this.buildHierarchy();
   }
+
+  countUnloadedNodes(type: string) {
+    return this.nodes.filter((node) => !node.loaded && node.omeNode.type === type).length;
+  }
 }
