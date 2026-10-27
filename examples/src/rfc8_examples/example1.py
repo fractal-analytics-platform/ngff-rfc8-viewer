@@ -77,8 +77,8 @@ def main():
     url = str(base_dir / "root.json")
     ngc.create(url, collection, overwrite=True)
 
-    create_zarr_array(base_dir / "1")
-    create_zarr_array(base_dir / "2")
+    create_zarr_array(base_dir / "1", seed=1111)
+    create_zarr_array(base_dir / "2", seed=2222)
 
 
 if __name__ == "__main__":

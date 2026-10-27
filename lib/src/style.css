@@ -77,6 +77,9 @@
 .ngff-rfc8-viewer-node-plus::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-node-plus' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M11 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8M6.025 7.5a5 5 0 1 1 0 1H4A1.5 1.5 0 0 1 2.5 10h-1A1.5 1.5 0 0 1 0 8.5v-1A1.5 1.5 0 0 1 1.5 6h1A1.5 1.5 0 0 1 4 7.5zM11 5a.5.5 0 0 1 .5.5v2h2a.5.5 0 0 1 0 1h-2v2a.5.5 0 0 1-1 0v-2h-2a.5.5 0 0 1 0-1h2v-2A.5.5 0 0 1 11 5M1.5 7a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z'/%3E%3C/svg%3E");
 }
+.ngff-rfc8-viewer-ui-checks::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' fill='currentColor' class='bi bi-ui-checks' viewBox='0 0 16 16'%3E%3Cpath d='M7 2.75a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zM2 1a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2zm0 8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2zM7 10.75a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 .5.5v.5a.5.5 0 0 1-.5.5h-7a.5.5 0 0 1-.5-.5zm0-5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0 8a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5'/%3E%3C/svg%3E");
+}
 
 .ngff-rfc8-viewer-icon-margin::before {
   margin-right: 5px;
@@ -314,15 +317,22 @@ Show the "sidebar" below the graph
   animation: ngff-rfc8-viewer-rotate-dash 0.5s linear infinite;
 }
 
-.ngff-rfc8-viewer-list-graph-root {
+.ngff-rfc8-viewer-list-graph-root,
+.ngff-rfc8-viewer-images-graph-root {
   padding: 65px 15px 15px 15px;
   height: 100%;
   box-sizing: border-box;
   overflow: auto;
 }
 
+.ngff-rfc8-viewer-images-graph-root {
+  width: fit-content;
+  margin: 0 auto;
+}
+
 .ngff-rfc8-viewer-node-element {
   padding: 2px 2px 2px 20px;
+  width: fit-content;
 }
 
 .ngff-rfc8-viewer-node-element button {
@@ -382,4 +392,25 @@ Show the "sidebar" below the graph
 }
 .ngff-rfc8-viewer-thumbnail-error img {
   position: absolute;
+}
+
+/* images view */
+.ngff-rfc8-viewer-image-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  padding-right: 15px;
+}
+.ngff-rfc8-viewer-image-row:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.ngff-rfc8-viewer-image-row h2 {
+  margin: 5px 0;
+  font-size: 1.25em;
+}
+.ngff-rfc8-viewer-image-row .ngff-rfc8-viewer-thumbnail-container {
+  flex-shrink: 0;
 }

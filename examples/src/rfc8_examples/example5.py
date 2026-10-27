@@ -96,12 +96,12 @@ def main():
 
     children_A1 = _get_children_and_tables(coord_system_id=coord_system_id, well_label="A1")
     children_A1_ref = []
-    for child in children_A1:
+    for ind, child in enumerate(children_A1):
         url = str(root_collection_path / f"plate/well-A1/{child.name}/zarr.json")
         children_A1_ref.append(ngc.create(url, child, overwrite=True))
         if child.type == "multiscale":
             url = str(root_collection_path / f"plate/well-A1/{child.name}/s0")
-            create_zarr_array(url)
+            create_zarr_array(url, seed=ind)
 
     well_A1 = ngc.new_node(
         "collection",
