@@ -216,7 +216,6 @@ export class TreeView {
       .attr('stroke-width', (d) => (d.data.selected ? 5 : 2))
       .on('click', async (event, d) => {
         const node = d.data;
-        this.selectNode(node);
         if ('path' in node.omeNode && node.omeNode.path) {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
@@ -224,10 +223,13 @@ export class TreeView {
           await this.graph.loadNodeWithSignal(
             node as D3Node & { omeNode: OmeNode & { path: OmePath } }
           );
+          this.selectNode(node);
           this.renderTree();
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.remove('ngff-rfc8-viewer-rotating-dash');
           }
+        } else {
+          this.selectNode(node);
         }
       })
       .on('mouseenter', (event, d) => {
