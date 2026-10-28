@@ -1,0 +1,86 @@
+{
+  "attributes": {
+    "ome": {
+      "version": "0.x",
+      "type": "multiscale",
+      "id": "22170272-d80b-4cc9-8ddb-4ef92394c59b",
+      "name": "fov0",
+      "coordinate_systems": [
+        {
+          "type": "coordinate_system",
+          "id": "aef38ede-4a16-46ef-913a-d4cf1a53bebd",
+          "name": "physical",
+          "axes": [
+            {
+              "name": "y",
+              "type": "space",
+              "unit": "micrometer"
+            },
+            {
+              "name": "x",
+              "type": "space",
+              "unit": "micrometer"
+            }
+          ]
+        }
+      ],
+      "scales": [
+        {
+          "type": "scale",
+          "id": "486f6a2a-c1ca-4d4a-bcb4-f415b885f385",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s0"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "486f6a2a-c1ca-4d4a-bcb4-f415b885f385"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "aef38ede-4a16-46ef-913a-d4cf1a53bebd"
+              },
+              "type": "scale",
+              "scale": [
+                1.0,
+                1.0
+              ]
+            }
+          ]
+        },
+        {
+          "type": "scale",
+          "id": "130d0fea-24f3-4c20-bab5-46ac4add35d0",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s1"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "130d0fea-24f3-4c20-bab5-46ac4add35d0"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "aef38ede-4a16-46ef-913a-d4cf1a53bebd"
+              },
+              "type": "scale",
+              "scale": [
+                2.0,
+                2.0
+              ]
+            }
+          ]
+        }
+      ],
+      "nodes": []
+    }
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}

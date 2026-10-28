@@ -1,0 +1,164 @@
+{
+  "attributes": {
+    "ome": {
+      "version": "0.x",
+      "type": "multiscale",
+      "id": "de0d4e83-f3eb-4df2-bd9b-8e9b8f803869",
+      "name": "image-02",
+      "coordinate_systems": [
+        {
+          "type": "coordinate_system",
+          "id": "b4844b21-538e-439b-aa9d-fb54c61721ba",
+          "name": "physical",
+          "axes": [
+            {
+              "name": "y",
+              "type": "space",
+              "unit": "micrometer"
+            },
+            {
+              "name": "x",
+              "type": "space",
+              "unit": "micrometer"
+            }
+          ]
+        }
+      ],
+      "scales": [
+        {
+          "type": "scale",
+          "id": "6622368d-4bd7-4db7-898e-10c28c15f5e6",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s0"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "6622368d-4bd7-4db7-898e-10c28c15f5e6"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "b4844b21-538e-439b-aa9d-fb54c61721ba"
+              },
+              "type": "scale",
+              "scale": [
+                1.0,
+                1.0
+              ]
+            }
+          ]
+        },
+        {
+          "type": "scale",
+          "id": "3987f36d-0486-4be8-8ea4-b68636a3e76e",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s1"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "3987f36d-0486-4be8-8ea4-b68636a3e76e"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "b4844b21-538e-439b-aa9d-fb54c61721ba"
+              },
+              "type": "scale",
+              "scale": [
+                2.0,
+                2.0
+              ]
+            }
+          ]
+        },
+        {
+          "type": "scale",
+          "id": "378d0628-f7b5-4d5d-b032-6fbaa368982b",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s2"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "378d0628-f7b5-4d5d-b032-6fbaa368982b"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "b4844b21-538e-439b-aa9d-fb54c61721ba"
+              },
+              "type": "scale",
+              "scale": [
+                4.0,
+                4.0
+              ]
+            }
+          ]
+        },
+        {
+          "type": "scale",
+          "id": "59ab9c34-d8d2-4231-906d-a25ffa1f98f5",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s3"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "59ab9c34-d8d2-4231-906d-a25ffa1f98f5"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "b4844b21-538e-439b-aa9d-fb54c61721ba"
+              },
+              "type": "scale",
+              "scale": [
+                8.0,
+                8.0
+              ]
+            }
+          ]
+        },
+        {
+          "type": "scale",
+          "id": "aa32dac5-8f9b-47ff-9a0b-3307bb01240f",
+          "path": {
+            "type": "zarr",
+            "format": "relative",
+            "href": "./s4"
+          },
+          "coordinate_transformations": [
+            {
+              "input": {
+                "type": "scale",
+                "ref": "aa32dac5-8f9b-47ff-9a0b-3307bb01240f"
+              },
+              "output": {
+                "type": "coordinate_system",
+                "ref": "b4844b21-538e-439b-aa9d-fb54c61721ba"
+              },
+              "type": "scale",
+              "scale": [
+                16.0,
+                16.0
+              ]
+            }
+          ]
+        }
+      ],
+      "nodes": []
+    }
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}
