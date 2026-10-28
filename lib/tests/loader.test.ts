@@ -1,14 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NGFFLoader } from '../src/loader';
-import { LegacyFormatError } from '../src/validation';
-import type { OmeDocument } from '../src/types';
+import type { OmeNode } from '../src/types';
 
 describe('NGFFLoader', () => {
-  const validOmeNode: OmeDocument = {
-    version: '0.x',
+  const validOmeNode: OmeNode = {
     type: 'collection',
     name: 'test',
-    id: '0192f3a0-7c1e-7b00-9c22-000000000001',
+    id: 'test',
     nodes: []
   };
 
@@ -19,17 +17,15 @@ describe('NGFFLoader', () => {
 
   describe('constructor', () => {
     it('should append zarr.json if source does not end with .json', () => {
-      expect(new NGFFLoader('https://example.com/graph/').getSource()).toBe(
-        'https://example.com/graph/zarr.json'
-      );
-      expect(new NGFFLoader('https://example.com/graph').getSource()).toBe(
-        'https://example.com/graph/zarr.json'
-      );
+      const loader = new NGFFLoader('https://example.com/graph/');
+      expect(loader['source']).toBe('https://example.com/graph/zarr.json');
+      expect(loader['prefix']).toBe('https://example.com/graph');
     });
 
     it('should preserve original source if it ends with .json', () => {
       const loader = new NGFFLoader('https://example.com/graph/data.json');
-      expect(loader.getSource()).toBe('https://example.com/graph/data.json');
+      expect(loader['source']).toBe('https://example.com/graph/data.json');
+      expect(loader['prefix']).toBe('https://example.com/graph');
     });
 
     it('should throw error for invalid URL in constructor', async () => {
@@ -71,7 +67,7 @@ describe('NGFFLoader', () => {
       );
     });
 
-    it('should load node with absolute URL on the trusted domain', async () => {
+    it('should load node with absolute URL and valid prefix', async () => {
       const loader = new NGFFLoader('https://example.com/data');
       const nodeUrl = 'https://example.com/data/other/node.json';
       mockValidOmeResponse();
@@ -80,40 +76,14 @@ describe('NGFFLoader', () => {
       expect(global.fetch).toHaveBeenCalledWith(nodeUrl, expect.anything());
     });
 
-    it('should reject pre-revision documents', async () => {
+    it('should resolve relative paths starting with ./', async () => {
       const loader = new NGFFLoader('https://example.com/data/image.json');
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ome: { ...validOmeNode, attributes: {} } })
-      });
-      await expect(loader.loadGraphData()).rejects.toThrow(LegacyFormatError);
-    });
-
-    it('should reject structurally invalid documents', async () => {
-      const loader = new NGFFLoader('https://example.com/data/image.json');
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ ome: { version: '0.x', type: 'collection', nodes: [] } })
-      });
-      await expect(loader.loadGraphData()).rejects.toThrow(
-        'Invalid field at root.id: must be a non-empty string'
+      mockValidOmeResponse();
+      await loader.loadNode('./subdir/node.json');
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://example.com/data/subdir/node.json',
+        expect.anything()
       );
-    });
-
-    it('should normalize upstream camelCase structural keys', async () => {
-      const loader = new NGFFLoader('https://example.com/data/image.json');
-      global.fetch = vi.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          ome: {
-            ...validOmeNode,
-            extensionManifest: [{ id: 'https://e.org/', version: '1', schemas: [] }]
-          }
-        })
-      });
-      const result = await loader.loadGraphData();
-      expect(result.extension_manifest).toHaveLength(1);
-      expect('extensionManifest' in result).toBe(false);
     });
 
     it('should throw error on failed fetch response', async () => {

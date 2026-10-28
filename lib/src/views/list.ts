@@ -1,7 +1,6 @@
-import type { D3Node } from './../types';
-import { CSS_CLASS_PREFIX, getNodeColor } from './../constants';
+import type { D3Node, OmeNode, OmePath } from './../types';
+import { CSS_CLASS_PREFIX, NODE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
-import { displayName, shortTypeName } from './../nodes';
 
 export class ListView {
   private graph: NGFFGraph;
@@ -63,10 +62,9 @@ export class ListView {
 
   renderNode(node: D3Node, parent: D3Node | undefined) {
     const isLoaded = node.loaded;
-    const isRemote = node.omeNode.path !== undefined;
+    const isRemote = 'path' in node.omeNode;
     const isCollapsed = node.collapsed || !isLoaded;
-    // multiscales are leaves: their scales are metadata, not child nodes
-    const hasChildren = node.omeNode.type === 'collection';
+    const hasChildren = ['multiscale', 'collection'].includes(node.omeNode.type);
     const nodeElement = document.createElement('div');
 
     const parentId = parent ? parent.id : null;
@@ -79,16 +77,8 @@ export class ListView {
 
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
-    button.style.borderColor = getNodeColor(node.omeNode.type);
-    button.textContent = displayName(node.omeNode);
-    for (const trait of node.omeNode.traits ?? []) {
-      const badge = document.createElement('span');
-      badge.classList.add(`${CSS_CLASS_PREFIX}trait-badge`);
-      const entry = this.graph.findManifestEntry(trait.type);
-      badge.textContent = shortTypeName(trait.type, entry ? [entry] : undefined);
-      badge.title = trait.type;
-      button.appendChild(badge);
-    }
+    button.style.borderColor = NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
+    button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
       this.selectNode(node);
@@ -99,7 +89,9 @@ export class ListView {
         node.collapsed = !node.collapsed;
         return;
       }
-      await this.graph.loadNodeWithSignal(node);
+      await this.graph.loadNodeWithSignal(
+        node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+      );
       this.renderTree();
     };
     if (parentId) {
