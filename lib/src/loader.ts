@@ -1,5 +1,7 @@
-import type { OmeNode } from './types';
-import { validateRequiredOmeStructure } from './validation';
+import type { OmeDocument } from './types';
+import { detectLegacyFormat, validateRequiredOmeStructure } from './validation';
+import { metaUrlForSource } from './paths';
+import { normalizeDocument } from './normalize';
 
 export class UntrustedDomainError extends Error {
   domain: string;
@@ -11,41 +13,30 @@ export class UntrustedDomainError extends Error {
 
 export class NGFFLoader {
   private source: string;
-  private prefix: string;
   private trustedDomains: string[] = [];
 
   constructor(source: string) {
-    this.source = source;
-    if (!this.source.endsWith('.json')) {
-      this.source += 'zarr.json';
-    }
-
-    this.prefix = this.source.endsWith('.json')
-      ? this.source.substring(0, this.source.search(/\/[^/]+\.json$/))
-      : this.source;
-
+    this.source = metaUrlForSource(source);
     const url = this.checkUrl(this.source);
     this.addTrustedDomain(url.hostname);
   }
 
-  getPrefix() {
-    return this.prefix;
+  /** Absolute URL of the root document's metadata file. */
+  getSource() {
+    return this.source;
   }
 
-  async loadGraphData(): Promise<OmeNode> {
+  async loadGraphData(): Promise<OmeDocument> {
     return await this.loadNode(this.source);
   }
 
-  async loadNode(source: string): Promise<OmeNode> {
-    if (source.startsWith('./')) {
-      source = `${this.prefix}${source.substring(1)}`;
-    } else {
-      const url = this.checkUrl(source);
-      if (!this.trustedDomains.includes(url.hostname)) {
-        throw new UntrustedDomainError(url.hostname);
-      }
+  /** Fetches and checks the RFC-8 document at an absolute URL. */
+  async loadNode(url: string): Promise<OmeDocument> {
+    const parsedUrl = this.checkUrl(url);
+    if (!this.trustedDomains.includes(parsedUrl.hostname)) {
+      throw new UntrustedDomainError(parsedUrl.hostname);
     }
-    const response = await fetch(source, {
+    const response = await fetch(url, {
       mode: 'cors',
       cache: 'no-cache'
     });
@@ -54,14 +45,12 @@ export class NGFFLoader {
       try {
         data = await response.json();
       } catch {
-        throw new Error(`Unable to load ${source}: invalid JSON content`);
+        throw new Error(`Unable to load ${url}: invalid JSON content`);
       }
-      const ome = this.getOme(data);
-      validateRequiredOmeStructure(ome);
-      return ome;
+      return this.getOme(data);
     } else {
       throw new Error(
-        `Unexpected response from server while loading ${source}. Status: ${response.status}`
+        `Unexpected response from server while loading ${url}. Status: ${response.status}`
       );
     }
   }
@@ -85,12 +74,18 @@ export class NGFFLoader {
     return url;
   }
 
-  private getOme(data: any): OmeNode {
+  private getOme(data: any): OmeDocument {
+    let raw: unknown;
     if ('ome' in data) {
-      return data.ome;
-    } else if ('attributes' in data && 'ome' in data.attributes) {
-      return data.attributes.ome;
+      raw = data.ome;
+    } else if ('attributes' in data && data.attributes && 'ome' in data.attributes) {
+      raw = data.attributes.ome;
+    } else {
+      throw new Error('Payload does not contain ome field');
     }
-    throw new Error('Payload does not contain ome field');
+    const ome = normalizeDocument(raw);
+    detectLegacyFormat(ome);
+    validateRequiredOmeStructure(ome);
+    return ome as OmeDocument;
   }
 }

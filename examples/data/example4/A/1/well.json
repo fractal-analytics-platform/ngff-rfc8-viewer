@@ -1,0 +1,151 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "collection",
+    "id": "e485db16-5e21-4d0c-95a6-318301c60919",
+    "name": "A1",
+    "traits": [
+      {
+        "type": "well",
+        "row_index": 0,
+        "column_index": 0
+      },
+      {
+        "type": "scene",
+        "coordinate_systems": [
+          {
+            "type": "coordinate_system",
+            "id": "4c243371-b239-414d-93f9-0cf8d428cba0",
+            "name": "well",
+            "axes": [
+              {
+                "name": "y",
+                "type": "space",
+                "unit": "micrometer"
+              },
+              {
+                "name": "x",
+                "type": "space",
+                "unit": "micrometer"
+              }
+            ]
+          }
+        ],
+        "coordinate_transformations": [
+          {
+            "input": {
+              "type": "coordinate_system",
+              "ref": "4d0a9ec9-f496-475c-86cd-910b80bcb8e1",
+              "path": {
+                "type": "zarr",
+                "format": "relative",
+                "href": "./0"
+              }
+            },
+            "output": {
+              "type": "coordinate_system",
+              "ref": "4c243371-b239-414d-93f9-0cf8d428cba0"
+            },
+            "type": "translation",
+            "translation": [
+              0.0,
+              0.0
+            ]
+          },
+          {
+            "input": {
+              "type": "coordinate_system",
+              "ref": "a5f63d06-d50d-40cb-b954-8604de6f3819",
+              "path": {
+                "type": "zarr",
+                "format": "relative",
+                "href": "./0_t1"
+              }
+            },
+            "output": {
+              "type": "coordinate_system",
+              "ref": "4c243371-b239-414d-93f9-0cf8d428cba0"
+            },
+            "type": "translation",
+            "translation": [
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    ],
+    "nodes": [
+      {
+        "type": "multiscale",
+        "id": "2e35084a-c8b1-4675-b312-60f2be3ddc39",
+        "name": "fov0_t0",
+        "path": {
+          "type": "zarr",
+          "format": "relative",
+          "href": "./0"
+        },
+        "traits": [
+          {
+            "type": "acquisition",
+            "acquisition": {
+              "type": "acquisition",
+              "ref": "530e8a8c-42ea-4c18-b8da-9e6aa02e6da9"
+            }
+          }
+        ]
+      },
+      {
+        "type": "multiscale",
+        "id": "9b1d84fc-419d-4f68-bf81-e8a16dd26b27",
+        "name": "fov0_t1",
+        "path": {
+          "type": "zarr",
+          "format": "relative",
+          "href": "./0_t1"
+        },
+        "traits": [
+          {
+            "type": "acquisition",
+            "acquisition": {
+              "type": "acquisition",
+              "ref": "ddbb4af1-7471-475e-8f78-bf3c598f2006"
+            }
+          }
+        ]
+      },
+      {
+        "type": "multiscale",
+        "id": "279a1c37-2480-4d5d-ba3d-284f39f484b5",
+        "name": "nuclei",
+        "path": {
+          "type": "zarr",
+          "format": "relative",
+          "href": "./nuclei"
+        },
+        "traits": [
+          {
+            "type": "labels",
+            "source": [
+              {
+                "type": "multiscale",
+                "ref": "2e35084a-c8b1-4675-b312-60f2be3ddc39"
+              }
+            ],
+            "label_attributes": [
+              {
+                "label_value": 1,
+                "rgba": [
+                  0,
+                  128,
+                  255,
+                  255
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

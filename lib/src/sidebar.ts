@@ -1,18 +1,32 @@
-import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node } from './types';
+import type {
+  AcquisitionTrait,
+  D3Node,
+  ExtensionManifestEntry,
+  LabelsTrait,
+  OmeNode,
+  OmeReference,
+  PlateTrait,
+  SceneTrait,
+  Trait,
+  WellTrait
+} from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
+import { displayName, isExtensionType, nodeFields, shortTypeName } from './nodes';
+import { resolveHref } from './paths';
 
 const defaultWidth = 560;
 const minWidth = 150;
 const minSpace = 100;
 const smallScreenBreakpoint = 768;
-// validation errors to ignore for *unloaded* multiscale nodes only
-const IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE = [
-  "must have required property 'attributes'",
-  'must match "then" schema'
-];
+/**
+ * Shown when validation is requested: the external JSON Schema validator
+ * (ngff-rfc8-validator) targets the pre-revision RFC-8 schema and there is no
+ * revision 1 schema yet, so only the viewer's structural checks are applied.
+ */
+export const VALIDATION_UNAVAILABLE_MESSAGE =
+  'JSON Schema validation is not available for RFC-8 revision 1 documents yet; only structural checks were applied while loading.';
 
 export class NGFFSidebar {
   private element: HTMLElement;
@@ -29,13 +43,8 @@ export class NGFFSidebar {
     // Listen for loading & update events from the graph to refresh the sidebar if needed
     graph.onLoading((loading) => {
       if (!loading && this.isOpen()) {
-        // If the current node is a multiscale node with remote children (now loaded),
-        // showInfo() to display thumbnail
-        if (
-          this.node &&
-          this.node.omeNode.type == 'multiscale' &&
-          !('nodes' in this.node.omeNode)
-        ) {
+        // If the current node is a multiscale node (now loaded), showInfo() to display thumbnail
+        if (this.node && this.node.omeNode.type == 'multiscale' && this.node.loaded) {
           this.showInfo(this.node);
         }
       }
@@ -117,129 +126,311 @@ export class NGFFSidebar {
   showInfo(node: D3Node) {
     this.node = node;
     this.content.innerHTML = '';
+    const omeNode = node.omeNode;
 
-    this.addKeyValue('Id', node.omeNode.id || '-');
-    this.addKeyValue('Name', node.omeNode.name);
-    this.addKeyValue('Type', node.omeNode.type);
+    this.addKeyValue('Id', omeNode.id);
+    this.addKeyValue('Name', omeNode.name ?? `(no name, shown as ${displayName(omeNode)})`);
+    this.addKeyValue('Type', this.typeElement(omeNode.type));
 
     // For multiscale nodes, display a thumbnail image
-    if (node.omeNode.type == 'multiscale') {
-      const prefix = this.graph.getLoader().getPrefix();
-      let resolvedPath = node.resolvedPath;
-      if ('path' in node.omeNode && node.omeNode.path?.path) {
-        resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
-      }
-      // Construct the base URL for the thumbnailZarr store
-      // resolvedPath either starts with './' or is an absolute URL
-      const baseUrl = resolvedPath.startsWith('./')
-        ? prefix + resolvedPath.substring(1)
-        : resolvedPath;
-      // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
-      if ('nodes' in node.omeNode) {
-        this.content.appendChild(createThumbnailImg(node, baseUrl, 150));
+    if (omeNode.type == 'multiscale') {
+      if (node.loaded) {
+        this.content.appendChild(createThumbnailImg(node, 150));
       } else {
-        // otherwise we need to traverse the graph to get child nodes
-        const children = this.graph.getChildren(node).map((child) => child.omeNode);
-        this.content.appendChild(createThumbnailImg(node, baseUrl, 150, children));
+        this.addKeyValue('Thumbnail', 'click the node to load the multiscale document');
       }
     }
 
-    if ('path' in node.omeNode) {
-      this.addKeyValue('Path', `${node.omeNode.path?.path} (type: ${node.omeNode.path?.type})`);
+    this.showPath(node);
+    this.showTraits(omeNode);
+    if (omeNode.type == 'multiscale' && node.loaded) {
+      this.showCoordinateSystems(omeNode);
+      this.showScales(node);
     }
-
-    if (node.omeNode.attributes) {
-      this.addTitle('Attributes');
-      const pre = document.createElement('pre');
-      pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
-      this.content.appendChild(pre);
-    } else {
-      this.addKeyValue('Attributes', '-');
+    this.showFields(omeNode);
+    if (node.manifest && node.manifest.length > 0) {
+      this.showManifest(node.manifest);
     }
 
     if (this.validationEnabled) {
-      this.showValidation(node);
+      this.showValidation();
     }
 
     this.element.classList.remove(`${CSS_CLASS_PREFIX}hide`);
   }
 
-  private showValidation(node: D3Node) {
-    this.element.classList.remove(`${CSS_CLASS_PREFIX}has-error`);
-    try {
-      validate(this.buildValidatableNode(node));
-    } catch (err) {
-      if (err instanceof Error) {
-        const error = document.createElement('div');
-        error.classList.add(`${CSS_CLASS_PREFIX}error`);
-        let errorCount = 0;
-        if (
-          'schemaErrors' in err &&
-          Array.isArray(err.schemaErrors) &&
-          err.schemaErrors.length > 0
-        ) {
-          const toIgnore =
-            !node.loaded && node.omeNode.type === 'multiscale'
-              ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
-              : [];
-
-          error.innerText = 'Validation errors, see below';
-          for (const schemaError of err.schemaErrors.filter(
-            (se) => !toIgnore.includes(se.message)
-          )) {
-            // we log in case node reloading causes the error to be lost
-            console.log('Schema Validation error:', schemaError);
-            const error = document.createElement('pre');
-            error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
-            error.innerText = JSON.stringify(schemaError, null, 2);
-            this.content.appendChild(error);
-            errorCount++;
-          }
-        } else {
-          error.innerText = err.message;
-          errorCount++;
-        }
-        if (errorCount === 0) {
-          return;
-        }
-        this.content.prepend(error);
-        this.element.classList.add(`${CSS_CLASS_PREFIX}has-error`);
+  private showPath(node: D3Node) {
+    const path = node.omeNode.path;
+    if (!path) {
+      return;
+    }
+    this.addKeyValue('Path', `${path.href} (type: ${path.type}, format: ${path.format})`);
+    if (node.targetUrl) {
+      this.addKeyValue('Resolves to', this.link(node.targetUrl, node.targetUrl));
+    } else {
+      try {
+        const url = resolveHref(path, node.documentUrl);
+        this.addKeyValue('Resolves to', this.link(url, `${url} (data, not an RFC-8 document)`));
+      } catch (err) {
+        this.addKeyValue('Resolves to', `error: ${err instanceof Error ? err.message : err}`);
       }
     }
   }
 
-  private buildValidatableNode(node: D3Node) {
-    const omeNode: any = { ...node.omeNode };
-    if (node.parentId && !('version' in omeNode)) {
-      // Add dummy version for validating non-root nodes
-      omeNode.version = '0.x';
+  private showTraits(omeNode: OmeNode) {
+    const traits = omeNode.traits ?? [];
+    if (traits.length === 0) {
+      this.addKeyValue('Traits', '-');
+      return;
     }
-    if (
-      !('path' in omeNode) &&
-      !('nodes' in omeNode) &&
-      ['collection', 'multiscale'].includes(omeNode.type)
-    ) {
-      omeNode.nodes = [];
+    this.addTitle('Traits');
+    for (const trait of traits) {
+      const block = document.createElement('div');
+      block.classList.add(`${CSS_CLASS_PREFIX}trait`);
+      const heading = document.createElement('div');
+      heading.classList.add(`${CSS_CLASS_PREFIX}trait-heading`);
+      heading.appendChild(this.typeElement(trait.type));
+      block.appendChild(heading);
+      const summary = this.traitSummary(trait);
+      if (summary) {
+        block.appendChild(summary);
+      }
+      const details = document.createElement('details');
+      const summaryEl = document.createElement('summary');
+      summaryEl.textContent = 'raw';
+      details.appendChild(summaryEl);
+      const { type, ...payload } = trait;
+      void type;
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(payload, null, 2);
+      details.appendChild(pre);
+      block.appendChild(details);
+      this.content.appendChild(block);
     }
-    return { ome: omeNode };
+  }
+
+  /** Human-readable summary of the built-in traits; `null` for unknown ones. */
+  private traitSummary(trait: Trait): HTMLElement | null {
+    const p = document.createElement('p');
+    switch (trait.type) {
+      case 'well': {
+        const well = trait as WellTrait;
+        p.textContent = `row ${well.row_index}, column ${well.column_index}`;
+        return p;
+      }
+      case 'plate': {
+        const plate = trait as PlateTrait;
+        const rows = (plate.rows ?? []).map((r) => r.name).join(', ');
+        const columns = (plate.columns ?? []).map((c) => c.name).join(', ');
+        p.textContent = `rows: ${rows || '-'}; columns: ${columns || '-'}; acquisitions: ${plate.acquisitions?.length ?? 0}`;
+        return p;
+      }
+      case 'acquisition': {
+        const acquisition = trait as AcquisitionTrait;
+        p.textContent = 'acquisition: ';
+        p.appendChild(this.referenceElement(acquisition.acquisition));
+        return p;
+      }
+      case 'labels': {
+        const labels = trait as LabelsTrait;
+        if (labels.source && labels.source.length > 0) {
+          p.appendChild(document.createTextNode('source: '));
+          labels.source.forEach((ref, index) => {
+            if (index > 0) p.appendChild(document.createTextNode(', '));
+            p.appendChild(this.referenceElement(ref));
+          });
+          p.appendChild(document.createElement('br'));
+        }
+        for (const label of labels.label_attributes ?? []) {
+          const swatch = document.createElement('span');
+          swatch.classList.add(`${CSS_CLASS_PREFIX}swatch`);
+          if (label.rgba && label.rgba.length >= 3) {
+            const [r, g, b, a = 255] = label.rgba;
+            swatch.style.backgroundColor = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+          }
+          swatch.title = `rgba: ${JSON.stringify(label.rgba ?? null)}`;
+          p.appendChild(swatch);
+          p.appendChild(document.createTextNode(` ${label.label_value} `));
+        }
+        return p;
+      }
+      case 'scene': {
+        const scene = trait as SceneTrait;
+        p.textContent = `${scene.coordinate_systems?.length ?? 0} coordinate system(s), ${scene.coordinate_transformations?.length ?? 0} transformation(s)`;
+        return p;
+      }
+      default:
+        return null;
+    }
+  }
+
+  private showCoordinateSystems(omeNode: OmeNode) {
+    const systems = omeNode.coordinate_systems ?? [];
+    this.addTitle('Coordinate systems');
+    const list = document.createElement('ul');
+    for (const cs of systems) {
+      const item = document.createElement('li');
+      const axes = cs.axes
+        .map(
+          (axis) =>
+            `${axis.name}${axis.type || axis.unit ? ` (${[axis.type, axis.unit].filter(Boolean).join(', ')})` : ''}`
+        )
+        .join(', ');
+      item.textContent = `${cs.name ? `${cs.name} ` : ''}[${cs.id}]: ${axes}`;
+      list.appendChild(item);
+    }
+    this.content.appendChild(list);
+  }
+
+  private showScales(node: D3Node) {
+    const scales = node.omeNode.scales ?? [];
+    this.addTitle('Scales');
+    const table = document.createElement('table');
+    const header = table.createTHead().insertRow();
+    for (const title of ['#', 'href', 'format', 'scale', 'translation', 'id']) {
+      const th = document.createElement('th');
+      th.textContent = title;
+      header.appendChild(th);
+    }
+    const body = table.createTBody();
+    const documentUrl = node.targetUrl ?? node.documentUrl;
+    scales.forEach((scale, index) => {
+      const row = body.insertRow();
+      const scaleTransform = scale.coordinate_transformations?.find((t) => t.type === 'scale');
+      const translation = scale.coordinate_transformations?.find((t) => t.type === 'translation');
+      row.insertCell().textContent = String(index);
+      const hrefCell = row.insertCell();
+      try {
+        hrefCell.appendChild(this.link(resolveHref(scale.path, documentUrl), scale.path.href));
+      } catch {
+        hrefCell.textContent = scale.path.href;
+      }
+      row.insertCell().textContent = scale.path.format;
+      row.insertCell().textContent = scaleTransform?.scale
+        ? JSON.stringify(scaleTransform.scale)
+        : '-';
+      row.insertCell().textContent = translation?.translation
+        ? JSON.stringify(translation.translation)
+        : '-';
+      const idCell = row.insertCell();
+      idCell.textContent = scale.id.slice(0, 8);
+      idCell.title = scale.id;
+    });
+    this.content.appendChild(table);
+  }
+
+  private showFields(omeNode: OmeNode) {
+    const fields = nodeFields(omeNode);
+    if (Object.keys(fields).length === 0) {
+      return;
+    }
+    this.addTitle('Fields');
+    const pre = document.createElement('pre');
+    pre.textContent = JSON.stringify(fields, null, 2);
+    this.content.appendChild(pre);
+  }
+
+  private showManifest(manifest: ExtensionManifestEntry[]) {
+    this.addTitle('Extension manifest');
+    const list = document.createElement('ul');
+    for (const entry of manifest) {
+      const item = document.createElement('li');
+      const name = document.createElement('strong');
+      name.textContent = `${entry.name ?? entry.id} (version ${entry.version})`;
+      item.appendChild(name);
+      if (entry.must_understand) {
+        const badge = document.createElement('span');
+        badge.classList.add(`${CSS_CLASS_PREFIX}trait-badge`);
+        badge.textContent = 'must understand';
+        item.appendChild(badge);
+      }
+      item.appendChild(document.createElement('br'));
+      item.appendChild(this.link(entry.homepage ?? entry.id, entry.id));
+      for (const schema of entry.schemas ?? []) {
+        item.appendChild(document.createElement('br'));
+        item.appendChild(this.link(schema.url, `${schema.type}: ${schema.url}`));
+      }
+      if (entry.description) {
+        item.appendChild(document.createElement('br'));
+        item.appendChild(document.createTextNode(entry.description));
+      }
+      list.appendChild(item);
+    }
+    this.content.appendChild(list);
+  }
+
+  private showValidation() {
+    this.element.classList.remove(`${CSS_CLASS_PREFIX}has-error`);
+    const notice = document.createElement('div');
+    notice.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}warning`);
+    notice.textContent = VALIDATION_UNAVAILABLE_MESSAGE;
+    this.content.prepend(notice);
+  }
+
+  /** A type label: keywords as text, URI types as a link to their extension (short name shown). */
+  private typeElement(type: string): HTMLElement {
+    const span = document.createElement('span');
+    if (!isExtensionType(type)) {
+      span.textContent = type;
+      return span;
+    }
+    const entry = this.graph.findManifestEntry(type);
+    const href = entry?.homepage ?? entry?.schemas?.[0]?.url ?? type;
+    const link = this.link(href, shortTypeName(type, entry ? [entry] : undefined));
+    link.title = entry
+      ? `${type}\nextension: ${entry.name ?? entry.id} (version ${entry.version})`
+      : `${type}\nnot declared in any extension_manifest`;
+    span.appendChild(link);
+    span.appendChild(document.createTextNode(` (${type})`));
+    return span;
+  }
+
+  private referenceElement(ref: OmeReference | undefined): HTMLElement {
+    const span = document.createElement('span');
+    if (!ref) {
+      span.textContent = '-';
+      return span;
+    }
+    span.textContent = `${ref.type} ${ref.ref}`;
+    if (ref.path) {
+      span.textContent += ` in ${ref.path.href}`;
+    }
+    const target = this.graph.findNodeByOmeId(ref.ref);
+    if (target) {
+      span.title = `node "${displayName(target.omeNode)}"`;
+    }
+    return span;
+  }
+
+  private link(href: string, text: string): HTMLAnchorElement {
+    const a = document.createElement('a');
+    a.href = href;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = text;
+    return a;
   }
 
   private addTitle(value: string) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
-    title.innerText = value;
+    title.textContent = value;
     p.appendChild(title);
     this.content.appendChild(p);
   }
 
-  private addKeyValue(key: string, value: string) {
+  private addKeyValue(key: string, value: string | HTMLElement) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
-    const text = document.createElement('span');
-    title.innerText = `${key}: `;
-    text.innerText = value || '-';
+    title.textContent = `${key}: `;
     p.appendChild(title);
-    p.appendChild(text);
+    if (typeof value === 'string') {
+      const text = document.createElement('span');
+      text.textContent = value || '-';
+      p.appendChild(text);
+    } else {
+      p.appendChild(value);
+    }
     this.content.appendChild(p);
   }
 

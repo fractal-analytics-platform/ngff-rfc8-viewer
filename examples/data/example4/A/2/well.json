@@ -1,0 +1,36 @@
+{
+  "ome": {
+    "version": "0.x",
+    "type": "collection",
+    "id": "452e0aed-e626-4477-a07f-964a67102ec5",
+    "name": "A2",
+    "traits": [
+      {
+        "type": "well",
+        "row_index": 0,
+        "column_index": 1
+      }
+    ],
+    "nodes": [
+      {
+        "type": "multiscale",
+        "id": "22170272-d80b-4cc9-8ddb-4ef92394c59b",
+        "name": "fov0",
+        "path": {
+          "type": "zarr",
+          "format": "relative",
+          "href": "./0"
+        },
+        "traits": [
+          {
+            "type": "acquisition",
+            "acquisition": {
+              "type": "acquisition",
+              "ref": "530e8a8c-42ea-4c18-b8da-9e6aa02e6da9"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

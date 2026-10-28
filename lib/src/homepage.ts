@@ -1,37 +1,29 @@
 import { CSS_CLASS_PREFIX } from './constants';
 
+const EXAMPLES_BASE =
+  'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data';
+
 const exampleSources = [
   [
-    'Basic example',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json'
+    'Basic example: two images in a scene, one a label image',
+    `${EXAMPLES_BASE}/example1/zarr.json`
+  ],
+  ['Many images in a collection (10 images, 5 scales each)', `${EXAMPLES_BASE}/example2/zarr.json`],
+  [
+    'HCS plate: plate / well / acquisition traits, wells as JSON documents',
+    `${EXAMPLES_BASE}/example4/zarr.json`
   ],
   [
-    'Basic example, with many images in a collection',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json'
+    'Use http paths to add the examples above into 1 collection',
+    `${EXAMPLES_BASE}/example3/root.json`
   ],
   [
-    'Plate with multiple fields',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example4/root.json'
+    'Extensions: extension manifest, URI traits and a URI node type (table with CSV path)',
+    `${EXAMPLES_BASE}/example5/zarr.json`
   ],
   [
-    'Use https paths to add the examples above into 1 collection',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example3/root.json'
-  ],
-  [
-    'Plate with multiple acquisitions of the same field',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example5/root.json'
-  ],
-  [
-    'Basic example of invalid attributes (click on multiscale node)',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/invalid/missing-multiscale-coordinate-systems.json'
-  ],
-  [
-    'IDR v0.5 images to RFC-8. Singlescales use https paths',
-    'https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/refs/heads/main/examples/data/v05_idr_multi_doc/collection.json'
-  ],
-  [
-    'Plate from IDR. Singlescales use https paths',
-    'https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/refs/heads/main/examples/data/v05_plate_to_multi_doc/collection.json'
+    'Pre-revision RFC-8 document (shows the legacy format error)',
+    `${EXAMPLES_BASE}/invalid/legacy/root.json`
   ]
 ];
 

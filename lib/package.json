@@ -25,8 +25,7 @@
     "vitest": "^5.0.5"
   },
   "dependencies": {
-    "@fractal-analytics-platform/ngff-rfc8-validator": "https://github.com/fractal-analytics-platform/ngff-rfc8-validator/releases/download/v0.0.2/ngff-rfc8-validator-v0.0.2.tgz",
     "d3": "^7.9.0",
-    "ome-zarr.js": "^0.0.23"
+    "ome-zarr.js": "0.0.23"
   }
 }
