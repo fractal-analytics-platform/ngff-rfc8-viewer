@@ -40,7 +40,9 @@ export class NGFFGraph {
     list.push(fn);
     return () => {
       const index = list.indexOf(fn);
-      if (index !== -1) list.splice(index, 1);
+      if (index !== -1) {
+        list.splice(index, 1);
+      }
     };
   }
 
@@ -127,7 +129,7 @@ export class NGFFGraph {
   }
 
   setValidation(validate: boolean) {
-    if (validate == this.validation) {
+    if (validate === this.validation) {
       return;
     }
     this.validation = validate;
@@ -221,7 +223,9 @@ export class NGFFGraph {
     let current = node;
     while (current.parentId) {
       const parent = this.nodes.find((n) => n.id === current.parentId);
-      if (!parent) break;
+      if (!parent) {
+        break;
+      }
       parents.push(this.getNodeId(parent));
       current = parent;
     }
@@ -273,7 +277,7 @@ export class NGFFGraph {
       for (const leave of this.hierarchy!.leaves()) {
         if ('path' in leave.data.omeNode) {
           const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
-          if (!node.loaded && !node.error && !(node.omeNode.type == 'singlescale')) {
+          if (!node.loaded && !node.error && !(node.omeNode.type === 'singlescale')) {
             await this.loadNode(node);
             loaded = true;
           }
@@ -291,7 +295,7 @@ export class NGFFGraph {
   }
 
   async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
-    if (node.loading || node.loaded || node.error || node.omeNode.type == 'singlescale') {
+    if (node.loading || node.loaded || node.error || node.omeNode.type === 'singlescale') {
       return;
     }
     // this.signalError(null);

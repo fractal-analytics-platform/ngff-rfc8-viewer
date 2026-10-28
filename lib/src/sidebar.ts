@@ -31,7 +31,7 @@ export class NGFFSidebar {
         // showInfo() to display thumbnail
         if (
           this.node &&
-          this.node.omeNode.type == 'multiscale' &&
+          this.node.omeNode.type === 'multiscale' &&
           !('nodes' in this.node.omeNode)
         ) {
           this.showInfo(this.node);
@@ -87,7 +87,9 @@ export class NGFFSidebar {
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      if (!resizing) return;
+      if (!resizing) {
+        return;
+      }
 
       const delta = e.clientX - startX;
       const newWidth = startWidth - delta;
@@ -129,7 +131,7 @@ export class NGFFSidebar {
     this.addKeyValue('Type', node.omeNode.type);
 
     // For multiscale nodes, display a thumbnail image
-    if (node.omeNode.type == 'multiscale') {
+    if (node.omeNode.type === 'multiscale') {
       const prefix = this.graph.getLoader().getPrefix();
       let resolvedPath = node.resolvedPath;
       if ('path' in node.omeNode && node.omeNode.path?.path) {
