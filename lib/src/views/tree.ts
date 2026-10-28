@@ -91,7 +91,7 @@ export class TreeView {
   }
 
   selectNode(node?: D3Node) {
-    this.graph.selectNode(node!);
+    this.graph.selectNode(node);
   }
 
   renderTree() {

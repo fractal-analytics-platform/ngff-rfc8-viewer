@@ -187,7 +187,7 @@ export default class NGFFControlPanel {
     console.log('Selected path from URL:', selectedPath);
     if (selectedPath) {
       try {
-        await this.graph.loadNodeAtPath(decodeURIComponent(selectedPath));
+        await this.graph.loadNodeAtPath(selectedPath);
       } catch (err) {
         this.graph.signalError(err instanceof Error ? err.message : 'Unexpected error');
       }
@@ -220,7 +220,7 @@ export default class NGFFControlPanel {
           if (this.view) {
             this.view.destroy();
           }
-          this.view = new ImagesView(this.graph!, this.graphContainerId!);
+          this.view = new ImagesView(this.graph, this.graphContainerId!);
         }
         break;
       case 'list':
@@ -228,7 +228,7 @@ export default class NGFFControlPanel {
           if (this.view) {
             this.view.destroy();
           }
-          this.view = new ListView(this.graph!, this.graphContainerId!);
+          this.view = new ListView(this.graph, this.graphContainerId!);
         }
         break;
       default:
@@ -236,29 +236,25 @@ export default class NGFFControlPanel {
           if (this.view) {
             this.view.destroy();
           }
-          this.view = new TreeView(this.graph!, this.graphContainerId!);
+          this.view = new TreeView(this.graph, this.graphContainerId!);
         }
     }
     this.ignoreEvents = false;
   }
 
   async loadAll() {
-    // this.sidebar.hide();
     this.setLoadingState();
     try {
       await this.graph.recursiveLoad(Infinity);
-      // this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }
   }
 
   async loadNext() {
-    // this.sidebar.hide();
     this.setLoadingState();
     try {
       await this.graph.recursiveLoad(1);
-      // this.view.renderTree();
     } finally {
       this.unsetLoadingState();
     }

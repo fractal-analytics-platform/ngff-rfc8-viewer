@@ -47,7 +47,6 @@ export class ListView {
     // re-render the tree when a node is selected
     this.unsubscribers.push(
       graph.addNodeSelectedListener(() => {
-        // setTimeout(() => this.renderTree(), 1000);;
         this.renderTree();
       })
     );
