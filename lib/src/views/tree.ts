@@ -1,8 +1,7 @@
 import * as d3 from 'd3';
-import type { D3Node } from '../types';
-import { CSS_CLASS_PREFIX, getNodeColor, STROKE_COLORS } from '../constants';
+import type { D3Node, OmeNode, OmePath } from '../types';
+import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from '../constants';
 import type { NGFFGraph } from '../graph';
-import { displayName, shortTypeName } from '../nodes';
 
 const NODE_SPACING = 160;
 const CIRCLE_RADIUS = 24;
@@ -161,10 +160,10 @@ export class TreeView {
       })
       // if the child (target) has a path, it is considered "remote" (different file from it's parent)
       .attr('stroke', (d) =>
-        d.target.data.omeNode.path ? STROKE_COLORS.remote : STROKE_COLORS.local
+        'path' in d.target.data.omeNode ? STROKE_COLORS.remote : STROKE_COLORS.local
       )
       .attr('fill', (d) =>
-        d.target.data.omeNode.path ? STROKE_COLORS.remote : STROKE_COLORS.local
+        'path' in d.target.data.omeNode ? STROKE_COLORS.remote : STROKE_COLORS.local
       )
       .attr('marker-end', 'url(#arrow)');
 
@@ -172,13 +171,10 @@ export class TreeView {
     const nodeMap = new Map();
     descendants.forEach((d) => nodeMap.set(d.data.id, d));
 
-    const resolvedExtraEdges = this.graph
-      .getExtraEdges()
-      .map((link) => ({
-        source: nodeMap.get(link.sourceId),
-        target: nodeMap.get(link.targetId)
-      }))
-      .filter((link) => link.source && link.target);
+    const resolvedExtraEdges = this.graph.getExtraEdges().map((link) => ({
+      source: nodeMap.get(link.sourceId),
+      target: nodeMap.get(link.targetId)
+    }));
 
     tree
       .selectAll('line.source')
@@ -202,7 +198,7 @@ export class TreeView {
       .attr('cx', (d) => Number(d.x))
       .attr('cy', (d) => Number(d.y))
       .attr('r', CIRCLE_RADIUS)
-      .attr('fill', (d) => getNodeColor(d.data.omeNode.type))
+      .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
       .attr('opacity', (d) => (d.data.loaded ? 1 : 0.4))
       .style('cursor', 'pointer')
       .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
@@ -211,11 +207,13 @@ export class TreeView {
       .on('click', async (event, d) => {
         const node = d.data;
         this.selectNode(node);
-        if (node.targetUrl && !node.loaded) {
+        if ('path' in node.omeNode && node.omeNode.path) {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
           }
-          await this.graph.loadNodeWithSignal(node);
+          await this.graph.loadNodeWithSignal(
+            node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+          );
           this.renderTree();
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.remove('ngff-rfc8-viewer-rotating-dash');
@@ -226,10 +224,9 @@ export class TreeView {
         if (event.target instanceof SVGCircleElement) {
           d3.select(event.target).attr('stroke', STROKE_COLORS.selection);
           this.tooltip?.style('opacity', 1).html(`
-            <strong>Id: </strong>${d.data.omeNode.id}<br>
-            <strong>Name: </strong>${d.data.omeNode.name ?? '-'}<br>
-            <strong>Type: </strong> ${d.data.omeNode.type}<br>
-            <strong>Traits: </strong> ${this.traitLabels(d.data).join(', ') || '-'}
+            <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
+            <strong>Name: </strong>${d.data.omeNode.name}<br>
+            <strong>Type: </strong> ${d.data.omeNode.type}
           `);
         }
       })
@@ -265,7 +262,7 @@ export class TreeView {
       .each(function (d) {
         // split long labels on multiple lines
         const charsPerLine = 15;
-        const name = displayName(d.data.omeNode);
+        const name = d.data.omeNode.name;
 
         for (let i = 0; i < name.length; i += charsPerLine) {
           const line = name.substring(i, i + charsPerLine);
@@ -279,23 +276,6 @@ export class TreeView {
         }
       });
 
-    // Trait badges under the label
-    tree
-      .selectAll('text.trait-label')
-      .data(descendants.filter((d) => this.traitLabels(d.data).length > 0))
-      .enter()
-      .append('text')
-      .attr('class', 'trait-label')
-      .attr('x', (d) => Number(d.x))
-      .attr('y', (d) => {
-        const nameLines = Math.max(1, Math.ceil(displayName(d.data.omeNode).length / 15));
-        return Number(d.y) + 2 * CIRCLE_RADIUS + 5 + nameLines * 18;
-      })
-      .attr('text-anchor', 'middle')
-      .attr('font-size', '12px')
-      .attr('fill', '#777')
-      .text((d) => this.traitLabels(d.data).join(' · '));
-
     // Compute initial zoom level
     if (!this.currentZoom) {
       const k = Math.max(minZoom, maxZoom / 3);
@@ -306,18 +286,6 @@ export class TreeView {
     }
 
     this.svg.call(zoom.transform, this.currentZoom);
-  }
-
-  /** Short names of the traits of a node, for badges and tooltips. */
-  private traitLabels(node: D3Node): string[] {
-    return (node.omeNode.traits ?? []).map((trait) =>
-      shortTypeName(
-        trait.type,
-        this.graph.findManifestEntry(trait.type)
-          ? [this.graph.findManifestEntry(trait.type)!]
-          : undefined
-      )
-    );
   }
 
   showErrorAlert(message: string) {
