@@ -3,6 +3,7 @@ import type { NGFFGraph } from './graph';
 import { ImagesView } from './views/images';
 import { ListView } from './views/list';
 import { TreeView } from './views/tree';
+import { ErrorAlert } from './error';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
@@ -16,14 +17,15 @@ export default class NGFFControlPanel {
 
   constructor(element: HTMLElement, graph: NGFFGraph, containerId: string) {
     this.graphContainerId = containerId;
-    // We listen for events on the graph...
     this.graph = graph;
-    // ...and we call viewer.refreshView() when necessary
-    this.graph.addLoadingListener((loading) =>
-      loading ? this.setLoadingState() : this.unsetLoadingState()
-    );
-
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
+
+    new ErrorAlert(graph, containerId);
+
+    // Add all the buttons to the control panel
+    const { loadNextBtn, loadAllBtn } = this.buildButtons(element);
+    this.loadNextBtn = loadNextBtn;
+    this.loadAllBtn = loadAllBtn;
 
     this.spinner = document.createElement('div');
     this.spinner.classList.add(
@@ -31,7 +33,66 @@ export default class NGFFControlPanel {
       `${CSS_CLASS_PREFIX}spinner`,
       `${CSS_CLASS_PREFIX}hide`
     );
+    element.appendChild(this.spinner);
 
+    // spacer
+    const spacer = document.createElement('div');
+    spacer.style.flexGrow = '1';
+    element.appendChild(spacer);
+
+    // GitHub link
+    const githubLink = document.createElement('a');
+    githubLink.href = 'https://github.com/fractal-analytics-platform/ngff-rfc8-viewer';
+    githubLink.target = '_blank';
+    githubLink.classList.add(`${CSS_CLASS_PREFIX}github`, `${CSS_CLASS_PREFIX}bi`);
+    element.appendChild(githubLink);
+
+    this.init();
+  }
+
+  async init() {
+    // initial refreshView...
+    this.refreshView();
+
+    // start listening to popstate events for browser navigation
+    this.initHistory();
+
+    // start listening to node selection events
+    this.initListeners();
+  }
+
+  initListeners() {
+    this.graph.addLoadingListener((loading) =>
+      loading ? this.setLoadingState() : this.unsetLoadingState()
+    );
+
+    this.graph.addNodeSelectedListener((node) => {
+      if (this.ignoreEvents) {
+        return;
+      }
+      const params = new URLSearchParams(window.location.search);
+      let idsToNode = '';
+      if (node) {
+        idsToNode = this.graph.getParentsIds(node).join('/');
+      }
+      console.log('Selected node path:', idsToNode);
+      params.set('select', idsToNode);
+      history.pushState(null, '', `?${params.toString()}`);
+    });
+  }
+
+  initHistory() {
+    window.addEventListener('popstate', () => {
+      console.log('NGFFViewer: popstate event triggered');
+      this.refreshView();
+    });
+  }
+
+  buildButtons(element: HTMLElement): {
+    loadNextBtn: HTMLButtonElement;
+    loadAllBtn: HTMLButtonElement;
+  } {
+    // add buttons to the control panel
     function addButton(className: string, parent: HTMLElement, title: string, onClick: () => void) {
       const button = document.createElement('button');
       button.classList.add(className, `${CSS_CLASS_PREFIX}bi`);
@@ -73,15 +134,15 @@ export default class NGFFControlPanel {
     btnGroup.classList.add(`${CSS_CLASS_PREFIX}btn-group`);
     element.appendChild(btnGroup);
 
-    this.loadNextBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load next level', () =>
+    const loadNextBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load next level', () =>
       this.loadNext()
     );
 
-    this.loadAllBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load all nodes', () =>
+    const loadAllBtn = addButton(`${CSS_CLASS_PREFIX}node-plus`, btnGroup, 'Load all nodes', () =>
       this.loadAll()
     );
-    this.loadAllBtn.classList.add(`${CSS_CLASS_PREFIX}icon-margin`);
-    this.loadAllBtn.textContent = 'all';
+    loadAllBtn.classList.add(`${CSS_CLASS_PREFIX}icon-margin`);
+    loadAllBtn.textContent = 'all';
 
     // Button group for view buttons
     btnGroup = document.createElement('div');
@@ -123,55 +184,7 @@ export default class NGFFControlPanel {
     );
     vBtn.id = `${CSS_CLASS_PREFIX}validate-btn`;
 
-    element.appendChild(this.spinner);
-
-    // spacer
-    const spacer = document.createElement('div');
-    spacer.style.flexGrow = '1';
-    element.appendChild(spacer);
-
-    // GitHub link
-    const githubLink = document.createElement('a');
-    githubLink.href = 'https://github.com/fractal-analytics-platform/ngff-rfc8-viewer';
-    githubLink.target = '_blank';
-    githubLink.classList.add(`${CSS_CLASS_PREFIX}github`, `${CSS_CLASS_PREFIX}bi`);
-    element.appendChild(githubLink);
-
-    this.init();
-  }
-
-  async init() {
-    // initial refreshView...
-    this.refreshView();
-
-    // start listening to popstate events for browser navigation
-    this.initHistory();
-
-    // start listening to node selection events
-    this.initListeners();
-  }
-
-  initListeners() {
-    this.graph.addNodeSelectedListener((node) => {
-      if (this.ignoreEvents) {
-        return;
-      }
-      const params = new URLSearchParams(window.location.search);
-      let idsToNode = '';
-      if (node) {
-        idsToNode = this.graph.getParentsIds(node).join('/');
-      }
-      console.log('Selected node path:', idsToNode);
-      params.set('select', idsToNode);
-      history.pushState(null, '', `?${params.toString()}`);
-    });
-  }
-
-  initHistory() {
-    window.addEventListener('popstate', () => {
-      console.log('NGFFViewer: popstate event triggered');
-      this.refreshView();
-    });
+    return { loadNextBtn, loadAllBtn };
   }
 
   async refreshView() {

@@ -19,21 +19,12 @@ export class TreeView {
 
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
-  private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
   private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     console.log('TREE: constructor: containerId', containerId);
     this.graph = graph;
     this.containerId = containerId;
-
-    this.errorAlert = d3
-      .select('body')
-      .append('div')
-      .attr(
-        'class',
-        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed ${CSS_CLASS_PREFIX}hide`
-      );
 
     this.svg = d3
       .select(`#${containerId}`)
@@ -56,11 +47,7 @@ export class TreeView {
       .style('opacity', 0);
 
     this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
-    this.unsubscribers.push(
-      graph.addErrorListener((message) =>
-        message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
-      )
-    );
+
     // Also re-render when loading completes
     this.unsubscribers.push(
       graph.addLoadingListener((isLoading) => {
@@ -309,20 +296,6 @@ export class TreeView {
     this.svg.call(zoom.transform, this.currentZoom);
   }
 
-  showErrorAlert(message: string) {
-    this.errorAlert.selectAll('*').remove();
-    this.errorAlert.append('span').text(message);
-    this.errorAlert
-      .append('button')
-      .html('&times;')
-      .on('click', () => this.hideErrorAlert());
-    this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, false);
-  }
-
-  hideErrorAlert() {
-    this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, true);
-  }
-
   private buildExportableSVG() {
     // Recompute initial dimensions
     const hierarchy = this.graph.getHierarchy();
@@ -379,11 +352,11 @@ export class TreeView {
           if (blob !== null) {
             this.downloadImage(blob, 'png');
           } else {
-            this.showErrorAlert('Unable to draw the image');
+            this.graph.signalError('Unable to draw the image');
           }
         }, 'image/png');
       } catch (err) {
-        this.showErrorAlert(err instanceof Error ? err.message : 'Unable to generate the image');
+        this.graph.signalError(err instanceof Error ? err.message : 'Unable to generate the image');
       }
     };
 
