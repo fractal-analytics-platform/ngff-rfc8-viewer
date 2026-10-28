@@ -48,7 +48,6 @@ export class ImagesView {
   }
 
   renderTree() {
-    console.log('IMAGES: renderTree()');
     this.rootElement.innerHTML = '';
     const unloadedCollections = this.graph.countUnloadedNodes('collection');
     const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');

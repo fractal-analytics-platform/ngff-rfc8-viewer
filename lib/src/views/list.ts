@@ -46,7 +46,6 @@ export class ListView {
   }
 
   renderTree() {
-    console.log('LIST: renderTree()');
     this.rootElement.innerHTML = '';
 
     const descendants = this.graph.getHierarchy().descendants();
@@ -81,7 +80,6 @@ export class ListView {
     button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
-      console.log('Node clicked:', node.id, 'collapsed:', node.collapsed);
       this.selectNode(node);
       // unloaded nodes are actually expanded already - don't toggle collapsed. Just load...
       if (node.loaded) {

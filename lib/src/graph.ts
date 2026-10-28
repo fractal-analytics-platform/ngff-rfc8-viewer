@@ -50,7 +50,6 @@ export class NGFFGraph {
 
   // When a node is loaded
   signalLoading(loading: boolean) {
-    console.log('NGFFGraph: signalLoading', loading, this.eventListeners['loading'].length);
     this.eventListeners['loading'].forEach((fn) => fn(loading));
   }
   // handled by control (spinner) and sidebar (update thumbnail)
@@ -60,7 +59,6 @@ export class NGFFGraph {
 
   // called when loading fails
   signalError(message: string | null) {
-    console.log('NGFFGraph: signalError', message, this.eventListeners['error'].length);
     console.trace(message); // to enable debugging of where the error originated
     this.eventListeners['error'].forEach((fn) => fn(message));
   }
@@ -71,7 +69,6 @@ export class NGFFGraph {
 
   // When a node is loaded and extra attributes are added
   signalNodeUpdated(node: D3Node) {
-    console.log('NGFFGraph: signalNodeUpdated', node, this.eventListeners['nodeUpdated'].length);
     this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
   }
   // handled by sidebar.showInfo()
@@ -81,7 +78,6 @@ export class NGFFGraph {
 
   // When a node is selected
   signalNodeSelected(node?: D3Node) {
-    console.log('NGFFGraph: signalNodeSelected', node, this.eventListeners['nodeSelected'].length);
     this.eventListeners['nodeSelected'].forEach((fn) => fn(node));
   }
   // handled by sidebar.showInfo()
@@ -91,12 +87,10 @@ export class NGFFGraph {
 
   // only called by loadRoot() -> render() and recursive load
   signalChange() {
-    console.log('NGFFGraph: signalChange', this.eventListeners['change'].length);
     this.eventListeners['change'].forEach((fn) => fn());
   }
   // views.renderTree()
   addChangeListener(fn: () => void): Unsubscribe {
-    console.log('NGFFGraph: onChange - listening...');
     return this.addListener(this.eventListeners['change'], fn);
   }
 

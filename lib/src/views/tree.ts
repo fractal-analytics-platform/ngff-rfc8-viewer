@@ -22,7 +22,6 @@ export class TreeView {
   private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
-    console.log('TREE: constructor: containerId', containerId);
     this.graph = graph;
     this.containerId = containerId;
 
@@ -82,7 +81,6 @@ export class TreeView {
   }
 
   renderTree() {
-    console.log('TREE: renderTree()');
     const hierarchy = this.graph.getHierarchy();
     this.width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
     this.height = Math.max(1, hierarchy.height) * NODE_SPACING;

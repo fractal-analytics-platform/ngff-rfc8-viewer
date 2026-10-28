@@ -75,7 +75,6 @@ export default class NGFFControlPanel {
       if (node) {
         idsToNode = this.graph.getParentsIds(node).join('/');
       }
-      console.log('Selected node path:', idsToNode);
       params.set('select', idsToNode);
       history.pushState(null, '', `?${params.toString()}`);
     });
@@ -83,7 +82,6 @@ export default class NGFFControlPanel {
 
   initHistory() {
     window.addEventListener('popstate', () => {
-      console.log('NGFFViewer: popstate event triggered');
       this.refreshView();
     });
   }
@@ -197,7 +195,6 @@ export default class NGFFControlPanel {
 
     // 'select' -> set selected Node
     const selectedPath = queryParams.get('select');
-    console.log('Selected path from URL:', selectedPath);
     if (selectedPath) {
       try {
         await this.graph.loadNodeAtPath(selectedPath);
@@ -224,7 +221,6 @@ export default class NGFFControlPanel {
     this.graph.setValidation(validate);
 
     // 'view' -> set the appropriate view (images, list, tree)
-    console.log("VIEW queryParams.get('view')", queryParams.get('view'));
     switch (queryParams.get('view')) {
       case 'images':
         // If the current view exists and is ImagesView - do nothing, otherwise...
