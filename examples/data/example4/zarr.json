@@ -1,0 +1,68 @@
+{
+  "attributes": {
+    "ome": {
+      "version": "0.x",
+      "type": "collection",
+      "id": "9d3bbdfc-ed82-431f-b55c-309e03fcdaa5",
+      "name": "plate-001",
+      "traits": [
+        {
+          "type": "plate",
+          "rows": [
+            {
+              "name": "A"
+            }
+          ],
+          "columns": [
+            {
+              "name": "1"
+            },
+            {
+              "name": "2"
+            }
+          ],
+          "acquisitions": [
+            {
+              "type": "acquisition",
+              "id": "530e8a8c-42ea-4c18-b8da-9e6aa02e6da9",
+              "name": "t0",
+              "starttime": 1727683200,
+              "endtime": 1727686800
+            },
+            {
+              "type": "acquisition",
+              "id": "ddbb4af1-7471-475e-8f78-bf3c598f2006",
+              "name": "t1",
+              "starttime": 1727690400,
+              "endtime": 1727694000
+            }
+          ]
+        }
+      ],
+      "nodes": [
+        {
+          "type": "collection",
+          "id": "e485db16-5e21-4d0c-95a6-318301c60919",
+          "name": "A1",
+          "path": {
+            "type": "json",
+            "format": "relative",
+            "href": "./A/1/well.json"
+          }
+        },
+        {
+          "type": "collection",
+          "id": "452e0aed-e626-4477-a07f-964a67102ec5",
+          "name": "A2",
+          "path": {
+            "type": "json",
+            "format": "relative",
+            "href": "./A/2/well.json"
+          }
+        }
+      ]
+    }
+  },
+  "zarr_format": 3,
+  "node_type": "group"
+}

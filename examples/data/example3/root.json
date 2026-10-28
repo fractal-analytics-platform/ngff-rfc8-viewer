@@ -2,34 +2,37 @@
   "ome": {
     "version": "0.x",
     "type": "collection",
+    "id": "aa8f4466-8e18-4e1c-aba6-633c747c3c79",
     "name": "http_collection",
-    "id": "http_collection",
     "nodes": [
       {
         "type": "collection",
+        "id": "330d92ae-6e20-455c-bca5-6e998e967d29",
         "name": "example1",
-        "id": "example1",
         "path": {
-          "type": "json",
-          "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example1/root.json"
+          "type": "zarr",
+          "format": "http",
+          "href": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example1"
         }
       },
       {
         "type": "collection",
+        "id": "a7fb51ab-4fa8-45a3-b240-7c6e45029ec4",
         "name": "example2",
-        "id": "example2",
         "path": {
-          "type": "json",
-          "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example2/root.json"
+          "type": "zarr",
+          "format": "http",
+          "href": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example2"
         }
       },
       {
         "type": "collection",
+        "id": "9d3bbdfc-ed82-431f-b55c-309e03fcdaa5",
         "name": "example4",
-        "id": "example4",
         "path": {
-            "type": "json",
-            "path": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/refs/heads/main/examples/data/example4/root.json"
+          "type": "zarr",
+          "format": "http",
+          "href": "https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-viewer/main/examples/data/example4"
         }
       }
     ]

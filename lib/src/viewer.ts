@@ -7,6 +7,7 @@ import { NGFFSidebar } from './sidebar';
 import { TreeView } from './views/tree';
 import { ListView } from './views/list';
 import { ImagesView } from './views/images';
+import { labelsSourceEdges } from './edges';
 
 export default class NGFFViewer {
   constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
@@ -51,7 +52,7 @@ export default class NGFFViewer {
 
     try {
       const loader = new NGFFLoader(source);
-      const graph = new NGFFGraph(loader, autoloadDepth);
+      const graph = new NGFFGraph(loader, autoloadDepth, labelsSourceEdges);
       // sidebar listens to graph update and load events
       const sidebarHandler = new NGFFSidebar(sidebar, validate, graph);
       const queryParams = new URLSearchParams(window.location.search);

@@ -414,3 +414,62 @@ Show the "sidebar" below the graph
 .ngff-rfc8-viewer-image-row .ngff-rfc8-viewer-thumbnail-container {
   flex-shrink: 0;
 }
+
+.ngff-rfc8-viewer-sidebar-content a {
+  color: #9ecbff;
+}
+
+.ngff-rfc8-viewer-sidebar-content table {
+  border-collapse: collapse;
+  font-size: 0.85em;
+  margin-bottom: 10px;
+}
+
+.ngff-rfc8-viewer-sidebar-content th,
+.ngff-rfc8-viewer-sidebar-content td {
+  border: 1px solid #777;
+  padding: 3px 6px;
+  text-align: left;
+}
+
+.ngff-rfc8-viewer-sidebar-content details {
+  margin: 4px 0 8px 0;
+}
+
+.ngff-rfc8-viewer-sidebar-content summary {
+  cursor: pointer;
+  color: #bbb;
+}
+
+.ngff-rfc8-viewer-trait {
+  border-left: 3px solid #9ecbff;
+  padding-left: 8px;
+  margin-bottom: 8px;
+}
+
+.ngff-rfc8-viewer-trait-heading {
+  font-weight: bold;
+}
+
+.ngff-rfc8-viewer-trait p {
+  margin: 4px 0;
+}
+
+.ngff-rfc8-viewer-swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #ccc;
+  vertical-align: middle;
+}
+
+.ngff-rfc8-viewer-trait-badge {
+  display: inline-block;
+  font-size: 0.75em;
+  padding: 1px 6px;
+  margin-left: 6px;
+  border-radius: 8px;
+  background-color: #e8e8e8;
+  color: #333;
+  vertical-align: middle;
+}

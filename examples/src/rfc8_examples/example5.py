@@ -1,145 +1,106 @@
-import shutil
-from pathlib import Path
+"""Example 5: extensions on a plate: an `extension_manifest`, URI traits and a URI node type.
+
+    plate-001 (collection; plate trait + training-dataset trait)
+    └── A1 (embedded collection; well trait)
+        ├── fov0        -> ./A/1/0               (multiscale)
+        ├── nuclei      -> ./A/1/nuclei          (multiscale; labels -> fov0, provenance trait)
+        └── regionprops -> ./A/1/regionprops.csv (Fractal table node, custom CSV path type)
+
+The extensions and their JSON Schemas are the illustrative ones shipped with ngio-collections
+(`examples/schemas/`); the manifest is derived from the registered extensions.
+"""
 
 import ngio_collections as ngc
 
 from rfc8_examples import BASE_PATH, get_uuid4
-from rfc8_examples.utils import create_zarr_array
+from rfc8_examples.utils import create_image, multiscale, reset_dir
 
+ROOT_ID = get_uuid4("example5")
 
-def _get_singlescales(coord_system_id: int, image_id: str) -> list[ngc.Node]:
-    s0_id = get_uuid4(f"{image_id}-s0")
-    return [
-        ngc.new_node(
-            node_type="singlescale",
-            id=s0_id,
-            name="s0",
-            ref=ngc.Reference(path=ngc.ZarrPath(path="./s0")),
-        ).set_attr(
-            ngc.CoordinateTransformationsAttribute(
-                [
-                    ngc.ScaleTransformation(
-                        input=ngc.ReferenceObj(id=s0_id),
-                        output=ngc.ReferenceObj(id=coord_system_id),
-                        scale=[1.0, 1.0],
-                    )
-                ]
-            )
-        ),
-    ]
+SCHEMAS_BASE = (
+    "https://raw.githubusercontent.com/BioVisionCenter/ngio-collections/main/examples/schemas/"
+)
+HOMEPAGE = "https://github.com/BioVisionCenter/ngio-collections/tree/main/examples/schemas"
+FRACTAL = SCHEMAS_BASE + "fractal/"
+PROVENANCE = FRACTAL + "provenance"
+TABLE = FRACTAL + "table"
+CSV = FRACTAL + "csv"
+TRAINING = SCHEMAS_BASE + "training/"
+DATASET = TRAINING + "dataset"
 
-def _get_image(
-    name: str,
-    coord_system_id: str,
-    attributes: dict | None = None,
-) -> ngc.Node:
-    image_id =get_uuid4({"name": name, "attributes": attributes})
-    _image = ngc.new_node(
-        node_type="multiscale",
-        id=image_id,
-        name=name,
-        attributes=attributes,
-        children=_get_singlescales(coord_system_id=coord_system_id, image_id=image_id),
-    ).set_attr(
-        ngc.CoordinateSystemsAttribute(
-            [
-                ngc.CoordinateSystem(
-                    id=coord_system_id,
-                    axes=[
-                        ngc.Axis(name="y", type="space", unit="micrometer"),
-                        ngc.Axis(name="x", type="space", unit="micrometer"),
-                    ],
-                )
-            ]
-        )
-    )
-    return _image
-
-
-def _get_children_and_tables(coord_system_id: int, well_label: str) -> list[ngc.Node]:
-    return [
-        _get_image(
-            name="0",
-            coord_system_id=coord_system_id,
-            attributes={"field": {"id": 0}, "acquisition": 0},
-        ),
-        _get_image(
-            name="1",
-            coord_system_id=coord_system_id,
-            attributes={"field": {"id": 0}, "acquisition": 1},
-        ),
-        _get_image(
-            name="1_registered",
-            coord_system_id=coord_system_id,
-            attributes={"field": {"id": 0}, "acquisition": 1},
-        ),
-        _get_image(
-            name="nuclei",
-            coord_system_id=coord_system_id,
-            attributes={"field": {"id": 0}, "acquisition": 0},
-        ),
-        ngc.new_node(
-            node_type="table",
-            id=get_uuid4("nuclei_measurements" + well_label),
-            name="nuclei_measurements",
-        ),
-    ]
+FRACTAL_ENTRY = {
+    "id": FRACTAL,
+    "version": "0.1",
+    "name": "Fractal",
+    "schemas": [
+        {"type": "jsonschema", "url": FRACTAL + "provenance.schema.json"},
+        {"type": "jsonschema", "url": FRACTAL + "table.schema.json"},
+    ],
+    "homepage": HOMEPAGE,
+}
+TRAINING_ENTRY = {
+    "id": TRAINING,
+    "version": "0.1",
+    "name": "Training dataset",
+    "schemas": [{"type": "jsonschema", "url": TRAINING + "dataset.schema.json"}],
+    "homepage": HOMEPAGE,
+}
 
 
 def main():
-    coord_system_id = get_uuid4("coord-system")
+    base = reset_dir(BASE_PATH / "example5")
+    ngc.register_extension(FRACTAL_ENTRY)
+    ngc.register_extension(TRAINING_ENTRY)
 
-    root_collection_path = BASE_PATH / "example5"
-    if Path(root_collection_path).exists():
-        shutil.rmtree(root_collection_path)
-    root_collection_path.mkdir(parents=True, exist_ok=True)
-
-    children_A1 = _get_children_and_tables(coord_system_id=coord_system_id, well_label="A1")
-    children_A1_ref = []
-    for ind, child in enumerate(children_A1):
-        url = str(root_collection_path / f"plate/well-A1/{child.name}/zarr.json")
-        children_A1_ref.append(ngc.create(url, child, overwrite=True))
-        if child.type == "multiscale":
-            url = str(root_collection_path / f"plate/well-A1/{child.name}/s0")
-            create_zarr_array(url, seed=ind)
-
-    well_A1 = ngc.new_node(
-        "collection",
-        name="Well A1",
-        id=get_uuid4("well A1"),
-        children=[],
-        attributes={"well": {"column": {"id": "1"}, "row": {"id": "A"}}},
-    ).add_ref(*children_A1_ref)
-
-    url = str(root_collection_path / "plate/well-A1/well.json")
-    well_A1_ref = ngc.create(url, well_A1, overwrite=True)
-
-    plate = ngc.new_node(
-        "collection",
-        name="Plate",
-        id=get_uuid4("plate"),
-        children=[],
-        attributes={
-            "plate": {
-                "acquisitions": [],
-                "columns": [{"id": "1"}],
-                "rows": [{"id": "A"}],
-            }
-        },
-    ).add_ref(well_A1_ref)
-
-    url = str(root_collection_path / "plate/plate.json")
-    ngc.create(url, plate, overwrite=True)
-
-    collection = ngc.new_node(
-        "collection",
-        name="My dataset",
-        id=get_uuid4("dataset"),
-        children=[plate],
+    well_dir = base / "A" / "1"
+    fov0 = create_image(
+        well_dir / "0", multiscale("fov0", "example5-fov0"), levels=2, seed=50
     )
+    nuclei = create_image(
+        well_dir / "nuclei",
+        multiscale("nuclei", "example5-nuclei"),
+        levels=2,
+        seed=51,
+        dtype="u2",
+    ).set_traits(
+        ngc.LabelsTrait(source=[ngc.ReferenceObj(type="multiscale", ref=fov0.id)]),
+        {
+            "type": PROVENANCE,
+            "task": "cellpose-segmentation",
+            "version": "3.0.0",
+            "inputs": [{"type": "multiscale", "ref": fov0.id}],
+        },
+    )
+    (well_dir / "regionprops.csv").write_text(
+        "label,area,mean_intensity\n1,120,0.82\n2,98,0.64\n"
+    )
+    table = ngc.new_node(
+        TABLE,
+        id=get_uuid4("example5-regionprops"),
+        name="regionprops",
+        path=ngc.DocPath(type=CSV, format="relative", href="./A/1/regionprops.csv"),
+        fields={"columns": ["label", "area", "mean_intensity"]},
+    )
+    well = ngc.new_collection(
+        id=get_uuid4("example5-A1"),
+        name="A1",
+        traits=[ngc.WellTrait(row_index=0, column_index=0)],
+    ).add_external(fov0, nuclei, table)
 
-    url = str(root_collection_path / "root.json")
-    ngc.create(url, collection, overwrite=True)
+    plate = ngc.PlateTrait(rows=[ngc.RowObj(name="A")], columns=[ngc.ColumnObj(name="1")])
+    dataset = {
+        "type": DATASET,
+        "task": "segmentation",
+        "samples": [
+            {
+                "image": {"type": "multiscale", "ref": fov0.id},
+                "labels": {"type": "multiscale", "ref": nuclei.id},
+                "split": "train",
+            }
+        ],
+    }
+    root = ngc.new_collection(id=ROOT_ID, name="plate-001", traits=[plate, dataset]).add(well)
+    ngc.create(str(base / "zarr.json"), root, overwrite=True)
 
 
 if __name__ == "__main__":

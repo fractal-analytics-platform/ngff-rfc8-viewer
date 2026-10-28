@@ -1,6 +1,15 @@
 import * as d3 from 'd3';
-import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
+import type {
+  D3Node,
+  ExtensionManifestEntry,
+  ExtraEdge,
+  ExtraEdgesFn,
+  OmeDocument,
+  OmeNode
+} from './types';
 import { UntrustedDomainError, type NGFFLoader } from './loader';
+import { documentUrlFor } from './paths';
+import { displayName, findManifestEntry, mergeTraits } from './nodes';
 
 export class NGFFGraph {
   private loader: NGFFLoader;
@@ -8,7 +17,7 @@ export class NGFFGraph {
   private computeExtraEdges: ExtraEdgesFn | undefined;
 
   private nodes: Array<D3Node> = [];
-  private extraEdges: Array<{ sourceId: string; targetId: string }> = [];
+  private extraEdges: Array<ExtraEdge> = [];
 
   private hierarchy: d3.HierarchyNode<D3Node> | undefined;
 
@@ -72,6 +81,10 @@ export class NGFFGraph {
     return this.hierarchy!;
   }
 
+  getNodes(): ReadonlyArray<D3Node> {
+    return this.nodes;
+  }
+
   getExtraEdges() {
     return this.extraEdges;
   }
@@ -87,50 +100,68 @@ export class NGFFGraph {
     }
   }
 
+  /**
+   * Adds `node` and its declared children (recursively) to `nodes`. `documentUrl` is the metadata
+   * file that declares the node; relative paths are resolved against it.
+   */
   walk(
     nodes: Array<D3Node>,
-    node: OmeNode & { generatedId?: string },
+    node: OmeNode,
     parentId: string | null,
-    resolvedPath: string,
-    extraEdges: Array<{ sourceId: string; targetId: string }>
+    documentUrl: string,
+    manifest: ExtensionManifestEntry[] | undefined = undefined
   ) {
-    if (!('generatedId' in node) || !node.generatedId) {
-      this.lastGeneratedId++;
-      node.generatedId = String(this.lastGeneratedId);
+    this.lastGeneratedId++;
+    const generatedId = String(this.lastGeneratedId);
+
+    let targetUrl: string | undefined;
+    let error = false;
+    if (node.path) {
+      try {
+        targetUrl = documentUrlFor(node.path, documentUrl);
+      } catch (err) {
+        error = true;
+        this.signalError(
+          `Unable to resolve the path of node "${displayName(node)}": ${err instanceof Error ? err.message : err}`
+        );
+      }
     }
 
     nodes.push({
-      id: node.generatedId,
+      id: generatedId,
       omeNode: this.getBasicOmeNode(node),
       parentId: parentId,
+      documentUrl,
+      targetUrl,
+      manifest,
       loading: false,
-      loaded: !('path' in node),
-      resolvedPath,
-      error: false,
+      // nodes pointing to a document are loaded only once it has been fetched;
+      // nodes with a data path (extension path types) have nothing to fetch
+      loaded: !targetUrl && !error,
+      error,
       collapsed: false
     });
 
-    if (this.computeExtraEdges) {
-      this.computeExtraEdges(node, extraEdges);
-    }
-
-    if ('nodes' in node && node.nodes) {
-      node.nodes.forEach((child) =>
-        this.walk(nodes, child, node.generatedId!, resolvedPath, extraEdges)
-      );
+    // multiscale documents may carry an empty `nodes` list; scales are not child nodes
+    if (node.type !== 'multiscale' && node.nodes) {
+      node.nodes.forEach((child) => this.walk(nodes, child, generatedId, documentUrl));
     }
   }
 
+  /**
+   * Copy of the node without its children (represented by the hierarchy) and without the
+   * document-level keys (`version`, `extension_manifest`, kept on the D3Node as `manifest`).
+   */
   private getBasicOmeNode(node: OmeNode): OmeNode {
     const nodeCopy = { ...node };
-    if ('generatedId' in nodeCopy) {
-      delete nodeCopy['generatedId'];
-    }
+    delete nodeCopy.nodes;
+    delete (nodeCopy as Partial<OmeDocument>).version;
+    delete (nodeCopy as Partial<OmeDocument>).extension_manifest;
     return nodeCopy;
   }
 
-  async render(ome: OmeNode) {
-    this.walk(this.nodes, ome, null, './', this.extraEdges);
+  async render(ome: OmeDocument) {
+    this.walk(this.nodes, ome, null, this.loader.getSource(), ome.extension_manifest);
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -143,7 +174,7 @@ export class NGFFGraph {
   }
 
   /** Loads a node, signalling loading state to listeners. */
-  async loadNodeWithSignal(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
+  async loadNodeWithSignal(node: D3Node) {
     this.signalLoading(true);
     try {
       await this.loadNode(node);
@@ -152,25 +183,38 @@ export class NGFFGraph {
     }
   }
 
+  /** The RFC-8 id of a node (required, globally unique UUID). */
   getNodeId(node: D3Node): string {
-    return node.omeNode.id || node.omeNode?.name;
+    return node.omeNode.id;
   }
 
   getChildren(node: D3Node): Array<D3Node> {
     return this.nodes.filter((n) => n.parentId === node.id);
   }
 
+  getParent(node: D3Node): D3Node | undefined {
+    return node.parentId ? this.nodes.find((n) => n.id === node.parentId) : undefined;
+  }
+
   getParentsIds(node: D3Node): Array<string> {
     const parents: Array<string> = [];
     parents.push(this.getNodeId(node));
-    let current = node;
-    while (current.parentId) {
-      const parent = this.nodes.find((n) => n.id === current.parentId);
-      if (!parent) break;
-      parents.push(this.getNodeId(parent));
-      current = parent;
+    let current: D3Node | undefined = node;
+    while ((current = this.getParent(current))) {
+      parents.push(this.getNodeId(current));
     }
     return parents.reverse();
+  }
+
+  /** Finds a node by its RFC-8 id (first match; the same id may appear once per document). */
+  findNodeByOmeId(id: string): D3Node | undefined {
+    return this.nodes.find((n) => n.omeNode.id === id);
+  }
+
+  /** The manifest entry covering an extension type, searched in every loaded document. */
+  findManifestEntry(type: string): ExtensionManifestEntry | undefined {
+    const entries = this.nodes.flatMap((n) => n.manifest ?? []);
+    return findManifestEntry(type, entries);
   }
 
   // path is a hierarchy of node IDs, e.g. "root/child/grandchild"
@@ -190,9 +234,7 @@ export class NGFFGraph {
     while (parentIds.length > 0) {
       const nextId = parentIds[0];
       // make sure node is loaded before looking for its children
-      await this.loadNodeWithSignal(
-        currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
-      );
+      await this.loadNodeWithSignal(currentNode);
       const child = this.nodes.find(
         (n) => n.parentId === currentNode!.id && this.getNodeId(n) === nextId
       );
@@ -206,7 +248,7 @@ export class NGFFGraph {
     }
 
     // Finally, let's load the target node
-    await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
+    await this.loadNodeWithSignal(currentNode);
 
     return currentNode!;
   }
@@ -215,12 +257,10 @@ export class NGFFGraph {
     if (autoloadDepth === Infinity || autoloadDepth > 0) {
       let loaded = false;
       for (const leave of this.hierarchy!.leaves()) {
-        if ('path' in leave.data.omeNode) {
-          const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
-          if (!node.loaded && !node.error && !(node.omeNode.type == 'singlescale')) {
-            await this.loadNode(node);
-            loaded = true;
-          }
+        const node = leave.data;
+        if (node.targetUrl && !node.loaded && !node.error) {
+          await this.loadNode(node);
+          loaded = true;
         }
       }
       if (loaded) {
@@ -231,41 +271,36 @@ export class NGFFGraph {
 
   buildHierarchy() {
     this.hierarchy = d3.stratify<D3Node>()(this.nodes);
+    this.extraEdges = this.computeExtraEdges ? this.computeExtraEdges(this.nodes) : [];
   }
 
-  async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
-    if (node.loading || node.loaded || node.error || node.omeNode.type == 'singlescale') {
+  /** URLs of the documents enclosing a node (its own document and all ancestors' documents). */
+  getAncestorDocumentUrls(node: D3Node): Set<string> {
+    const urls = new Set<string>();
+    let current: D3Node | undefined = node;
+    while (current) {
+      urls.add(current.documentUrl);
+      current = this.getParent(current);
+    }
+    return urls;
+  }
+
+  /** Fetches the document a node points to and merges it into the node. */
+  async loadNode(node: D3Node) {
+    if (node.loading || node.loaded || node.error || !node.targetUrl) {
       return;
     }
     this.signalError(null);
     node.loading = true;
     try {
-      switch (node.omeNode.path.type) {
-        case 'json':
-          {
-            const resolvedPath = this.resolvePath(node.resolvedPath, node.omeNode.path.path);
-            const ome = await this.loader.loadNode(resolvedPath);
-            // just updates the 'attributes' from ome - NOT the child ome.nodes
-            this.updateNode(node, ome);
-            this.appendSubtree(
-              ome,
-              resolvedPath.substring(0, resolvedPath.search(/\/[^/]+\.json$/))
-            );
-          }
-          break;
-        case 'zarr':
-          {
-            const ome = await this.loader.loadNode(
-              this.resolvePath(node.resolvedPath, `${node.omeNode.path.path}/zarr.json`)
-            );
-            this.updateNode(node, ome);
-            this.appendSubtree(ome, this.resolvePath(node.resolvedPath, node.omeNode.path.path));
-          }
-          break;
-        default:
-          this.signalError(`Unexpected path type: ${node.omeNode.path.type}`);
-          break;
+      if (this.getAncestorDocumentUrls(node).has(node.targetUrl)) {
+        throw new Error(
+          `Cycle detected: node "${displayName(node.omeNode)}" resolves to ${node.targetUrl}, which is one of its enclosing documents`
+        );
       }
+      const ome = await this.loader.loadNode(node.targetUrl);
+      this.updateNode(node, ome);
+      this.appendSubtree(ome, node);
     } catch (err) {
       if (err instanceof UntrustedDomainError) {
         node.loading = false;
@@ -289,34 +324,53 @@ export class NGFFGraph {
     node.loading = false;
   }
 
-  updateNode(node: D3Node, ome: OmeNode) {
+  /**
+   * Merges a fetched document into the node that declares it: the document supplies type-specific
+   * fields and traits; traits of the declaring node override same-type traits of the document; the
+   * declaring node's name wins when set. The two must share id and type.
+   */
+  updateNode(node: D3Node, ome: OmeDocument) {
+    const entry = node.omeNode;
+    if (ome.id !== entry.id) {
+      throw new Error(
+        `Id mismatch: node "${entry.id}" resolves to a document whose root id is "${ome.id}" (${node.targetUrl})`
+      );
+    }
+    if (ome.type !== entry.type) {
+      throw new Error(
+        `Type mismatch: node "${displayName(entry)}" has type "${entry.type}" but resolves to a document of type "${ome.type}" (${node.targetUrl})`
+      );
+    }
+    const root: OmeNode = { ...ome };
+    delete (root as Partial<OmeDocument>).version;
+    delete (root as Partial<OmeDocument>).extension_manifest;
+    delete root.nodes;
+
+    const traits = mergeTraits(root.traits, entry.traits);
+    const merged: OmeNode = { ...root, type: entry.type, id: entry.id };
+    if (entry.name ?? root.name) {
+      merged.name = entry.name ?? root.name;
+    }
+    if (traits.length > 0) {
+      merged.traits = traits;
+    } else {
+      delete merged.traits;
+    }
+    if (entry.path) {
+      merged.path = entry.path;
+    }
+    node.omeNode = merged;
+    node.manifest = ome.extension_manifest;
     node.loaded = true;
-    node.omeNode.attributes = { ...(node.omeNode.attributes || {}), ...ome.attributes };
-    (ome as any).generatedId = node.id;
     this.signalNodeUpdated(node);
   }
 
-  resolvePath(parentPath: string, path: string) {
-    if (!(path.startsWith('./') || path.startsWith('http')) || path.includes('..')) {
-      throw new Error(`Unsupported path "${path}"`);
-    }
-    if (path.startsWith('http')) {
-      return path;
-    }
-    parentPath = parentPath.replace(/^\.\//, '').replace(/\/$/, '');
-    path = path.replace(/^\.\//, '').replace(/\/$/, '');
-    if (parentPath.startsWith('http')) {
-      return `${parentPath}/${path}`;
-    }
-    return parentPath ? `./${parentPath}/${path}` : `./${path}`;
-  }
-
-  appendSubtree(ome: OmeNode, resolvedPath: string) {
-    const nodes: Array<D3Node> = [];
-    const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
-    this.walk(nodes, ome, null, resolvedPath, extraEdges);
-    if (nodes.length > 0) {
-      this.nodes.push(...nodes.splice(1));
+  /** Adds the children declared in a fetched document under the node that points to it. */
+  appendSubtree(ome: OmeDocument, node: D3Node) {
+    if (ome.type !== 'multiscale' && ome.nodes && node.targetUrl) {
+      const nodes: Array<D3Node> = [];
+      ome.nodes.forEach((child) => this.walk(nodes, child, node.id, node.targetUrl!));
+      this.nodes.push(...nodes);
     }
     this.buildHierarchy();
   }
