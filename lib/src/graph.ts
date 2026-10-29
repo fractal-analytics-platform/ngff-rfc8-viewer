@@ -298,7 +298,6 @@ export class NGFFGraph {
     if (node.loading || node.loaded || node.error || node.omeNode.type === 'singlescale') {
       return;
     }
-    // this.signalError(null);
     node.loading = true;
     try {
       switch (node.omeNode.path.type) {

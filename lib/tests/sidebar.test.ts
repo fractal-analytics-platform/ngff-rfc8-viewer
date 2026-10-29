@@ -111,7 +111,7 @@ describe('NGFFSidebar', () => {
       await graph.loadNode(graph['nodes'][1] as any);
 
       const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, false, graph);
+      const sidebar = new NGFFSidebar(element, graph);
       sidebar.showInfo(graph['nodes'][1]);
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
@@ -149,7 +149,7 @@ describe('NGFFSidebar', () => {
       await graph.loadNode(graph['nodes'][1] as any);
 
       const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, false, graph);
+      const sidebar = new NGFFSidebar(element, graph);
       sidebar.showInfo(graph['nodes'][1]);
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
@@ -202,7 +202,7 @@ describe('NGFFSidebar', () => {
       await graph.loadNode(graph['nodes'][1] as any);
 
       const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, false, graph);
+      const sidebar = new NGFFSidebar(element, graph);
       sidebar.showInfo(graph['nodes'][1]);
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
