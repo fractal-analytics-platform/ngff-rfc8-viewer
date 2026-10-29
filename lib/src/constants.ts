@@ -8,7 +8,8 @@ export const NODE_COLORS: Record<string, string> = {
 };
 
 export const STROKE_COLORS: Record<string, string> = {
-  selection: '#333',
+  hover: '#333',
+  selected: '#f00',
   inlining: '#8e009b',
   remote: '#ddd',
   local: '#555'

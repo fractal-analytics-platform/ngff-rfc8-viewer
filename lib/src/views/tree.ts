@@ -10,6 +10,7 @@ const MAX_EXPORT_SIZE = 16384;
 
 export class TreeView {
   private graph: NGFFGraph;
+  private containerId: string;
   private width: number = 0;
   private height: number = 0;
   private currentZoom: any;
@@ -18,21 +19,11 @@ export class TreeView {
 
   private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
-  private errorAlert: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
-
-  private nodeSelectHandler: (node: D3Node) => void = () => {};
-  private backgroundClickHandler: () => void = () => {};
+  private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
-
-    this.errorAlert = d3
-      .select('body')
-      .append('div')
-      .attr(
-        'class',
-        `${CSS_CLASS_PREFIX}alert ${CSS_CLASS_PREFIX}error ${CSS_CLASS_PREFIX}alert-fixed ${CSS_CLASS_PREFIX}hide`
-      );
+    this.containerId = containerId;
 
     this.svg = d3
       .select(`#${containerId}`)
@@ -44,7 +35,7 @@ export class TreeView {
       .style('touch-action', 'none')
       .on('click', (event) => {
         if (!(event.target instanceof SVGCircleElement)) {
-          this.backgroundClickHandler();
+          this.selectNode();
         }
       });
 
@@ -54,9 +45,15 @@ export class TreeView {
       .attr('class', `${CSS_CLASS_PREFIX}tree-tooltip`)
       .style('opacity', 0);
 
-    graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
+
+    // Also re-render when loading completes
+    this.unsubscribers.push(
+      graph.addLoadingListener((isLoading) => {
+        if (!isLoading) {
+          this.renderTree();
+        }
+      })
     );
 
     const exportButtons = d3
@@ -73,18 +70,14 @@ export class TreeView {
       .append('button')
       .text('Export PNG')
       .on('click', () => this.exportPNG());
+
+    this.unsubscribers.push(this.graph.addNodeSelectedListener(() => this.renderTree()));
+    // initial render of the tree
+    this.renderTree();
   }
 
-  onNodeSelect(fn: (node: D3Node) => void) {
-    this.nodeSelectHandler = fn;
-  }
-
-  selectNode(node: D3Node) {
-    this.nodeSelectHandler(node);
-  }
-
-  onBackgroundClick(fn: () => void) {
-    this.backgroundClickHandler = fn;
+  selectNode(node?: D3Node) {
+    this.graph.selectNode(node);
   }
 
   renderTree() {
@@ -201,12 +194,13 @@ export class TreeView {
       .attr('fill', (d) => NODE_COLORS[d.data.omeNode.type] || NODE_COLORS.default)
       .attr('opacity', (d) => (d.data.loaded ? 1 : 0.4))
       .style('cursor', 'pointer')
-      .attr('stroke', (d) => (d.data.loaded ? 'none' : STROKE_COLORS.inlining))
+      .attr('stroke', (d) =>
+        d.data.selected ? STROKE_COLORS.selected : d.data.loaded ? 'none' : STROKE_COLORS.inlining
+      )
       .attr('stroke-dasharray', (d) => (d.data.loaded ? 'none' : '10,5'))
-      .attr('stroke-width', 2)
+      .attr('stroke-width', (d) => (d.data.selected ? 5 : 2))
       .on('click', async (event, d) => {
         const node = d.data;
-        this.selectNode(node);
         if ('path' in node.omeNode && node.omeNode.path) {
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.add('ngff-rfc8-viewer-rotating-dash');
@@ -214,15 +208,18 @@ export class TreeView {
           await this.graph.loadNodeWithSignal(
             node as D3Node & { omeNode: OmeNode & { path: OmePath } }
           );
+          this.selectNode(node);
           this.renderTree();
           if (event.target instanceof SVGCircleElement) {
             event.target.classList.remove('ngff-rfc8-viewer-rotating-dash');
           }
+        } else {
+          this.selectNode(node);
         }
       })
       .on('mouseenter', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', STROKE_COLORS.selection);
+          d3.select(event.target).attr('stroke', STROKE_COLORS.hover);
           this.tooltip?.style('opacity', 1).html(`
             <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
             <strong>Name: </strong>${d.data.omeNode.name}<br>
@@ -235,7 +232,16 @@ export class TreeView {
       })
       .on('mouseleave', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
-          d3.select(event.target).attr('stroke', d.data.loaded ? 'none' : STROKE_COLORS.inlining);
+          d3.select(event.target)
+            .attr(
+              'stroke',
+              d.data.selected
+                ? STROKE_COLORS.selected
+                : d.data.loaded
+                  ? 'none'
+                  : STROKE_COLORS.inlining
+            )
+            .attr('stroke-width', d.data.selected ? 5 : 2);
           this.tooltip?.style('opacity', 0);
         }
       });
@@ -286,20 +292,6 @@ export class TreeView {
     }
 
     this.svg.call(zoom.transform, this.currentZoom);
-  }
-
-  showErrorAlert(message: string) {
-    this.errorAlert.selectAll('*').remove();
-    this.errorAlert.append('span').text(message);
-    this.errorAlert
-      .append('button')
-      .html('&times;')
-      .on('click', () => this.hideErrorAlert());
-    this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, false);
-  }
-
-  hideErrorAlert() {
-    this.errorAlert.classed(`${CSS_CLASS_PREFIX}hide`, true);
   }
 
   private buildExportableSVG() {
@@ -358,11 +350,11 @@ export class TreeView {
           if (blob !== null) {
             this.downloadImage(blob, 'png');
           } else {
-            this.showErrorAlert('Unable to draw the image');
+            this.graph.signalError('Unable to draw the image');
           }
         }, 'image/png');
       } catch (err) {
-        this.showErrorAlert(err instanceof Error ? err.message : 'Unable to generate the image');
+        this.graph.signalError(err instanceof Error ? err.message : 'Unable to generate the image');
       }
     };
 
@@ -381,5 +373,19 @@ export class TreeView {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  }
+
+  destroy() {
+    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribers = [];
+    // remove the svg element created in constructor
+    const el = document.getElementById(this.containerId + '-graph');
+    if (el) {
+      el.remove();
+    }
+    const exportBtns = document.querySelector(`#${this.containerId} .export-buttons`);
+    if (exportBtns) {
+      exportBtns.remove();
+    }
   }
 }

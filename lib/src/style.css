@@ -289,6 +289,7 @@ Show the "sidebar" below the graph
   bottom: 0;
   right: 0;
   left: 0;
+  z-index: 10;
 }
 
 .ngff-rfc8-viewer-alert-fixed button {
@@ -403,6 +404,7 @@ Show the "sidebar" below the graph
   margin-bottom: 10px;
   border-radius: 5px;
   padding-right: 15px;
+  border: solid 2px transparent;
 }
 .ngff-rfc8-viewer-image-row:hover {
   background-color: rgba(0, 0, 0, 0.05);

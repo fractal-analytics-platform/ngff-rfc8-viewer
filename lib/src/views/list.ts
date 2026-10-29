@@ -1,52 +1,48 @@
 import type { D3Node, OmeNode, OmePath } from './../types';
-import { CSS_CLASS_PREFIX, NODE_COLORS } from './../constants';
+import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 
 export class ListView {
   private graph: NGFFGraph;
   private containerId: string;
   private rootElement: HTMLDivElement;
-  private errorAlert: HTMLDivElement;
-
-  private nodeSelectHandler: (node: D3Node) => void = () => {};
-  private backgroundClickHandler: () => void = () => {};
+  private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
     this.containerId = containerId;
-    this.errorAlert = document.createElement('div');
-    this.errorAlert.classList.add(
-      `${CSS_CLASS_PREFIX}alert`,
-      `${CSS_CLASS_PREFIX}error`,
-      `${CSS_CLASS_PREFIX}alert-fixed`,
-      `${CSS_CLASS_PREFIX}hide`
-    );
-    document.getElementById(this.containerId)?.appendChild(this.errorAlert);
 
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}list-graph-root`);
     this.rootElement.onclick = (event) => {
       if (event.target !== this.rootElement) return;
-      this.backgroundClickHandler();
+      this.selectNode();
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
-    graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    // This is triggered when tree is first loaded
+    this.unsubscribers.push(graph.addChangeListener(this.renderTree));
+    // Re-render when loading completes
+    this.unsubscribers.push(
+      graph.addLoadingListener((isLoading) => {
+        if (!isLoading) {
+          this.renderTree();
+        }
+      })
     );
+    // re-render the tree when a node is selected
+    this.unsubscribers.push(
+      graph.addNodeSelectedListener(() => {
+        this.renderTree();
+      })
+    );
+
+    // initial render
+    this.renderTree();
   }
 
-  onNodeSelect(fn: (node: D3Node) => void) {
-    this.nodeSelectHandler = fn;
-  }
-
-  selectNode(node: D3Node) {
-    this.nodeSelectHandler(node);
-  }
-
-  onBackgroundClick(fn: () => void) {
-    this.backgroundClickHandler = fn;
+  selectNode(node?: D3Node) {
+    this.graph.selectNode(node);
   }
 
   renderTree() {
@@ -77,22 +73,22 @@ export class ListView {
 
     // Add a button to load children and toggle the collapsed class of the node
     const button = document.createElement('button');
-    button.style.borderColor = NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
+    button.style.borderColor = node.selected
+      ? STROKE_COLORS.selected
+      : NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
+    button.style.borderWidth = node.selected ? '3px' : '1px';
     button.textContent = `${node.omeNode?.name}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
       this.selectNode(node);
-      // Adding 'collapsed' class will hide child nodes etc.
-      nodeElement.classList.toggle(`${CSS_CLASS_PREFIX}collapsed`);
-      if (isLoaded) {
-        // simply toggle collapsed - don't need to re-render the tree
+      // unloaded nodes are actually expanded already - don't toggle collapsed. Just load...
+      if (node.loaded) {
         node.collapsed = !node.collapsed;
-        return;
       }
       await this.graph.loadNodeWithSignal(
         node as D3Node & { omeNode: OmeNode & { path: OmePath } }
       );
-      this.renderTree();
+      return false;
     };
     if (parentId) {
       document.getElementById(`node-${parentId}`)?.appendChild(nodeElement);
@@ -101,19 +97,11 @@ export class ListView {
     }
   }
 
-  showErrorAlert(message: string) {
-    this.errorAlert.innerHTML = '';
-    const span = document.createElement('span');
-    span.textContent = message;
-    this.errorAlert.appendChild(span);
-    const button = document.createElement('button');
-    button.innerHTML = '&times;';
-    button.onclick = () => this.hideErrorAlert();
-    this.errorAlert.appendChild(button);
-    this.errorAlert.classList.remove(`${CSS_CLASS_PREFIX}hide`);
-  }
-
-  hideErrorAlert() {
-    this.errorAlert.classList.add(`${CSS_CLASS_PREFIX}hide`);
+  destroy() {
+    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribers = [];
+    if (this.rootElement) {
+      this.rootElement.remove();
+    }
   }
 }
