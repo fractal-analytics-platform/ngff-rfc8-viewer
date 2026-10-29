@@ -1,5 +1,5 @@
 import type { D3Node, OmeNode, OmePath } from './../types';
-import { CSS_CLASS_PREFIX } from './../constants';
+import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
 
@@ -7,47 +7,44 @@ export class ImagesView {
   private graph: NGFFGraph;
   private containerId: string;
   private rootElement: HTMLDivElement;
-  private errorAlert: HTMLDivElement;
-
-  private nodeSelectHandler: (node: D3Node) => void = () => {};
-  private backgroundClickHandler: () => void = () => {};
+  private unsubscribers: Array<() => void> = [];
 
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
     this.containerId = containerId;
-    this.errorAlert = document.createElement('div');
-    this.errorAlert.classList.add(
-      `${CSS_CLASS_PREFIX}alert`,
-      `${CSS_CLASS_PREFIX}error`,
-      `${CSS_CLASS_PREFIX}alert-fixed`,
-      `${CSS_CLASS_PREFIX}hide`
-    );
-    document.getElementById(this.containerId)?.appendChild(this.errorAlert);
 
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}images-graph-root`);
     this.rootElement.onclick = (event) => {
-      if (event.target !== this.rootElement) return;
-      this.backgroundClickHandler();
+      if (event.target == this.rootElement) {
+        this.selectNode();
+      }
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
-    graph.onChange(() => this.renderTree());
-    graph.onError((message) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
+    this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
+    this.unsubscribers.push(
+      graph.addNodeSelectedListener(() => {
+        const descendants = this.graph.getHierarchy().descendants();
+        descendants.forEach((d) => {
+          if (d.data.omeNode.type == 'multiscale') {
+            const nodeElement = document.getElementById(`image-row-node-${d.data.id}`);
+            if (nodeElement) {
+              nodeElement.style.borderColor = d.data.selected
+                ? STROKE_COLORS.selected
+                : 'transparent';
+            }
+          }
+        });
+      })
     );
+
+    // initial render of the tree
+    this.renderTree();
   }
 
-  onNodeSelect(fn: (node: D3Node) => void) {
-    this.nodeSelectHandler = fn;
-  }
-
-  selectNode(node: D3Node) {
-    this.nodeSelectHandler(node);
-  }
-
-  onBackgroundClick(fn: () => void) {
-    this.backgroundClickHandler = fn;
+  selectNode(node?: D3Node) {
+    this.graph.selectNode(node!);
   }
 
   renderTree() {
@@ -81,6 +78,8 @@ export class ImagesView {
 
     const nodeElement = document.createElement('div');
     nodeElement.classList.add(`${CSS_CLASS_PREFIX}image-row`);
+    nodeElement.id = `image-row-node-${node.id}`;
+    nodeElement.style.borderColor = node.selected ? STROKE_COLORS.selected : 'transparent';
 
     // Add Thumbnail for the node
     const prefix = this.graph.getLoader().getPrefix();
@@ -112,10 +111,12 @@ export class ImagesView {
     // Click on row to select node. If not loaded, load it and update the thumbnail.
     nodeElement.onclick = async () => {
       this.selectNode(node);
-      if (!node.loaded) {
-        await this.graph.loadNodeWithSignal(
-          node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-        );
+      const isLoaded = node.loaded;
+      // even if loaded, the signal causes re-render to update selection
+      await this.graph.loadNodeWithSignal(
+        node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+      );
+      if (!isLoaded) {
         // try again to show thumbnail...
         thumbnailElement.remove();
         const children = this.graph.getChildren(node).map((child) => child.omeNode);
@@ -127,19 +128,9 @@ export class ImagesView {
     this.rootElement.appendChild(nodeElement);
   }
 
-  showErrorAlert(message: string) {
-    this.errorAlert.innerHTML = '';
-    const span = document.createElement('span');
-    span.textContent = message;
-    this.errorAlert.appendChild(span);
-    const button = document.createElement('button');
-    button.innerHTML = '&times;';
-    button.onclick = () => this.hideErrorAlert();
-    this.errorAlert.appendChild(button);
-    this.errorAlert.classList.remove(`${CSS_CLASS_PREFIX}hide`);
-  }
-
-  hideErrorAlert() {
-    this.errorAlert.classList.add(`${CSS_CLASS_PREFIX}hide`);
+  destroy() {
+    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
+    this.unsubscribers = [];
+    this.rootElement.remove();
   }
 }

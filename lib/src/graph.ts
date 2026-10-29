@@ -2,6 +2,8 @@ import * as d3 from 'd3';
 import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
 import { UntrustedDomainError, type NGFFLoader } from './loader';
 
+type Unsubscribe = () => void;
+
 export class NGFFGraph {
   private loader: NGFFLoader;
   private autoloadDepth: number;
@@ -11,11 +13,13 @@ export class NGFFGraph {
   private extraEdges: Array<{ sourceId: string; targetId: string }> = [];
 
   private hierarchy: d3.HierarchyNode<D3Node> | undefined;
+  private validation: boolean = false;
 
   private eventListeners = {
     loading: [] as Array<(loading: boolean) => void>,
     error: [] as Array<(message: string | null) => void>,
     nodeUpdated: [] as Array<(node: D3Node) => void>,
+    nodeSelected: [] as Array<(node?: D3Node) => void>,
     change: [] as Array<() => void>
   };
 
@@ -31,41 +35,63 @@ export class NGFFGraph {
     this.computeExtraEdges = computeExtraEdges;
   }
 
+  // adds fn to the list and returns a function that removes it again
+  private addListener<T extends (...args: any[]) => void>(list: T[], fn: T): Unsubscribe {
+    list.push(fn);
+    return () => {
+      const index = list.indexOf(fn);
+      if (index !== -1) list.splice(index, 1);
+    };
+  }
+
   getLoader() {
     return this.loader;
   }
 
+  // When a node is loaded
   signalLoading(loading: boolean) {
     this.eventListeners['loading'].forEach((fn) => fn(loading));
   }
-
-  signalError(message: string | null) {
-    this.eventListeners['error'].forEach((fn) => fn(message));
+  // handled by control (spinner) and sidebar (update thumbnail)
+  addLoadingListener(fn: (loading: boolean) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['loading'], fn);
   }
 
+  // called when loading fails
+  signalError(message: string | null) {
+    console.trace(message); // to enable debugging of where the error originated
+    this.eventListeners['error'].forEach((fn) => fn(message));
+  }
+  // handled by viewer showing an error
+  addErrorListener(fn: (message: string | null) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['error'], fn);
+  }
+
+  // When a node is loaded and extra attributes are added
   signalNodeUpdated(node: D3Node) {
     this.eventListeners['nodeUpdated'].forEach((fn) => fn(node));
   }
+  // handled by sidebar.showInfo()
+  addNodeUpdatedListener(fn: (node: D3Node) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['nodeUpdated'], fn);
+  }
 
+  // When a node is selected
+  signalNodeSelected(node?: D3Node) {
+    this.eventListeners['nodeSelected'].forEach((fn) => fn(node));
+  }
+  // handled by sidebar.showInfo()
+  addNodeSelectedListener(fn: (node?: D3Node) => void): Unsubscribe {
+    return this.addListener(this.eventListeners['nodeSelected'], fn);
+  }
+
+  // only called by loadRoot() -> render() and recursive load
   signalChange() {
     this.eventListeners['change'].forEach((fn) => fn());
   }
-
-  // Convenience methods for adding event listeners
-  onLoading(fn: (loading: boolean) => void) {
-    this.eventListeners['loading'].push(fn);
-  }
-
-  onError(fn: (message: string | null) => void) {
-    this.eventListeners['error'].push(fn);
-  }
-
-  onNodeUpdated(fn: (node: D3Node) => void) {
-    this.eventListeners['nodeUpdated'].push(fn);
-  }
-
-  onChange(fn: () => void) {
-    this.eventListeners['change'].push(fn);
+  // views.renderTree()
+  addChangeListener(fn: () => void): Unsubscribe {
+    return this.addListener(this.eventListeners['change'], fn);
   }
 
   getHierarchy(): d3.HierarchyNode<D3Node> {
@@ -85,6 +111,34 @@ export class NGFFGraph {
       this.signalError(err instanceof Error ? err.message : 'Unexpected error');
       return false;
     }
+  }
+
+  selectNode(node?: D3Node) {
+    // clear selected state of all nodes
+    this.nodes.forEach((n) => (n.selected = false));
+    if (node) {
+      node.selected = true;
+    }
+    this.signalNodeSelected(node);
+  }
+
+  getSelectedNode(): D3Node | undefined {
+    return this.nodes.find((n) => n.selected);
+  }
+
+  setValidation(validate: boolean) {
+    if (validate == this.validation) {
+      return;
+    }
+    this.validation = validate;
+    const selectedNode = this.getSelectedNode();
+    if (selectedNode) {
+      // trigger sidebar.showInfo()
+      this.signalNodeUpdated(selectedNode);
+    }
+  }
+  getValidation(): boolean {
+    return this.validation;
   }
 
   walk(
@@ -107,7 +161,8 @@ export class NGFFGraph {
       loaded: !('path' in node),
       resolvedPath,
       error: false,
-      collapsed: false
+      collapsed: false,
+      selected: false
     });
 
     if (this.computeExtraEdges) {
@@ -206,6 +261,7 @@ export class NGFFGraph {
     }
 
     // Finally, let's load the target node
+    this.selectNode(currentNode);
     await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
 
     return currentNode!;
@@ -227,6 +283,7 @@ export class NGFFGraph {
         await this.recursiveLoad(autoloadDepth === Infinity ? Infinity : autoloadDepth - 1);
       }
     }
+    this.signalChange();
   }
 
   buildHierarchy() {
@@ -237,7 +294,7 @@ export class NGFFGraph {
     if (node.loading || node.loaded || node.error || node.omeNode.type == 'singlescale') {
       return;
     }
-    this.signalError(null);
+    // this.signalError(null);
     node.loading = true;
     try {
       switch (node.omeNode.path.type) {
