@@ -132,13 +132,17 @@ export class NGFFSidebar {
     const parentPath = node.resolvedPath;
     const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
 
-    const parentDir = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/)) || './';
+    // parentDir is e.g. ./grandparent/parent or . if resolvedPath is ./root.json
+    let parentDir = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
+    if (parentDir == '.') {
+      parentDir = './';
+    }
     let resolvedPath = parentDir;
     if (nodePath) {
       resolvedPath = this.graph.resolvePath(parentDir, nodePath);
     }
     const baseUrl = resolvedPath.startsWith('./')
-      ? prefix + resolvedPath.substring(1)
+      ? this.graph.resolvePath(prefix, resolvedPath)
       : resolvedPath;
 
     if (nodePath && 'path' in node.omeNode) {
@@ -150,7 +154,7 @@ export class NGFFSidebar {
       this.addKeyValue('Path', `${nodePath} (type: ${node.omeNode.path?.type})`);
     } else {
       const fullUrl = parentPath.startsWith('./') ? prefix + parentPath.substring(1) : parentPath;
-      this.addKeyValueLink('Node in-line in file:', fullUrl);
+      this.addKeyValueLink('Node in-line in file', fullUrl);
     }
 
     // For multiscale nodes, display a thumbnail image

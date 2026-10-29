@@ -299,7 +299,10 @@ export class NGFFGraph {
     }
     node.loading = true;
     try {
-      const parentDir = node.resolvedPath.substring(0, node.resolvedPath.search(/\/[^/]+\.json$/));
+      let parentDir = node.resolvedPath.substring(0, node.resolvedPath.search(/\/[^/]+\.json$/));
+      if (parentDir == '.') {
+        parentDir = './';
+      }
       let loadPath = this.resolvePath(parentDir, node.omeNode.path.path);
       switch (node.omeNode.path.type) {
         // node.path.path will be e.g. './subdir/node.json'
