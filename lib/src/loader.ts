@@ -28,6 +28,10 @@ export class NGFFLoader {
     this.addTrustedDomain(url.hostname);
   }
 
+  getSource() {
+    return this.source;
+  }
+
   getPrefix() {
     return this.prefix;
   }

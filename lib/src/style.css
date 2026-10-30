@@ -157,6 +157,14 @@ Show the "sidebar" below the graph
   overflow-x: scroll;
 }
 
+.ngff-rfc8-viewer-sidebar-content a {
+  color: #6cafff;
+  text-decoration: none;
+}
+.ngff-rfc8-viewer-sidebar-content a:hover {
+  text-decoration: underline;
+}
+
 .ngff-rfc8-viewer-sidebar-content div.ngff-rfc8-viewer-error {
   margin-top: 10px;
   padding: 5px 10px;
