@@ -4,12 +4,14 @@ import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
 
 const THUMBNAIL_SIZE = 100;
+const SCROLL_DEBOUNCE_MS = 50;
 
 export class ImagesView {
   private graph: NGFFGraph;
   private containerId: string;
   private rootElement: HTMLDivElement;
   private unsubscribers: Array<() => void> = [];
+  private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
 
   constructor(graph: NGFFGraph, containerId: string) {
     this.graph = graph;
@@ -22,6 +24,7 @@ export class ImagesView {
         this.selectNode();
       }
     };
+    this.rootElement.addEventListener('scroll', this.onScroll);
     document.getElementById(this.containerId)?.appendChild(this.rootElement);
 
     this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
@@ -47,6 +50,29 @@ export class ImagesView {
 
   selectNode(node?: D3Node) {
     this.graph.selectNode(node!);
+  }
+
+  private onScroll = () => {
+    clearTimeout(this.scrollTimeout);
+    this.scrollTimeout = setTimeout(() => this.loadVisibleThumbnails(), SCROLL_DEBOUNCE_MS);
+  };
+
+  // Load thumbnails for image rows that are visible (within rootElement and the window)
+  // and don't have one yet.
+  private loadVisibleThumbnails() {
+    const rootRect = this.rootElement.getBoundingClientRect();
+    const top = Math.max(rootRect.top, 0);
+    const bottom = Math.min(rootRect.bottom, window.innerHeight);
+    const rows = this.rootElement.querySelectorAll<HTMLElement>(`.${CSS_CLASS_PREFIX}image-row`);
+    rows.forEach((row) => {
+      if (row.querySelector('img') !== null) {
+        return;
+      }
+      const rect = row.getBoundingClientRect();
+      if (rect.bottom > top && rect.top < bottom) {
+        this.loadThumbnail(row);
+      }
+    });
   }
 
   loadThumbnail(nodeElement: HTMLElement) {
@@ -114,6 +140,7 @@ export class ImagesView {
     descendants.forEach((d) => {
       this.renderNode(d.data);
     });
+    this.loadVisibleThumbnails();
   }
 
   renderNode(node: D3Node) {
@@ -158,6 +185,8 @@ export class ImagesView {
   }
 
   destroy() {
+    clearTimeout(this.scrollTimeout);
+    this.rootElement.removeEventListener('scroll', this.onScroll);
     this.unsubscribers.forEach((unsubscribe) => unsubscribe());
     this.unsubscribers = [];
     this.rootElement.remove();
