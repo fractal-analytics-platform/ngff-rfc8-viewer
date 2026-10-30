@@ -15,7 +15,9 @@ export class ListView {
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}list-graph-root`);
     this.rootElement.onclick = (event) => {
-      if (event.target !== this.rootElement) return;
+      if (event.target !== this.rootElement) {
+        return;
+      }
       this.selectNode();
     };
     document.getElementById(this.containerId)?.appendChild(this.rootElement);

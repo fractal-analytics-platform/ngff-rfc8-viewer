@@ -16,7 +16,7 @@ export class ImagesView {
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}images-graph-root`);
     this.rootElement.onclick = (event) => {
-      if (event.target == this.rootElement) {
+      if (event.target === this.rootElement) {
         this.selectNode();
       }
     };
@@ -27,7 +27,7 @@ export class ImagesView {
       graph.addNodeSelectedListener(() => {
         const descendants = this.graph.getHierarchy().descendants();
         descendants.forEach((d) => {
-          if (d.data.omeNode.type == 'multiscale') {
+          if (d.data.omeNode.type === 'multiscale') {
             const nodeElement = document.getElementById(`image-row-node-${d.data.id}`);
             if (nodeElement) {
               nodeElement.style.borderColor = d.data.selected
@@ -74,7 +74,9 @@ export class ImagesView {
 
   renderNode(node: D3Node) {
     // We only render multiscale nodes
-    if (!(node.omeNode.type == 'multiscale')) return;
+    if (!(node.omeNode.type === 'multiscale')) {
+      return;
+    }
 
     const nodeElement = document.createElement('div');
     nodeElement.classList.add(`${CSS_CLASS_PREFIX}image-row`);
@@ -91,7 +93,7 @@ export class ImagesView {
     // add any node 'path'...
     let fullUrl = parentPath;
     const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
-    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type == 'zarr' : false;
+    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
     if (nodePath) {
       const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
       fullUrl = this.graph.resolvePath(parent, nodePath);

@@ -31,7 +31,7 @@ export class NGFFSidebar {
         // showInfo() to display thumbnail
         if (
           this.node &&
-          this.node.omeNode.type == 'multiscale' &&
+          this.node.omeNode.type === 'multiscale' &&
           !('nodes' in this.node.omeNode)
         ) {
           this.showInfo(this.node);
@@ -87,7 +87,9 @@ export class NGFFSidebar {
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      if (!resizing) return;
+      if (!resizing) {
+        return;
+      }
 
       const delta = e.clientX - startX;
       const newWidth = startWidth - delta;
@@ -137,7 +139,7 @@ export class NGFFSidebar {
     // add any node 'path'...
     let fullUrl = parentPath;
     const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
-    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type == 'zarr' : false;
+    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
     if (nodePath) {
       const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
       fullUrl = this.graph.resolvePath(parent, nodePath);
@@ -155,7 +157,7 @@ export class NGFFSidebar {
     }
 
     // For multiscale nodes, display a thumbnail image
-    if (node.omeNode.type == 'multiscale') {
+    if (node.omeNode.type === 'multiscale') {
       const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
       // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
       if ('nodes' in node.omeNode) {
@@ -170,7 +172,7 @@ export class NGFFSidebar {
     if (node.omeNode.attributes) {
       this.addTitle('Attributes');
       const pre = document.createElement('pre');
-      pre.innerText = JSON.stringify(node.omeNode.attributes, null, 2);
+      pre.textContent = JSON.stringify(node.omeNode.attributes, null, 2);
       this.content.appendChild(pre);
     } else {
       this.addKeyValue('Attributes', '-');
@@ -204,7 +206,7 @@ export class NGFFSidebar {
               ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
               : [];
 
-          error.innerText = 'Validation errors, see below';
+          error.textContent = 'Validation errors, see below';
           for (const schemaError of err.schemaErrors.filter(
             (se) => !toIgnore.includes(se.message)
           )) {
@@ -212,12 +214,12 @@ export class NGFFSidebar {
             console.log('Schema Validation error:', schemaError);
             const error = document.createElement('pre');
             error.classList.add(`${CSS_CLASS_PREFIX}`, `${CSS_CLASS_PREFIX}error`);
-            error.innerText = JSON.stringify(schemaError, null, 2);
+            error.textContent = JSON.stringify(schemaError, null, 2);
             this.content.appendChild(error);
             errorCount++;
           }
         } else {
-          error.innerText = err.message;
+          error.textContent = err.message;
           errorCount++;
         }
         if (errorCount === 0) {
@@ -248,7 +250,7 @@ export class NGFFSidebar {
   private addTitle(value: string) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
-    title.innerText = value;
+    title.textContent = value;
     p.appendChild(title);
     this.content.appendChild(p);
   }
@@ -257,8 +259,8 @@ export class NGFFSidebar {
     const p = document.createElement('p');
     const title = document.createElement('strong');
     const text = document.createElement('span');
-    title.innerText = `${key}: `;
-    text.innerText = value || '-';
+    title.textContent = `${key}: `;
+    text.textContent = value || '-';
     p.appendChild(title);
     p.appendChild(text);
     this.content.appendChild(p);
@@ -268,9 +270,9 @@ export class NGFFSidebar {
     const p = document.createElement('p');
     const title = document.createElement('strong');
     const link = document.createElement('a');
-    title.innerText = `${key}: `;
+    title.textContent = `${key}: `;
     link.href = url;
-    link.innerText = url;
+    link.textContent = url;
     link.target = '_blank';
     p.appendChild(title);
     p.appendChild(link);

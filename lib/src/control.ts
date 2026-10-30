@@ -168,14 +168,14 @@ export default class NGFFControlPanel {
     });
 
     // Validate button - toggle true/false
-    const validate = new URLSearchParams(window.location.search).get('validate') == 'true';
+    const validate = new URLSearchParams(window.location.search).get('validate') === 'true';
     const vBtn = addButton(
       validate ? `${CSS_CLASS_PREFIX}shield-fill-check` : `${CSS_CLASS_PREFIX}shield-check`,
       element,
       'Validate selected node with JSON Schema',
       () => {
         const params = new URLSearchParams(window.location.search);
-        params.set('validate', params.get('validate') == 'true' ? 'false' : 'true');
+        params.set('validate', params.get('validate') === 'true' ? 'false' : 'true');
         history.pushState(null, '', `?${params.toString()}`);
         this.refreshView();
       }
@@ -206,7 +206,7 @@ export default class NGFFControlPanel {
     }
 
     // 'validate' -> set the appropriate validation state
-    const validate = queryParams.get('validate') == 'true';
+    const validate = queryParams.get('validate') === 'true';
     const valBtn = document.getElementById(`${CSS_CLASS_PREFIX}validate-btn`);
     // change of validation state...
     if (valBtn) {
