@@ -85,15 +85,26 @@ export class ImagesView {
 
     // Add Thumbnail for the node
     const prefix = this.graph.getLoader().getPrefix();
-    let resolvedPath = node.resolvedPath;
-    if ('path' in node.omeNode && node.omeNode.path?.path) {
-      resolvedPath = this.graph.resolvePath(node.resolvedPath, node.omeNode.path.path);
+    let parentPath = node.resolvedPath;
+    // Convert relative parentPath to an absolute URL if it starts with './'
+    if (parentPath.startsWith('./')) {
+      parentPath = this.graph.resolvePath(prefix, parentPath);
     }
+    // add any node 'path'...
+    let fullUrl = parentPath;
+    const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
+    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
+    if (nodePath) {
+      const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
+      fullUrl = this.graph.resolvePath(parent, nodePath);
+    }
+    if (zarrType) {
+      fullUrl += '/zarr.json';
+    }
+    const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
+
     let thumbnailElement: HTMLElement;
-    // resolvedPath either starts with './' or is an absolute URL
-    const baseUrl = resolvedPath.startsWith('./')
-      ? prefix + resolvedPath.substring(1)
-      : resolvedPath;
+
     // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
     if ('nodes' in node.omeNode) {
       thumbnailElement = createThumbnailImg(node, baseUrl, 100);

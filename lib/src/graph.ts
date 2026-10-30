@@ -187,7 +187,10 @@ export class NGFFGraph {
   }
 
   async render(ome: OmeNode) {
-    this.walk(this.nodes, ome, null, './', this.extraEdges);
+    const source = this.loader.getSource();
+    const prefix = this.loader.getPrefix();
+    const rootName = '.' + source.replace(prefix, '');
+    this.walk(this.nodes, ome, null, rootName, this.extraEdges);
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -300,32 +303,28 @@ export class NGFFGraph {
     }
     node.loading = true;
     try {
+      let parentDir = node.resolvedPath.substring(0, node.resolvedPath.search(/\/[^/]+\.json$/));
+      if (parentDir === '.') {
+        parentDir = './';
+      }
+      let loadPath = this.resolvePath(parentDir, node.omeNode.path.path);
       switch (node.omeNode.path.type) {
+        // node.path.path will be e.g. './subdir/node.json'
         case 'json':
-          {
-            const resolvedPath = this.resolvePath(node.resolvedPath, node.omeNode.path.path);
-            const ome = await this.loader.loadNode(resolvedPath);
-            // just updates the 'attributes' from ome - NOT the child ome.nodes
-            this.updateNode(node, ome);
-            this.appendSubtree(
-              ome,
-              resolvedPath.substring(0, resolvedPath.search(/\/[^/]+\.json$/))
-            );
-          }
           break;
+        // node.path.path will be e.g. './subdir/image.zarr' (directory)
         case 'zarr':
           {
-            const ome = await this.loader.loadNode(
-              this.resolvePath(node.resolvedPath, `${node.omeNode.path.path}/zarr.json`)
-            );
-            this.updateNode(node, ome);
-            this.appendSubtree(ome, this.resolvePath(node.resolvedPath, node.omeNode.path.path));
+            loadPath = `${loadPath}/zarr.json`;
           }
           break;
         default:
           this.signalError(`Unexpected path type: ${node.omeNode.path.type}`);
           break;
       }
+      const ome = await this.loader.loadNode(loadPath);
+      this.updateNode(node, ome);
+      this.appendSubtree(ome, loadPath);
     } catch (err) {
       if (err instanceof UntrustedDomainError) {
         node.loading = false;
