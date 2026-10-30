@@ -216,6 +216,10 @@ export class NGFFGraph {
     return node.omeNode.id || node.omeNode?.name;
   }
 
+  getNode(id: string): D3Node | undefined {
+    return this.nodes.find((n) => n.id === id);
+  }
+
   getChildren(node: D3Node): Array<D3Node> {
     return this.nodes.filter((n) => n.parentId === node.id);
   }

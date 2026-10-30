@@ -3,6 +3,8 @@ import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
 
+const THUMBNAIL_SIZE = 100;
+
 export class ImagesView {
   private graph: NGFFGraph;
   private containerId: string;
@@ -47,6 +49,48 @@ export class ImagesView {
     this.graph.selectNode(node!);
   }
 
+  loadThumbnail(nodeElement: HTMLElement) {
+    const nodeId = nodeElement.id.replace('image-row-node-', '');
+    const node = this.graph.getNode(nodeId);
+    if (!node) {
+      return;
+    }
+
+    // Add Thumbnail for the node
+    const prefix = this.graph.getLoader().getPrefix();
+    let parentPath = node.resolvedPath;
+    // Convert relative parentPath to an absolute URL if it starts with './'
+    if (parentPath.startsWith('./')) {
+      parentPath = this.graph.resolvePath(prefix, parentPath);
+    }
+    // add any node 'path'...
+    let fullUrl = parentPath;
+    const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
+    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
+    if (nodePath) {
+      const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
+      fullUrl = this.graph.resolvePath(parent, nodePath);
+    }
+    if (zarrType) {
+      fullUrl += '/zarr.json';
+    }
+    const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
+
+    const existingThumbnail = nodeElement.querySelector(`.${CSS_CLASS_PREFIX}thumbnail-container`);
+    if (existingThumbnail) {
+      existingThumbnail.remove();
+    }
+    let thumbnailElement: HTMLElement;
+    if ('nodes' in node.omeNode) {
+      thumbnailElement = createThumbnailImg(node, baseUrl, THUMBNAIL_SIZE);
+    } else {
+      // or traverse the graph to get child nodes (will get empty list if node not loaded)
+      const children = this.graph.getChildren(node).map((child) => child.omeNode);
+      thumbnailElement = createThumbnailImg(node, baseUrl, THUMBNAIL_SIZE, children);
+    }
+    nodeElement.prepend(thumbnailElement);
+  }
+
   renderTree() {
     this.rootElement.innerHTML = '';
     const unloadedCollections = this.graph.countUnloadedNodes('collection');
@@ -83,37 +127,11 @@ export class ImagesView {
     nodeElement.id = `image-row-node-${node.id}`;
     nodeElement.style.borderColor = node.selected ? STROKE_COLORS.selected : 'transparent';
 
-    // Add Thumbnail for the node
-    const prefix = this.graph.getLoader().getPrefix();
-    let parentPath = node.resolvedPath;
-    // Convert relative parentPath to an absolute URL if it starts with './'
-    if (parentPath.startsWith('./')) {
-      parentPath = this.graph.resolvePath(prefix, parentPath);
-    }
-    // add any node 'path'...
-    let fullUrl = parentPath;
-    const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
-    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
-    if (nodePath) {
-      const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
-      fullUrl = this.graph.resolvePath(parent, nodePath);
-    }
-    if (zarrType) {
-      fullUrl += '/zarr.json';
-    }
-    const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
-
-    let thumbnailElement: HTMLElement;
-
-    // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
-    if ('nodes' in node.omeNode) {
-      thumbnailElement = createThumbnailImg(node, baseUrl, 100);
-    } else {
-      // or traverse the graph to get child nodes (will get empty list if node not loaded)
-      const children = this.graph.getChildren(node).map((child) => child.omeNode);
-      thumbnailElement = createThumbnailImg(node, baseUrl, 100, children);
-    }
-    nodeElement.appendChild(thumbnailElement);
+    const thumbnailPlaceholder = document.createElement('div');
+    thumbnailPlaceholder.style.width = `${THUMBNAIL_SIZE}px`;
+    thumbnailPlaceholder.style.height = `${THUMBNAIL_SIZE}px`;
+    thumbnailPlaceholder.classList.add(`${CSS_CLASS_PREFIX}thumbnail-container`);
+    nodeElement.appendChild(thumbnailPlaceholder);
 
     // Add image info (ID and parent IDs)
     const imgInfoElement = document.createElement('div');
@@ -129,12 +147,10 @@ export class ImagesView {
       await this.graph.loadNodeWithSignal(
         node as D3Node & { omeNode: OmeNode & { path: OmePath } }
       );
-      if (!isLoaded) {
+      const thumbLoaded = nodeElement.querySelector('img') !== null;
+      if (!isLoaded || !thumbLoaded) {
         // try again to show thumbnail...
-        thumbnailElement.remove();
-        const children = this.graph.getChildren(node).map((child) => child.omeNode);
-        thumbnailElement = createThumbnailImg(node, baseUrl, 100, children);
-        nodeElement.prepend(thumbnailElement);
+        this.loadThumbnail(nodeElement);
       }
     };
 
