@@ -75,7 +75,7 @@ export class ImagesView {
     });
   }
 
-  loadThumbnail(nodeElement: HTMLElement) {
+  async loadThumbnail(nodeElement: HTMLElement) {
     const nodeId = nodeElement.id.replace('image-row-node-', '');
     const node = this.graph.getNode(nodeId);
     if (!node) {
@@ -102,17 +102,22 @@ export class ImagesView {
     }
     const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
 
-    const existingThumbnail = nodeElement.querySelector(`.${CSS_CLASS_PREFIX}thumbnail-container`);
-    if (existingThumbnail) {
-      existingThumbnail.remove();
-    }
     let thumbnailElement: HTMLElement;
     if ('nodes' in node.omeNode) {
       thumbnailElement = createThumbnailImg(node, baseUrl, THUMBNAIL_SIZE);
     } else {
       // or traverse the graph to get child nodes (will get empty list if node not loaded)
+      if (!node.loaded) {
+        await this.graph.loadNodeWithSignal(
+          node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+        );
+      }
       const children = this.graph.getChildren(node).map((child) => child.omeNode);
       thumbnailElement = createThumbnailImg(node, baseUrl, THUMBNAIL_SIZE, children);
+    }
+    const existingThumbnail = nodeElement.querySelector(`.${CSS_CLASS_PREFIX}thumbnail-container`);
+    if (existingThumbnail) {
+      existingThumbnail.remove();
     }
     nodeElement.prepend(thumbnailElement);
   }
@@ -166,19 +171,9 @@ export class ImagesView {
     imgInfoElement.appendChild(document.createTextNode(this.graph.getParentsIds(node).join('/')));
     nodeElement.appendChild(imgInfoElement);
 
-    // Click on row to select node. If not loaded, load it and update the thumbnail.
+    // Click on row to select node.
     nodeElement.onclick = async () => {
       this.selectNode(node);
-      const isLoaded = node.loaded;
-      // even if loaded, the signal causes re-render to update selection
-      await this.graph.loadNodeWithSignal(
-        node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-      );
-      const thumbLoaded = nodeElement.querySelector('img') !== null;
-      if (!isLoaded || !thumbLoaded) {
-        // try again to show thumbnail...
-        this.loadThumbnail(nodeElement);
-      }
     };
 
     this.rootElement.appendChild(nodeElement);
