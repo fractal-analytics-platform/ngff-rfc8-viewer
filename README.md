@@ -19,18 +19,23 @@ To create new RFC-8 OME-Zarr collections, also check out the [ngio-collections](
 
 ## How to build the library
 
-First build the viewer library:
+Build the project via a single command through
+```bash
+npm run build-all
+```
+
+Note that this is equivalent to first building the viewer library
 ```bash
 cd lib
 npm ci
 npm run build
 ```
-
-Then you can build the root project, which is a demo page calling the library:
+and then the root project (which is a demo page calling the library)
 ```bash
 npm ci
 npm run build
 ```
+
 
 ## How to include the library
 
