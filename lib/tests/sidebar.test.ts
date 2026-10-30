@@ -105,7 +105,7 @@ describe('NGFFSidebar', () => {
           }
         })
       });
-      const loader = new NGFFLoader('https://example.com/');
+      const loader = new NGFFLoader('https://example.com/graph/root.json');
       const graph = new NGFFGraph(loader, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][1] as any);
@@ -119,7 +119,7 @@ describe('NGFFSidebar', () => {
       await vi.waitFor(() => {
         expect(element.querySelector('img')).toHaveAttribute('src', 'mock-image');
       });
-      expect(FetchStore).toHaveBeenCalledWith('https://example.com/');
+      expect(FetchStore).toHaveBeenCalledWith('https://example.com/graph');
     });
 
     it('multiscale, no in-line children, resolvedPath is relative path', async () => {
