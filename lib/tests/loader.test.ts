@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NGFFLoader } from '../src/loader';
 import type { OmeNode } from '../src/types';
+import { NGFFResolver } from '../src/resolver';
 
 describe('NGFFLoader', () => {
   const validOmeNode: OmeNode = {
@@ -16,24 +17,12 @@ describe('NGFFLoader', () => {
   });
 
   describe('constructor', () => {
-    it('should append zarr.json if source does not end with .json', () => {
-      const loader = new NGFFLoader('https://example.com/graph/');
-      expect(loader['source']).toBe('https://example.com/graph/zarr.json');
-      expect(loader['prefix']).toBe('https://example.com/graph');
-    });
-
-    it('should preserve original source if it ends with .json', () => {
-      const loader = new NGFFLoader('https://example.com/graph/data.json');
-      expect(loader['source']).toBe('https://example.com/graph/data.json');
-      expect(loader['prefix']).toBe('https://example.com/graph');
-    });
-
     it('should throw error for invalid URL in constructor', async () => {
-      expect(() => new NGFFLoader('not-a-valid-url')).toThrow('Source is not a valid URL');
+      expect(() => getLoader('not-a-valid-url')).toThrow('Source is not a valid URL');
     });
 
     it('should throw error for unsupported protocol in constructor', async () => {
-      expect(() => new NGFFLoader('ftp://example.com/image.json')).toThrow(
+      expect(() => getLoader('ftp://example.com/image.json')).toThrow(
         'Protocol ftp: is not supported'
       );
     });
@@ -42,7 +31,7 @@ describe('NGFFLoader', () => {
   describe('loadGraphData', () => {
     it('should successfully load graph data from valid URL', async () => {
       const source = 'https://example.com/zarr.json';
-      const loader = new NGFFLoader(source);
+      const loader = getLoader(source);
       mockValidOmeResponse();
       const result = await loader.loadGraphData();
       expect(result).toEqual(validOmeNode);
@@ -53,7 +42,7 @@ describe('NGFFLoader', () => {
   describe('loadNode', () => {
     it('should throw error for invalid URL in child node', async () => {
       const source = 'https://example.com/zarr.json';
-      const loader = new NGFFLoader(source);
+      const loader = getLoader(source);
       await expect(() => loader.loadNode('not-a-valid-url')).rejects.toThrow(
         'Source is not a valid URL'
       );
@@ -61,14 +50,14 @@ describe('NGFFLoader', () => {
 
     it('should throw error for invalid protocol in child node', async () => {
       const source = 'https://example.com/zarr.json';
-      const loader = new NGFFLoader(source);
+      const loader = getLoader(source);
       await expect(() => loader.loadNode('ftp://example.com/image.json')).rejects.toThrow(
         'Protocol ftp: is not supported'
       );
     });
 
     it('should load node with absolute URL and valid prefix', async () => {
-      const loader = new NGFFLoader('https://example.com/data');
+      const loader = getLoader('https://example.com/data');
       const nodeUrl = 'https://example.com/data/other/node.json';
       mockValidOmeResponse();
       const result = await loader.loadNode(nodeUrl);
@@ -77,7 +66,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should resolve relative paths starting with ./', async () => {
-      const loader = new NGFFLoader('https://example.com/data/image.json');
+      const loader = getLoader('https://example.com/data/image.json');
       mockValidOmeResponse();
       await loader.loadNode('./subdir/node.json');
       expect(global.fetch).toHaveBeenCalledWith(
@@ -87,7 +76,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should throw error on failed fetch response', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: false,
@@ -100,7 +89,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should throw error on invalid JSON response', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -115,7 +104,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should handle trusted and untrusted domains', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
       const externalSource = 'https://fractal.org/image.json';
       mockValidOmeResponse();
       await expect(loader.loadNode(externalSource)).rejects.toThrow(
@@ -129,14 +118,14 @@ describe('NGFFLoader', () => {
 
   describe('getOme', () => {
     it('should return ome property if it exists at top level', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
       mockValidOmeResponse();
       const result = await loader.loadGraphData();
       expect(result).toEqual(validOmeNode);
     });
 
     it('should return ome property from attributes if it exists there', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: async () => ({ attributes: { ome: validOmeNode } })
@@ -146,7 +135,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should prefer top-level ome over attributes.ome', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
       const topLevelOme = { ...validOmeNode, name: 'top-level' };
       const attributesOme = { ...validOmeNode, name: 'attributes' };
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -161,7 +150,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should throw error if ome field is missing', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: async () => ({})
@@ -171,7 +160,7 @@ describe('NGFFLoader', () => {
     });
 
     it('should throw error if attributes exists but does not contain ome', async () => {
-      const loader = new NGFFLoader('https://example.com/image.json');
+      const loader = getLoader('https://example.com/image.json');
       global.fetch = vi.fn().mockResolvedValueOnce({
         ok: true,
         json: async () => ({ attributes: {} })
@@ -180,6 +169,11 @@ describe('NGFFLoader', () => {
       await expect(loader.loadGraphData()).rejects.toThrow('Payload does not contain ome field');
     });
   });
+
+  function getLoader(source: string) {
+    const resolver = new NGFFResolver(source);
+    return new NGFFLoader(resolver);
+  }
 
   function mockValidOmeResponse() {
     global.fetch = vi.fn().mockResolvedValueOnce({

@@ -3,6 +3,7 @@ import { CSS_CLASS_PREFIX } from './constants';
 import type { D3Node } from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
+import type { NGFFResolver } from './resolver';
 
 const defaultWidth = 560;
 const minWidth = 150;
@@ -19,10 +20,12 @@ export class NGFFSidebar {
   private content: HTMLElement;
   private node: D3Node | null = null;
   private graph: NGFFGraph;
+  private resolver: NGFFResolver;
 
-  constructor(element: HTMLElement, graph: NGFFGraph) {
+  constructor(element: HTMLElement, graph: NGFFGraph, resolver: NGFFResolver) {
     this.element = element;
     this.graph = graph;
+    this.resolver = resolver;
 
     // Listen for loading & update events from the graph to refresh the sidebar if needed
     graph.addLoadingListener((loading) => {
@@ -130,35 +133,19 @@ export class NGFFSidebar {
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
 
-    const prefix = this.graph.getLoader().getPrefix();
-    let parentPath = node.resolvedPath;
-    // Convert relative parentPath to an absolute URL if it starts with './'
-    if (parentPath.startsWith('./')) {
-      parentPath = this.graph.resolvePath(prefix, parentPath);
-    }
-    // add any node 'path'...
-    let fullUrl = parentPath;
-    const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
-    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
-    if (nodePath) {
-      const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
-      fullUrl = this.graph.resolvePath(parent, nodePath);
-    }
-    if (zarrType) {
-      fullUrl += '/zarr.json';
-    }
+    const fullUrl = this.resolver.resolveNode(node, true);
 
     // Show link to fullUrl json and show path if available
-    if (nodePath && 'path' in node.omeNode) {
+    if ('path' in node.omeNode && node.omeNode.path) {
       this.addKeyValueLink('File loaded from', fullUrl);
-      this.addKeyValue('Path', `${nodePath} (type: ${node.omeNode.path?.type})`);
+      this.addKeyValue('Path', `${node.omeNode.path.path} (type: ${node.omeNode.path.type})`);
     } else {
       this.addKeyValueLink('Node in-line in file', fullUrl);
     }
 
     // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type === 'multiscale') {
-      const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
+      const baseUrl = this.resolver.getDirectory(fullUrl);
       // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
       if ('nodes' in node.omeNode) {
         this.content.appendChild(createThumbnailImg(node, baseUrl, 150));

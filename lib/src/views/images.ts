@@ -2,19 +2,22 @@ import type { D3Node, OmeNode, OmePath } from './../types';
 import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
+import type { NGFFResolver } from '../resolver';
 
 const THUMBNAIL_SIZE = 100;
 const SCROLL_DEBOUNCE_MS = 50;
 
 export class ImagesView {
   private graph: NGFFGraph;
+  private resolver: NGFFResolver;
   private containerId: string;
   private rootElement: HTMLDivElement;
   private unsubscribers: Array<() => void> = [];
   private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  constructor(graph: NGFFGraph, containerId: string) {
+  constructor(graph: NGFFGraph, resolver: NGFFResolver, containerId: string) {
     this.graph = graph;
+    this.resolver = resolver;
     this.containerId = containerId;
 
     this.rootElement = document.createElement('div');
@@ -83,24 +86,8 @@ export class ImagesView {
     }
 
     // Add Thumbnail for the node
-    const prefix = this.graph.getLoader().getPrefix();
-    let parentPath = node.resolvedPath;
-    // Convert relative parentPath to an absolute URL if it starts with './'
-    if (parentPath.startsWith('./')) {
-      parentPath = this.graph.resolvePath(prefix, parentPath);
-    }
-    // add any node 'path'...
-    let fullUrl = parentPath;
-    const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
-    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
-    if (nodePath) {
-      const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
-      fullUrl = this.graph.resolvePath(parent, nodePath);
-    }
-    if (zarrType) {
-      fullUrl += '/zarr.json';
-    }
-    const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
+    const fullUrl = this.resolver.resolveNode(node, true);
+    const baseUrl = this.resolver.getDirectory(fullUrl);
 
     let thumbnailElement: HTMLElement;
     if ('nodes' in node.omeNode) {
