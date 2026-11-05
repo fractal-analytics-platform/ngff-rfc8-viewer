@@ -112,6 +112,10 @@ export default class NGFFControlPanel {
       const params = new URLSearchParams(window.location.search);
       params.delete('source');
       params.delete('select');
+      window.location.replace('#');
+      if (typeof window.history.replaceState === 'function') {
+        history.replaceState({}, '', window.location.href.slice(0, -1));
+      }
       window.location.search = params.toString();
     });
 
