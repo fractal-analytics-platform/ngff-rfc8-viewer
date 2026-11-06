@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NGFFLoader } from '../src/loader';
+import { NGFFResolver } from '../src/resolver';
 import { NGFFGraph } from '../src/graph';
 import { NGFFSidebar } from '../src/sidebar';
 import '@testing-library/jest-dom/vitest';
@@ -105,13 +105,13 @@ describe('NGFFSidebar', () => {
           }
         })
       });
-      const loader = new NGFFLoader('https://example.com/graph/root.json');
-      const graph = new NGFFGraph(loader, 0);
+      const resolver = new NGFFResolver('https://example.com/graph/root.json');
+      const graph = new NGFFGraph(resolver, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][1] as any);
 
       const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, graph);
+      const sidebar = new NGFFSidebar(element, graph, resolver);
       sidebar.showInfo(graph['nodes'][1]);
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
@@ -143,13 +143,13 @@ describe('NGFFSidebar', () => {
             }
           })
         });
-      const loader = new NGFFLoader('https://example.com/graph/');
-      const graph = new NGFFGraph(loader, 0);
+      const resolver = new NGFFResolver('https://example.com/graph/');
+      const graph = new NGFFGraph(resolver, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][1] as any);
 
       const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, graph);
+      const sidebar = new NGFFSidebar(element, graph, resolver);
       sidebar.showInfo(graph['nodes'][1]);
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
@@ -195,14 +195,14 @@ describe('NGFFSidebar', () => {
             }
           })
         });
-      const loader = new NGFFLoader('https://example.com/');
-      const graph = new NGFFGraph(loader, 0);
+      const resolver = new NGFFResolver('https://example.com/');
+      const graph = new NGFFGraph(resolver, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][0] as any);
       await graph.loadNode(graph['nodes'][1] as any);
 
       const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, graph);
+      const sidebar = new NGFFSidebar(element, graph, resolver);
       sidebar.showInfo(graph['nodes'][1]);
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');

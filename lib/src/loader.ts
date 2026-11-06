@@ -1,3 +1,4 @@
+import type { NGFFResolver } from './resolver';
 import type { OmeNode } from './types';
 import { validateRequiredOmeStructure } from './validation';
 
@@ -10,44 +11,24 @@ export class UntrustedDomainError extends Error {
 }
 
 export class NGFFLoader {
-  private source: string;
-  private prefix: string;
+  private resolver: NGFFResolver;
   private trustedDomains: string[] = [];
 
-  constructor(source: string) {
-    this.source = source;
-    if (!this.source.endsWith('.json')) {
-      this.source += 'zarr.json';
-    }
-
-    this.prefix = this.source.endsWith('.json')
-      ? this.source.substring(0, this.source.search(/\/[^/]+\.json$/))
-      : this.source;
-
-    const url = this.checkUrl(this.source);
+  constructor(resolver: NGFFResolver) {
+    this.resolver = resolver;
+    const url = this.checkUrl(this.resolver.getSource());
     this.addTrustedDomain(url.hostname);
   }
 
-  getSource() {
-    return this.source;
-  }
-
-  getPrefix() {
-    return this.prefix;
-  }
-
   async loadGraphData(): Promise<OmeNode> {
-    return await this.loadNode(this.source);
+    return await this.loadNode(this.resolver.getSource());
   }
 
   async loadNode(source: string): Promise<OmeNode> {
-    if (source.startsWith('./')) {
-      source = `${this.prefix}${source.substring(1)}`;
-    } else {
-      const url = this.checkUrl(source);
-      if (!this.trustedDomains.includes(url.hostname)) {
-        throw new UntrustedDomainError(url.hostname);
-      }
+    source = this.resolver.getAbsoluteUrl(source);
+    const url = this.checkUrl(source);
+    if (!this.trustedDomains.includes(url.hostname)) {
+      throw new UntrustedDomainError(url.hostname);
     }
     const response = await fetch(source, {
       mode: 'cors',

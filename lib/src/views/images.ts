@@ -2,19 +2,23 @@ import type { D3Node, OmeNode, OmePath } from './../types';
 import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
+import type { NGFFResolver } from '../resolver';
 
 const THUMBNAIL_SIZE = 100;
 const SCROLL_DEBOUNCE_MS = 50;
 
 export class ImagesView {
   private graph: NGFFGraph;
+  private resolver: NGFFResolver;
   private containerId: string;
   private rootElement: HTMLDivElement;
   private unsubscribers: Array<() => void> = [];
   private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
+  private rendering = false;
 
-  constructor(graph: NGFFGraph, containerId: string) {
+  constructor(graph: NGFFGraph, resolver: NGFFResolver, containerId: string) {
     this.graph = graph;
+    this.resolver = resolver;
     this.containerId = containerId;
 
     this.rootElement = document.createElement('div');
@@ -59,20 +63,22 @@ export class ImagesView {
 
   // Load thumbnails for image rows that are visible (within rootElement and the window)
   // and don't have one yet.
-  private loadVisibleThumbnails() {
+  private async loadVisibleThumbnails() {
     const rootRect = this.rootElement.getBoundingClientRect();
     const top = Math.max(rootRect.top, 0);
     const bottom = Math.min(rootRect.bottom, window.innerHeight);
     const rows = this.rootElement.querySelectorAll<HTMLElement>(`.${CSS_CLASS_PREFIX}image-row`);
+    const thumbnailPromises: Promise<void>[] = [];
     rows.forEach((row) => {
       if (row.querySelector('img') !== null) {
         return;
       }
       const rect = row.getBoundingClientRect();
       if (rect.bottom > top && rect.top < bottom) {
-        this.loadThumbnail(row);
+        thumbnailPromises.push(this.loadThumbnail(row));
       }
     });
+    await Promise.all(thumbnailPromises);
   }
 
   async loadThumbnail(nodeElement: HTMLElement) {
@@ -83,24 +89,8 @@ export class ImagesView {
     }
 
     // Add Thumbnail for the node
-    const prefix = this.graph.getLoader().getPrefix();
-    let parentPath = node.resolvedPath;
-    // Convert relative parentPath to an absolute URL if it starts with './'
-    if (parentPath.startsWith('./')) {
-      parentPath = this.graph.resolvePath(prefix, parentPath);
-    }
-    // add any node 'path'...
-    let fullUrl = parentPath;
-    const nodePath = 'path' in node.omeNode ? node.omeNode.path?.path : undefined;
-    const zarrType = 'path' in node.omeNode ? node.omeNode.path?.type === 'zarr' : false;
-    if (nodePath) {
-      const parent = parentPath.substring(0, parentPath.search(/\/[^/]+\.json$/));
-      fullUrl = this.graph.resolvePath(parent, nodePath);
-    }
-    if (zarrType) {
-      fullUrl += '/zarr.json';
-    }
-    const baseUrl = fullUrl.substring(0, fullUrl.search(/\/[^/]+\.json$/));
+    const fullUrl = this.resolver.resolveNode(node, true);
+    const baseUrl = this.resolver.getDirectory(fullUrl);
 
     let thumbnailElement: HTMLElement;
     if ('nodes' in node.omeNode) {
@@ -122,7 +112,11 @@ export class ImagesView {
     nodeElement.prepend(thumbnailElement);
   }
 
-  renderTree() {
+  async renderTree() {
+    if (this.rendering) {
+      return;
+    }
+    this.rendering = true;
     this.rootElement.innerHTML = '';
     const unloadedCollections = this.graph.countUnloadedNodes('collection');
     const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
@@ -145,7 +139,8 @@ export class ImagesView {
     descendants.forEach((d) => {
       this.renderNode(d.data);
     });
-    this.loadVisibleThumbnails();
+    await this.loadVisibleThumbnails();
+    this.rendering = false;
   }
 
   renderNode(node: D3Node) {

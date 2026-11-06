@@ -1,10 +1,12 @@
 import * as d3 from 'd3';
 import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
-import { UntrustedDomainError, type NGFFLoader } from './loader';
+import { NGFFLoader, UntrustedDomainError } from './loader';
+import type { NGFFResolver } from './resolver';
 
 type Unsubscribe = () => void;
 
 export class NGFFGraph {
+  private resolver: NGFFResolver;
   private loader: NGFFLoader;
   private autoloadDepth: number;
   private computeExtraEdges: ExtraEdgesFn | undefined;
@@ -26,11 +28,12 @@ export class NGFFGraph {
   private lastGeneratedId = 0;
 
   constructor(
-    loader: NGFFLoader,
+    resolver: NGFFResolver,
     autoloadDepth: number,
     computeExtraEdges: ExtraEdgesFn | undefined = undefined
   ) {
-    this.loader = loader;
+    this.resolver = resolver;
+    this.loader = new NGFFLoader(resolver);
     this.autoloadDepth = autoloadDepth;
     this.computeExtraEdges = computeExtraEdges;
   }
@@ -187,10 +190,7 @@ export class NGFFGraph {
   }
 
   async render(ome: OmeNode) {
-    const source = this.loader.getSource();
-    const prefix = this.loader.getPrefix();
-    const rootName = '.' + source.replace(prefix, '');
-    this.walk(this.nodes, ome, null, rootName, this.extraEdges);
+    this.walk(this.nodes, ome, null, this.resolver.getRootRelativePath(), this.extraEdges);
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -307,25 +307,7 @@ export class NGFFGraph {
     }
     node.loading = true;
     try {
-      let parentDir = node.resolvedPath.substring(0, node.resolvedPath.search(/\/[^/]+\.json$/));
-      if (parentDir === '.') {
-        parentDir = './';
-      }
-      let loadPath = this.resolvePath(parentDir, node.omeNode.path.path);
-      switch (node.omeNode.path.type) {
-        // node.path.path will be e.g. './subdir/node.json'
-        case 'json':
-          break;
-        // node.path.path will be e.g. './subdir/image.zarr' (directory)
-        case 'zarr':
-          {
-            loadPath = `${loadPath}/zarr.json`;
-          }
-          break;
-        default:
-          this.signalError(`Unexpected path type: ${node.omeNode.path.type}`);
-          break;
-      }
+      const loadPath = this.resolver.resolveNode(node);
       const ome = await this.loader.loadNode(loadPath);
       this.updateNode(node, ome);
       this.appendSubtree(ome, loadPath);
@@ -357,21 +339,6 @@ export class NGFFGraph {
     node.omeNode.attributes = { ...(node.omeNode.attributes || {}), ...ome.attributes };
     (ome as any).generatedId = node.id;
     this.signalNodeUpdated(node);
-  }
-
-  resolvePath(parentPath: string, path: string) {
-    if (!(path.startsWith('./') || path.startsWith('http')) || path.includes('..')) {
-      throw new Error(`Unsupported path "${path}"`);
-    }
-    if (path.startsWith('http')) {
-      return path;
-    }
-    parentPath = parentPath.replace(/^\.\//, '').replace(/\/$/, '');
-    path = path.replace(/^\.\//, '').replace(/\/$/, '');
-    if (parentPath.startsWith('http')) {
-      return `${parentPath}/${path}`;
-    }
-    return parentPath ? `./${parentPath}/${path}` : `./${path}`;
   }
 
   appendSubtree(ome: OmeNode, resolvedPath: string) {

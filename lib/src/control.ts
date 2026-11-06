@@ -4,9 +4,11 @@ import { ImagesView } from './views/images';
 import { ListView } from './views/list';
 import { TreeView } from './views/tree';
 import { ErrorAlert } from './error';
+import type { NGFFResolver } from './resolver';
 
 export default class NGFFControlPanel {
   private graph: NGFFGraph;
+  private resolver: NGFFResolver;
 
   private spinner: HTMLElement;
   private loadAllBtn: HTMLButtonElement;
@@ -15,9 +17,10 @@ export default class NGFFControlPanel {
   private graphContainerId: string;
   private ignoreEvents: boolean = false;
 
-  constructor(element: HTMLElement, graph: NGFFGraph, containerId: string) {
+  constructor(element: HTMLElement, graph: NGFFGraph, resolver: NGFFResolver, containerId: string) {
     this.graphContainerId = containerId;
     this.graph = graph;
+    this.resolver = resolver;
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
 
     new ErrorAlert(graph, containerId);
@@ -233,7 +236,7 @@ export default class NGFFControlPanel {
           if (this.view) {
             this.view.destroy();
           }
-          this.view = new ImagesView(this.graph, this.graphContainerId!);
+          this.view = new ImagesView(this.graph, this.resolver, this.graphContainerId!);
         }
         break;
       case 'list':

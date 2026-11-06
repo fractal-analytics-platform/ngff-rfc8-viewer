@@ -2,7 +2,7 @@ import { CSS_CLASS_PREFIX } from './constants';
 import NGFFControlPanel from './control';
 import { NGFFGraph } from './graph';
 import { createHomepage } from './homepage';
-import { NGFFLoader } from './loader';
+import { NGFFResolver } from './resolver';
 import { NGFFSidebar } from './sidebar';
 
 export default class NGFFViewer {
@@ -53,18 +53,18 @@ export default class NGFFViewer {
     element.appendChild(viewerContainer);
 
     try {
-      const loader = new NGFFLoader(source);
-      this.graph = new NGFFGraph(loader, autoloadDepth);
+      const resolver = new NGFFResolver(source);
+      this.graph = new NGFFGraph(resolver, autoloadDepth);
       this.graph.setValidation(validate);
 
       // sidebar listens to graph update and load events
-      new NGFFSidebar(sidebar, this.graph);
+      new NGFFSidebar(sidebar, this.graph, resolver);
 
       // When page loads, we first load the graph's root...
       await this.graph.loadRoot();
 
       // control listens to graph events and calls viewer.refreshView() when necessary
-      new NGFFControlPanel(controlPanel, this.graph, this.graphContainerId);
+      new NGFFControlPanel(controlPanel, this.graph, resolver, this.graphContainerId);
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';
