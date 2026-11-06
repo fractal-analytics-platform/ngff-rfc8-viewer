@@ -14,6 +14,7 @@ export class ImagesView {
   private rootElement: HTMLDivElement;
   private unsubscribers: Array<() => void> = [];
   private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
+  private rendering = false;
 
   constructor(graph: NGFFGraph, resolver: NGFFResolver, containerId: string) {
     this.graph = graph;
@@ -62,20 +63,22 @@ export class ImagesView {
 
   // Load thumbnails for image rows that are visible (within rootElement and the window)
   // and don't have one yet.
-  private loadVisibleThumbnails() {
+  private async loadVisibleThumbnails() {
     const rootRect = this.rootElement.getBoundingClientRect();
     const top = Math.max(rootRect.top, 0);
     const bottom = Math.min(rootRect.bottom, window.innerHeight);
     const rows = this.rootElement.querySelectorAll<HTMLElement>(`.${CSS_CLASS_PREFIX}image-row`);
+    const thumbnailPromises: Promise<void>[] = [];
     rows.forEach((row) => {
       if (row.querySelector('img') !== null) {
         return;
       }
       const rect = row.getBoundingClientRect();
       if (rect.bottom > top && rect.top < bottom) {
-        this.loadThumbnail(row);
+        thumbnailPromises.push(this.loadThumbnail(row));
       }
     });
+    await Promise.all(thumbnailPromises);
   }
 
   async loadThumbnail(nodeElement: HTMLElement) {
@@ -109,7 +112,11 @@ export class ImagesView {
     nodeElement.prepend(thumbnailElement);
   }
 
-  renderTree() {
+  async renderTree() {
+    if (this.rendering) {
+      return;
+    }
+    this.rendering = true;
     this.rootElement.innerHTML = '';
     const unloadedCollections = this.graph.countUnloadedNodes('collection');
     const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
@@ -132,7 +139,8 @@ export class ImagesView {
     descendants.forEach((d) => {
       this.renderNode(d.data);
     });
-    this.loadVisibleThumbnails();
+    await this.loadVisibleThumbnails();
+    this.rendering = false;
   }
 
   renderNode(node: D3Node) {
