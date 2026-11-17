@@ -3,7 +3,7 @@ import { CSS_CLASS_PREFIX } from './constants';
 const exampleSources = [
   [
     'Basic example',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/main/data/e01_basic_example/root.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e01_basic_example/zarr.json'
   ],
   [
     'Basic example, with many images in a collection',
