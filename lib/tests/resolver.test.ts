@@ -93,7 +93,8 @@ describe('NGFFResolver', () => {
           omeNode: {
             path: {
               type: 'zarr',
-              path: './0'
+              format: 'relative',
+              href: './0'
             }
           }
         } as D3Node,
@@ -110,7 +111,8 @@ describe('NGFFResolver', () => {
           omeNode: {
             path: {
               type: 'json',
-              path: './0/node.json'
+              format: 'relative',
+              href: './0/node.json'
             }
           }
         } as D3Node,

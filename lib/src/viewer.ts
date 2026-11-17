@@ -60,11 +60,11 @@ export default class NGFFViewer {
       // sidebar listens to graph update and load events
       new NGFFSidebar(sidebar, this.graph, resolver);
 
-      // When page loads, we first load the graph's root...
-      await this.graph.loadRoot();
-
       // control listens to graph events and calls viewer.refreshView() when necessary
       new NGFFControlPanel(controlPanel, this.graph, resolver, this.graphContainerId);
+
+      // When page loads, we first load the graph's root...
+      await this.graph.loadRoot();
     } catch (err) {
       console.error(err);
       const error = err instanceof Error ? err.message : 'Unexpected error';

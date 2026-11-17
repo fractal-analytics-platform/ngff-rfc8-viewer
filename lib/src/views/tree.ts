@@ -82,6 +82,10 @@ export class TreeView {
 
   renderTree() {
     const hierarchy = this.graph.getHierarchy();
+    if (!hierarchy) {
+      return;
+    }
+
     this.width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
     this.height = Math.max(1, hierarchy.height) * NODE_SPACING;
     // We only want to set the viewBox on the first render
@@ -268,7 +272,7 @@ export class TreeView {
       .each(function (d) {
         // split long labels on multiple lines
         const charsPerLine = 15;
-        const name = d.data.omeNode.name;
+        const name = d.data.omeNode.name || d.data.omeNode.id;
 
         for (let i = 0; i < name.length; i += charsPerLine) {
           const line = name.substring(i, i + charsPerLine);

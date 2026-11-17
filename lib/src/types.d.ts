@@ -1,102 +1,87 @@
-export type OmeNodeAttributes = Record<string, any> & {
-  labels?: LabelsAttribute;
-  scene?: SceneAttribute;
-};
+import type { Axis } from 'ome-zarr.js';
 
-export type LabelsAttribute = {
-  source?: Array<{ id: string }>;
-  labelAttributes?: Array<{
-    labelValue: number;
-    color?: number[];
-  }>;
-};
-
-export type SceneAttribute = {
-  coordinateSystems?: CoordinateSystem[];
-  coordinateTransformations: CoordinateTransformation[];
+export type Declaration = {
+  id: string;
+  type: string;
 };
 
 export type OmePath = {
-  type: string;
-  path: string;
+  type: 'zarr' | 'json' | string; // extension point
+  format: 'relative' | string;
+  href: string;
 };
 
-export type OmeReference = {
-  id: string;
-  path?: OmePath;
+export type DownsamplingTransformation =
+  | {
+      type: 'scale';
+      scale: number[];
+    }
+  | {
+      type: 'translation';
+      translation: number[];
+    };
+
+export type Reference =
+  | string
+  | {
+      type: string;
+      ref: string;
+      path?: OmePath;
+    };
+
+export type Scene = {
+  coordinateTransformations: CoordinateTransformation[];
+  coordinateSystems?: CoordinateSystem[];
 };
+
+export type Trait = Scene;
+
+export type OmeArray = {
+  type: 'array';
+  name?: string;
+  path?: OmePath;
+  downsamplingTransformations?: DownsamplingTransformation[];
+};
+
+export type OmeNode = BaseOmeNode | CollectionOmeNode | MultiscaleOmeNode;
 
 export type BaseOmeNode = {
-  type: string;
-  id?: string;
-  name: string;
-  nodes?: OmeNode[];
-  attributes?: OmeNodeAttributes;
+  type: string; // extension point
+  id: string;
+  name?: string;
+  traits?: Trait[];
+  version?: string;
 };
 
-export type CollectionOmeNode = {
+export type CollectionOmeNode = BaseOmeNode & {
   type: 'collection';
-  id?: string;
-  name: string;
-  attributes?: OmeNodeAttributes;
-} & (
-  | {
-      nodes: OmeNode[];
-    }
-  | {
-      path: OmePath;
-    }
-);
+} & ({ nodes: OmeNode[] } | { path: OmePath });
 
-export type CoordinateTransformation = {
-  type: string;
-  input: OmeReference;
-  output: OmeReference;
-  // translation OR scale transformation
-  translation?: number[];
-  scale?: number[];
-};
+export type MultiscaleOmeNode = BaseOmeNode & {
+  type: 'multiscale';
+  coordinateSystems: CoordinateSystem[];
+  coordinateTransformations: CoordinateTransformation[];
+} & ({ data: OmeArray[] } | { path: OmePath });
 
 export type SinglescaleOmeNode = {
   type: 'singlescale';
   id?: string;
   name: string;
   path?: OmePath;
-  attributes: OmeNodeAttributes & {
-    coordinateTransformations: CoordinateTransformation[];
-  };
+  coordinateTransformations: CoordinateTransformation[];
+};
+
+export type CoordinateTransformation = DownsamplingTransformation & {
+  type: string;
+  input: Reference;
+  output: Reference;
 };
 
 export type CoordinateSystem = {
+  type: 'coordinate_system';
   id: string;
   name?: string;
-  axes: string[];
-};
-
-export type MultiscaleOmeNode = {
-  type: 'multiscale';
-  id?: string;
-  name: string;
-  attributes: OmeNodeAttributes & {
-    coordinateSystems: Record<any, any>;
-  };
-} & (
-  | {
-      nodes: SinglescaleOmeNode[];
-    }
-  | {
-      path?: OmePath;
-    }
-);
-
-export type OmeNode = (BaseOmeNode | CollectionOmeNode | SinglescaleOmeNode | MultiscaleOmeNode) & {
-  generatedId?: string;
-};
-
-export type Collection = {
-  ome: OmeNode & {
-    version: string;
-  };
+  axes: Axis[];
 };
 
 export type D3Node = {

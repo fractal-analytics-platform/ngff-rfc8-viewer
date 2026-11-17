@@ -52,19 +52,17 @@ export function createThumbnailImg(
   }
 
   function createDataset(node: SinglescaleOmeNode): omezarr.Dataset {
-    const scaleTransform = node.attributes.coordinateTransformations.find(
-      (ct) => ct.type === 'scale'
-    );
+    const scaleTransform = node.coordinateTransformations.find((ct) => ct.type === 'scale');
     if (!scaleTransform?.scale) {
-      showError('No scale transformation found for node: ' + node.path!.path);
-      console.log('No scale transformation found for node: ' + node.path!.path);
+      showError('No scale transformation found for node: ' + node.path!.href);
+      console.log('No scale transformation found for node: ' + node.path!.href);
       return {
-        path: node.path!.path,
+        path: node.path!.href,
         coordinateTransformations: []
       };
     }
     return {
-      path: node.path!.path,
+      path: node.path!.href,
       coordinateTransformations: [
         {
           type: 'scale' as const,
@@ -75,14 +73,13 @@ export function createThumbnailImg(
   }
 
   if (
-    rfc8multiscales.attributes &&
-    'coordinateSystems' in rfc8multiscales.attributes &&
-    Array.isArray(rfc8multiscales.attributes.coordinateSystems) &&
-    rfc8multiscales.attributes.coordinateSystems.length > 0 &&
-    Array.isArray(rfc8multiscales.attributes.coordinateSystems[0].axes)
+    'coordinateSystems' in rfc8multiscales &&
+    Array.isArray(rfc8multiscales.coordinateSystems) &&
+    rfc8multiscales.coordinateSystems.length > 0 &&
+    Array.isArray(rfc8multiscales.coordinateSystems[0].axes)
   ) {
     const ms: omezarr.Multiscale = {
-      axes: rfc8multiscales.attributes.coordinateSystems[0].axes,
+      axes: rfc8multiscales.coordinateSystems[0].axes,
       datasets: ssNodes.map(createDataset) as [omezarr.Dataset, ...omezarr.Dataset[]]
     };
 

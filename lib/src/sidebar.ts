@@ -1,6 +1,6 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node } from './types';
+import type { D3Node, OmeNode } from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
 import type { NGFFResolver } from './resolver';
@@ -129,7 +129,7 @@ export class NGFFSidebar {
     this.node = node;
     this.content.innerHTML = '';
 
-    this.addKeyValue('Id', node.omeNode.id || '-');
+    this.addKeyValue('Id', node.omeNode.id);
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
 
@@ -138,7 +138,7 @@ export class NGFFSidebar {
     // Show link to fullUrl json and show path if available
     if ('path' in node.omeNode && node.omeNode.path) {
       this.addKeyValueLink('File loaded from', fullUrl);
-      this.addKeyValue('Path', `${node.omeNode.path.path} (type: ${node.omeNode.path.type})`);
+      this.addKeyValue('Path', `${node.omeNode.path.href} (type: ${node.omeNode.path.type})`);
     } else {
       this.addKeyValueLink('Node in-line in file', fullUrl);
     }
@@ -156,14 +156,8 @@ export class NGFFSidebar {
       }
     }
 
-    if (node.omeNode.attributes) {
-      this.addTitle('Attributes');
-      const pre = document.createElement('pre');
-      pre.textContent = JSON.stringify(node.omeNode.attributes, null, 2);
-      this.content.appendChild(pre);
-    } else {
-      this.addKeyValue('Attributes', '-');
-    }
+    this.addFieldValue(node.omeNode, 'coordinateTransformations', 'Coordinate Transformation');
+    this.addFieldValue(node.omeNode, 'coordinateSystem', 'Coordinate System');
 
     if (this.graph.getValidation()) {
       this.showValidation(node);
@@ -242,7 +236,16 @@ export class NGFFSidebar {
     this.content.appendChild(p);
   }
 
-  private addKeyValue(key: string, value: string) {
+  private addFieldValue(omeNode: OmeNode, key: string, label: string) {
+    if (key in omeNode) {
+      this.addTitle(label);
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify((omeNode as any)[key], null, 2);
+      this.content.appendChild(pre);
+    }
+  }
+
+  private addKeyValue(key: string, value: string | undefined) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
     const text = document.createElement('span');

@@ -25,8 +25,6 @@ export class NGFFGraph {
     change: [] as Array<() => void>
   };
 
-  private lastGeneratedId = 0;
-
   constructor(
     resolver: NGFFResolver,
     autoloadDepth: number,
@@ -148,19 +146,14 @@ export class NGFFGraph {
 
   walk(
     nodes: Array<D3Node>,
-    node: OmeNode & { generatedId?: string },
+    node: OmeNode,
     parentId: string | null,
     resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
-    if (!('generatedId' in node) || !node.generatedId) {
-      this.lastGeneratedId++;
-      node.generatedId = String(this.lastGeneratedId);
-    }
-
     nodes.push({
-      id: node.generatedId,
-      omeNode: this.getBasicOmeNode(node),
+      id: node.id,
+      omeNode: { ...node },
       parentId: parentId,
       loading: false,
       loaded: !('path' in node),
@@ -175,18 +168,8 @@ export class NGFFGraph {
     }
 
     if ('nodes' in node && node.nodes) {
-      node.nodes.forEach((child) =>
-        this.walk(nodes, child, node.generatedId!, resolvedPath, extraEdges)
-      );
+      node.nodes.forEach((child) => this.walk(nodes, child, node.id, resolvedPath, extraEdges));
     }
-  }
-
-  private getBasicOmeNode(node: OmeNode): OmeNode {
-    const nodeCopy = { ...node };
-    if ('generatedId' in nodeCopy) {
-      delete nodeCopy['generatedId'];
-    }
-    return nodeCopy;
   }
 
   async render(ome: OmeNode) {
@@ -212,10 +195,6 @@ export class NGFFGraph {
     }
   }
 
-  getNodeId(node: D3Node): string {
-    return node.omeNode.id || node.omeNode?.name;
-  }
-
   getNode(id: string): D3Node | undefined {
     return this.nodes.find((n) => n.id === id);
   }
@@ -226,14 +205,14 @@ export class NGFFGraph {
 
   getParentsIds(node: D3Node): Array<string> {
     const parents: Array<string> = [];
-    parents.push(this.getNodeId(node));
+    parents.push(node.id);
     let current = node;
     while (current.parentId) {
       const parent = this.nodes.find((n) => n.id === current.parentId);
       if (!parent) {
         break;
       }
-      parents.push(this.getNodeId(parent));
+      parents.push(parent.id);
       current = parent;
     }
     return parents.reverse();
@@ -247,7 +226,7 @@ export class NGFFGraph {
 
     const parentIds = targetPath.split('/');
     let currentNode: D3Node | null = null;
-    currentNode = this.nodes.find((n) => this.getNodeId(n) === parentIds[0]) || null;
+    currentNode = this.nodes.find((n) => n.id === parentIds[0]) || null;
     if (!currentNode) {
       throw new Error(`No node found at path "${targetPath}"`);
     }
@@ -259,13 +238,9 @@ export class NGFFGraph {
       await this.loadNodeWithSignal(
         currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
       );
-      const child = this.nodes.find(
-        (n) => n.parentId === currentNode!.id && this.getNodeId(n) === nextId
-      );
+      const child = this.nodes.find((n) => n.parentId === currentNode!.id && n.id === nextId);
       if (!child) {
-        throw new Error(
-          `Node at path "${this.getNodeId(currentNode!)}" had no child with ID "${nextId}"`
-        );
+        throw new Error(`Node at path "${currentNode.id}" had no child with ID "${nextId}"`);
       }
       currentNode = child;
       parentIds.shift();
@@ -309,7 +284,7 @@ export class NGFFGraph {
     try {
       const loadPath = this.resolver.resolveNode(node);
       const ome = await this.loader.loadNode(loadPath);
-      this.updateNode(node, ome);
+      this.updateNode(node);
       this.appendSubtree(ome, loadPath);
     } catch (err) {
       if (err instanceof UntrustedDomainError) {
@@ -334,10 +309,8 @@ export class NGFFGraph {
     node.loading = false;
   }
 
-  updateNode(node: D3Node, ome: OmeNode) {
+  updateNode(node: D3Node) {
     node.loaded = true;
-    node.omeNode.attributes = { ...(node.omeNode.attributes || {}), ...ome.attributes };
-    (ome as any).generatedId = node.id;
     this.signalNodeUpdated(node);
   }
 
