@@ -7,7 +7,7 @@ const exampleSources = [
   ],
   [
     'Basic example, with many images in a collection',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/main/data/e02_basic_examples_many_images/root.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e02_basic_examples_many_images/root.json'
   ],
   [
     'Plate with multiple fields',
