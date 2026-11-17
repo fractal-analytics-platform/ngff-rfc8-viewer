@@ -10,12 +10,12 @@ const exampleSources = [
     'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e02_basic_examples_many_images/zarr.json'
   ],
   [
-    'Plate with multiple fields',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e04_plate_multiple_fields/root.json'
+    'Use https paths to add the examples above into 1 collection',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e03_http_urls_for_other_examples/root.json'
   ],
   [
-    'Use https paths to add the examples above into 1 collection',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e03_http_urls_for_other_examples/root.json'
+    'Plate with multiple fields',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e04_plate_multiple_fields/root.json'
   ],
   [
     'Plate with multiple acquisitions of the same field',
