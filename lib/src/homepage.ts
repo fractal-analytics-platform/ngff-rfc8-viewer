@@ -2,12 +2,12 @@ import { CSS_CLASS_PREFIX } from './constants';
 
 const exampleSources = [
   [
-    'Basic example',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e01_basic_example/zarr.json'
+    'Collection with a single multiscale (inlined)',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e01_inlined_multiscale/zarr.json'
   ],
   [
-    'Basic example, with many images in a collection',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e02_basic_examples_many_images/zarr.json'
+    'Collection with many images (on different JSON documents)',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e02_distributed_multiscales/zarr.json'
   ],
   [
     'Use https paths to add the examples above into 1 collection',
