@@ -65,8 +65,7 @@ export class ListView {
     const hasChildren = ['multiscale', 'collection'].includes(node.omeNode.type);
     const nodeElement = document.createElement('div');
 
-    const parentId = parent ? parent.id : null;
-    nodeElement.title = `ID: ${node.id}\nparentId: ${parentId ?? 'none'}`;
+    nodeElement.title = `ID: ${this.getOmeId(node)}\nparentId: ${this.getOmeId(parent)}`;
     nodeElement.id = `node-${node.id}`;
     nodeElement.style.opacity = isLoaded ? '1' : '0.5';
     nodeElement.style.paddingTop = isRemote ? '10px' : '2px';
@@ -92,11 +91,15 @@ export class ListView {
       );
       return false;
     };
-    if (parentId) {
-      document.getElementById(`node-${parentId}`)?.appendChild(nodeElement);
+    if (parent) {
+      document.getElementById(`node-${parent.id}`)?.appendChild(nodeElement);
     } else {
       this.rootElement.appendChild(nodeElement);
     }
+  }
+
+  private getOmeId(node: D3Node | undefined) {
+    return node && 'id' in node.omeNode ? node.omeNode.id : 'none';
   }
 
   destroy() {

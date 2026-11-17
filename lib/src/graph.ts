@@ -205,20 +205,28 @@ export class NGFFGraph {
     return this.nodes.find((n) => n.id === id);
   }
 
+  getNodeOmeId(node: D3Node): string | undefined {
+    return 'id' in node.omeNode ? node.omeNode.id : undefined;
+  }
+
   getChildren(node: D3Node): Array<D3Node> {
     return this.nodes.filter((n) => n.parentId === node.id);
   }
 
   getParentsIds(node: D3Node): Array<string> {
     const parents: Array<string> = [];
-    parents.push(node.id);
+    if ('id' in node.omeNode) {
+      parents.push(node.omeNode.id);
+    }
     let current = node;
     while (current.parentId) {
       const parent = this.nodes.find((n) => n.id === current.parentId);
       if (!parent) {
         break;
       }
-      parents.push(parent.id);
+      if ('id' in parent.omeNode) {
+        parents.push(parent.omeNode.id);
+      }
       current = parent;
     }
     return parents.reverse();
@@ -230,33 +238,35 @@ export class NGFFGraph {
       throw new Error('Cannot select a path before the graph has loaded');
     }
 
-    const parentIds = targetPath.split('/');
+    const parentOmeIds = targetPath.split('/');
     let currentNode: D3Node | null = null;
-    currentNode = this.nodes.find((n) => n.id === parentIds[0]) || null;
+    currentNode = this.nodes.find((n) => this.getNodeOmeId(n) === parentOmeIds[0]) || null;
     if (!currentNode) {
       throw new Error(`No node found at path "${targetPath}"`);
     }
-    parentIds.shift();
+    parentOmeIds.shift();
 
-    while (parentIds.length > 0) {
-      const nextId = parentIds[0];
+    while (parentOmeIds.length > 0) {
+      const nextOmeId = parentOmeIds[0];
       // make sure node is loaded before looking for its children
       await this.loadNodeWithSignal(
         currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
       );
-      const child = this.nodes.find((n) => n.parentId === currentNode!.id && n.id === nextId);
+      const child = this.nodes.find(
+        (n) => n.parentId === currentNode!.id && this.getNodeOmeId(n) === nextOmeId
+      );
       if (!child) {
-        throw new Error(`Node at path "${currentNode.id}" had no child with ID "${nextId}"`);
+        throw new Error(`Node at path "${currentNode.id}" had no child with ID "${nextOmeId}"`);
       }
       currentNode = child;
-      parentIds.shift();
+      parentOmeIds.shift();
     }
 
     // Finally, let's load the target node
     this.selectNode(currentNode);
     await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
 
-    return currentNode!;
+    return currentNode;
   }
 
   async recursiveLoad(autoloadDepth: number) {
@@ -289,6 +299,7 @@ export class NGFFGraph {
     node.loading = true;
     try {
       const loadPath = this.resolver.resolveNode(node);
+      node.resolvedPath = loadPath;
       const ome = await this.loader.loadNode(loadPath);
       this.updateNode(node, ome);
       this.appendSubtree(node, ome, loadPath);

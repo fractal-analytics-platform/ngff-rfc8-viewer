@@ -48,7 +48,7 @@ export class NGFFResolver {
       const parentDir = this.getDirectory(node.resolvedPath);
       const resolvedPath = this.resolvePath(parentDir, node.omeNode.path.href, absolute);
 
-      if (node.omeNode.path.type === 'zarr') {
+      if (node.omeNode.path.type === 'zarr' && !node.omeNode.path.href.endsWith('.json')) {
         return `${resolvedPath}/zarr.json`;
       }
       return resolvedPath;

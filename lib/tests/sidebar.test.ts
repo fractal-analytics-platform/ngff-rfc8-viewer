@@ -150,7 +150,7 @@ describe('NGFFSidebar', () => {
       await vi.waitFor(() => {
         expect(element.querySelector('img')).toHaveAttribute('src', 'mock-image');
       });
-      expect(FetchStore).toHaveBeenCalledWith('https://example.com/graph');
+      expect(FetchStore).toHaveBeenCalledWith('https://example.com/graph/0');
     });
 
     it('multiscale, no in-line children, resolvedPath is URL', async () => {
