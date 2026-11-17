@@ -1,6 +1,6 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node, OmeNode } from './types';
+import type { D3Node, OmeArray, OmeNode } from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
 import type { NGFFResolver } from './resolver';
@@ -129,7 +129,7 @@ export class NGFFSidebar {
     this.node = node;
     this.content.innerHTML = '';
 
-    this.addKeyValue('Id', node.omeNode.id);
+    this.addKeyValue('Id', 'id' in node.omeNode ? node.omeNode.id : undefined);
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
 
@@ -146,8 +146,8 @@ export class NGFFSidebar {
     // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type === 'multiscale') {
       const baseUrl = this.resolver.getDirectory(fullUrl);
-      // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
-      if ('nodes' in node.omeNode) {
+      // if the node has in-line 'array' nodes, they contain all info the thumbnail needs
+      if ('data' in node.omeNode) {
         this.content.appendChild(createThumbnailImg(node, baseUrl, 150));
       } else {
         // otherwise we need to traverse the graph to get child nodes
@@ -156,8 +156,8 @@ export class NGFFSidebar {
       }
     }
 
-    this.addFieldValue(node.omeNode, 'coordinateTransformations', 'Coordinate Transformation');
-    this.addFieldValue(node.omeNode, 'coordinateSystem', 'Coordinate System');
+    this.addFieldValue(node.omeNode, 'coordinateTransformations', 'Coordinate Transformations');
+    this.addFieldValue(node.omeNode, 'coordinateSystems', 'Coordinate Systems');
 
     if (this.graph.getValidation()) {
       this.showValidation(node);
@@ -236,7 +236,7 @@ export class NGFFSidebar {
     this.content.appendChild(p);
   }
 
-  private addFieldValue(omeNode: OmeNode, key: string, label: string) {
+  private addFieldValue(omeNode: OmeNode | OmeArray, key: string, label: string) {
     if (key in omeNode) {
       this.addTitle(label);
       const pre = document.createElement('pre');

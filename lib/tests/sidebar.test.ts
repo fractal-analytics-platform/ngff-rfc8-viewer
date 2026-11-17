@@ -32,8 +32,8 @@ vi.mock('ome-zarr.js', () => {
   return { NgffImage };
 });
 
-const singlescale = {
-  type: 'singlescale',
+const array = {
+  type: 'array',
   name: 'high-res',
   id: 'd3f91d97-cf73-4bbf-aaea-d72d8a6ceca0',
   coordinateTransformations: [
@@ -94,7 +94,7 @@ describe('NGFFSidebar', () => {
         json: async () => ({
           ome: {
             ...collection,
-            nodes: [{ ...multiscale, nodes: [singlescale] }]
+            nodes: [{ ...multiscale, data: [array] }]
           }
         })
       });
@@ -132,7 +132,7 @@ describe('NGFFSidebar', () => {
           json: async () => ({
             ome: {
               ...multiscale,
-              nodes: [singlescale]
+              data: [array]
             }
           })
         });
@@ -150,7 +150,7 @@ describe('NGFFSidebar', () => {
       await vi.waitFor(() => {
         expect(element.querySelector('img')).toHaveAttribute('src', 'mock-image');
       });
-      expect(FetchStore).toHaveBeenCalledWith('https://example.com/graph/0');
+      expect(FetchStore).toHaveBeenCalledWith('https://example.com/graph');
     });
 
     it('multiscale, no in-line children, resolvedPath is URL', async () => {
@@ -184,7 +184,7 @@ describe('NGFFSidebar', () => {
           json: async () => ({
             ome: {
               ...multiscale,
-              nodes: [singlescale]
+              data: [array]
             }
           })
         });
@@ -203,7 +203,7 @@ describe('NGFFSidebar', () => {
       await vi.waitFor(() => {
         expect(element.querySelector('img')).toHaveAttribute('src', 'mock-image');
       });
-      expect(FetchStore).toHaveBeenCalledWith('https://example.com/multiscale.json');
+      expect(FetchStore).toHaveBeenCalledWith('https://example.com');
     });
   });
 });

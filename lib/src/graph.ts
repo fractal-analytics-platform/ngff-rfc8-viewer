@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
+import type { D3Node, ExtraEdgesFn, OmeArray, OmeNode, OmePath } from './types';
 import { NGFFLoader, UntrustedDomainError } from './loader';
 import type { NGFFResolver } from './resolver';
 
@@ -24,6 +24,8 @@ export class NGFFGraph {
     nodeSelected: [] as Array<(node?: D3Node) => void>,
     change: [] as Array<() => void>
   };
+
+  private lastGeneratedId = 0;
 
   constructor(
     resolver: NGFFResolver,
@@ -146,13 +148,16 @@ export class NGFFGraph {
 
   walk(
     nodes: Array<D3Node>,
-    node: OmeNode,
+    node: OmeNode | OmeArray,
+    id: string | null,
     parentId: string | null,
     resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
+    const generatedId = id ?? String(++this.lastGeneratedId);
+
     nodes.push({
-      id: node.id,
+      id: generatedId,
       omeNode: { ...node },
       parentId: parentId,
       loading: false,
@@ -167,13 +172,14 @@ export class NGFFGraph {
       this.computeExtraEdges(node, extraEdges);
     }
 
-    if ('nodes' in node && node.nodes) {
-      node.nodes.forEach((child) => this.walk(nodes, child, node.id, resolvedPath, extraEdges));
+    const children = 'nodes' in node ? node.nodes : 'data' in node ? node.data : [];
+    for (const child of children) {
+      this.walk(nodes, child, null, generatedId, resolvedPath, extraEdges);
     }
   }
 
   async render(ome: OmeNode) {
-    this.walk(this.nodes, ome, null, this.resolver.getRootRelativePath(), this.extraEdges);
+    this.walk(this.nodes, ome, null, null, this.resolver.getRootRelativePath(), this.extraEdges);
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -259,7 +265,7 @@ export class NGFFGraph {
       for (const leave of this.hierarchy!.leaves()) {
         if ('path' in leave.data.omeNode) {
           const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
-          if (!node.loaded && !node.error && !(node.omeNode.type === 'singlescale')) {
+          if (!node.loaded && !node.error && !(node.omeNode.type === 'array')) {
             await this.loadNode(node);
             loaded = true;
           }
@@ -277,15 +283,15 @@ export class NGFFGraph {
   }
 
   async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
-    if (node.loading || node.loaded || node.error || node.omeNode.type === 'singlescale') {
+    if (node.loading || node.loaded || node.error || node.omeNode.type === 'array') {
       return;
     }
     node.loading = true;
     try {
       const loadPath = this.resolver.resolveNode(node);
       const ome = await this.loader.loadNode(loadPath);
-      this.updateNode(node);
-      this.appendSubtree(ome, loadPath);
+      this.updateNode(node, ome);
+      this.appendSubtree(node, ome, loadPath);
     } catch (err) {
       if (err instanceof UntrustedDomainError) {
         node.loading = false;
@@ -309,15 +315,16 @@ export class NGFFGraph {
     node.loading = false;
   }
 
-  updateNode(node: D3Node) {
+  updateNode(node: D3Node, ome: OmeNode) {
     node.loaded = true;
+    node.omeNode = { ...ome };
     this.signalNodeUpdated(node);
   }
 
-  appendSubtree(ome: OmeNode, resolvedPath: string) {
+  appendSubtree(node: D3Node, ome: OmeNode, resolvedPath: string) {
     const nodes: Array<D3Node> = [];
     const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
-    this.walk(nodes, ome, null, resolvedPath, extraEdges);
+    this.walk(nodes, ome, node.id, node.parentId, resolvedPath, extraEdges);
     if (nodes.length > 0) {
       this.nodes.push(...nodes.splice(1));
     }

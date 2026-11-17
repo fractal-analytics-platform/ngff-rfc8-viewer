@@ -63,14 +63,6 @@ export type MultiscaleOmeNode = BaseOmeNode & {
   coordinateTransformations: CoordinateTransformation[];
 } & ({ data: OmeArray[] } | { path: OmePath });
 
-export type SinglescaleOmeNode = {
-  type: 'singlescale';
-  id?: string;
-  name: string;
-  path?: OmePath;
-  coordinateTransformations: CoordinateTransformation[];
-};
-
 export type CoordinateTransformation = DownsamplingTransformation & {
   type: string;
   input: Reference;
@@ -86,7 +78,7 @@ export type CoordinateSystem = {
 
 export type D3Node = {
   id: string;
-  omeNode: OmeNode;
+  omeNode: OmeNode | OmeArray;
   parentId: string | null;
   resolvedPath: string;
   loading: boolean;
@@ -97,6 +89,6 @@ export type D3Node = {
 };
 
 export type ExtraEdgesFn = (
-  node: OmeNode,
+  node: OmeNode | OmeArray,
   extraEdges: Array<{ sourceId: string; targetId: string }>
 ) => void;
