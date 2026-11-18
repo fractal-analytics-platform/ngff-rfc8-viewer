@@ -7,7 +7,7 @@ export type Declaration = {
 
 export type OmePath = {
   type: 'zarr' | 'json' | string; // extension point
-  format: 'relative' | 'absolute';
+  format: 'relative' | 'http';
   href: string;
 };
 
