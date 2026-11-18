@@ -7,8 +7,9 @@ export type Declaration = {
 
 export type OmePath = {
   type: 'zarr' | 'json' | string; // extension point
-  format: 'relative' | string;
   href: string;
+  format?: 'relative' | string;
+  document_type?: string;
 };
 
 export type DownsamplingTransformation =

@@ -14,3 +14,6 @@ export const STROKE_COLORS: Record<string, string> = {
   remote: '#ddd',
   local: '#555'
 };
+
+export const HTTP_PATH_TYPE =
+  'https://fractal-analytics-platform.github.io/ngff-extensions/node-path-http';
