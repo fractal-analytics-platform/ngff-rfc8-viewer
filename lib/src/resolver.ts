@@ -1,4 +1,3 @@
-import { HTTP_PATH_TYPE } from './constants';
 import type { D3Node } from './types';
 
 export class NGFFResolver {
@@ -42,17 +41,14 @@ export class NGFFResolver {
 
   resolveNode(node: D3Node, absolute = false) {
     if ('path' in node.omeNode && node.omeNode.path) {
-      if (!['zarr', 'json', HTTP_PATH_TYPE].includes(node.omeNode.path.type)) {
+      if (!['zarr', 'json'].includes(node.omeNode.path.type)) {
         throw new Error(`Unexpected path type: ${node.omeNode.path.type}`);
       }
 
       const parentDir = this.getDirectory(node.resolvedPath);
       const resolvedPath = this.resolvePath(parentDir, node.omeNode.path.href, absolute);
 
-      if (
-        ['zarr', HTTP_PATH_TYPE].includes(node.omeNode.path.type) &&
-        !node.omeNode.path.href.endsWith('.json')
-      ) {
+      if (['zarr'].includes(node.omeNode.path.type) && !node.omeNode.path.href.endsWith('.json')) {
         return `${resolvedPath}/zarr.json`;
       }
       return resolvedPath;
