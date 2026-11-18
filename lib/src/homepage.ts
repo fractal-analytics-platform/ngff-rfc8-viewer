@@ -23,8 +23,8 @@ const exampleSources = [
   //   'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e05_plate_multiple_acquisitions/root.json'
   // ],
   [
-    '(BROKEN) IDR v0.5 images to RFC-8. Singlescales use https paths',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e06_v05_idr_multi_doc/collection.json'
+    'IDR v0.5 images to RFC-8. Singlescales use https paths',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e06_v05_idr_multi_doc/collection.json'
   ],
   [
     '(BROKEN) Plate from IDR. Singlescales use https paths',
