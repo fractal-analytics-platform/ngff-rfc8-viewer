@@ -1,6 +1,6 @@
 import { validate } from '@fractal-analytics-platform/ngff-rfc8-validator';
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node, OmeArray, OmeNode } from './types';
+import type { D3Node } from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
 import type { NGFFResolver } from './resolver';
@@ -157,6 +157,8 @@ export class NGFFSidebar {
         const children = this.graph.getChildren(node).map((child) => child.omeNode);
         this.content.appendChild(createThumbnailImg(node, baseUrl, 150, children));
       }
+    } else if (node.omeNode.type === 'array') {
+      this.addArrayInfo(fullUrl);
     }
 
     this.addFieldValue(node.omeNode, 'coordinateTransformations', 'Coordinate Transformations');
@@ -231,6 +233,33 @@ export class NGFFSidebar {
     return { ome: omeNode };
   }
 
+  private async addArrayInfo(url: string) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        this.addKeyValue('Data Type', data.data_type, 'code');
+        this.addKeyValue('Shape', JSON.stringify(data.shape), 'code');
+        this.addFieldValue(data, 'chunk_grid', 'Chunk grid');
+      } else {
+        this.addErrorElement(
+          `Unable to fetch array info. Server replied with ${response.status} status.`
+        );
+      }
+    } catch (err) {
+      this.addErrorElement(
+        `Error while adding array info. Cause is: ${err instanceof Error ? err.message : 'Unexpected error'}`
+      );
+    }
+  }
+
+  private addErrorElement(message: string) {
+    const errorElement = document.createElement('div');
+    errorElement.classList.add(`${CSS_CLASS_PREFIX}error`);
+    errorElement.textContent = message;
+    this.content.append(errorElement);
+  }
+
   private addTitle(value: string) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
@@ -239,19 +268,19 @@ export class NGFFSidebar {
     this.content.appendChild(p);
   }
 
-  private addFieldValue(omeNode: OmeNode | OmeArray, key: string, label: string) {
-    if (key in omeNode) {
+  private addFieldValue(node: Record<string, any>, key: string, label: string) {
+    if (key in node) {
       this.addTitle(label);
       const pre = document.createElement('pre');
-      pre.textContent = JSON.stringify((omeNode as any)[key], null, 2);
+      pre.textContent = JSON.stringify(node[key], null, 2);
       this.content.appendChild(pre);
     }
   }
 
-  private addKeyValue(key: string, value: string | undefined) {
+  private addKeyValue(key: string, value: string | undefined, tag = 'span') {
     const p = document.createElement('p');
     const title = document.createElement('strong');
-    const text = document.createElement('span');
+    const text = document.createElement(tag);
     title.textContent = `${key}: `;
     text.textContent = value || '-';
     p.appendChild(title);
