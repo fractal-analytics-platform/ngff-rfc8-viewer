@@ -31,7 +31,7 @@ const exampleSources = [
     'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e07_v05_plate_to_multi_doc/collection.json'
   ],
   [
-    '(BROKEN) Big plate from IDR. Singlescales use https paths',
+    'Big plate from IDR. Singlescales use https paths',
     'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e08_v05_big_plate_to_multi_doc/collection.json'
   ]
   // This example should be rewritten
