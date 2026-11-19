@@ -152,6 +152,7 @@ export class NGFFGraph {
     node: OmeNode | OmeArray,
     id: string,
     parentId: string | null,
+    index: number | null,
     resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
@@ -159,6 +160,7 @@ export class NGFFGraph {
       id,
       omeNode: { ...node },
       parentId: parentId,
+      index: node.type === 'array' ? index : null,
       loading: false,
       loaded: !('path' in node),
       resolvedPath,
@@ -175,12 +177,20 @@ export class NGFFGraph {
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
       const childId = 'id' in child ? child.id : `${id}/${i}`;
-      this.walk(nodes, child, childId, id, resolvedPath, extraEdges);
+      this.walk(nodes, child, childId, id, i, resolvedPath, extraEdges);
     }
   }
 
   async render(ome: OmeNode) {
-    this.walk(this.nodes, ome, ome.id, null, this.resolver.getRootRelativePath(), this.extraEdges);
+    this.walk(
+      this.nodes,
+      ome,
+      ome.id,
+      null,
+      null,
+      this.resolver.getRootRelativePath(),
+      this.extraEdges
+    );
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -334,7 +344,7 @@ export class NGFFGraph {
   appendSubtree(node: D3Node, ome: OmeNode, resolvedPath: string) {
     const nodes: Array<D3Node> = [];
     const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
-    this.walk(nodes, ome, node.id, node.parentId, resolvedPath, extraEdges);
+    this.walk(nodes, ome, node.id, node.parentId, null, resolvedPath, extraEdges);
     if (nodes.length > 0) {
       this.nodes.push(...nodes.splice(1));
     }

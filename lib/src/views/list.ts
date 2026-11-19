@@ -78,7 +78,7 @@ export class ListView {
       ? STROKE_COLORS.selected
       : NODE_COLORS[node.omeNode.type] || NODE_COLORS.default;
     button.style.borderWidth = node.selected ? '3px' : '1px';
-    button.textContent = `${node.omeNode?.name}`;
+    button.textContent = `${node.omeNode.name || ('id' in node.omeNode ? node.omeNode.id : node.index)}`;
     nodeElement.appendChild(button);
     button.onclick = async () => {
       this.selectNode(node);

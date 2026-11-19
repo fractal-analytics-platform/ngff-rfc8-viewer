@@ -132,6 +132,9 @@ export class NGFFSidebar {
     this.addKeyValue('Id', 'id' in node.omeNode ? node.omeNode.id : undefined);
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
+    if (node.omeNode.type === 'array') {
+      this.addKeyValue('Index', String(node.index));
+    }
 
     const fullUrl = this.resolver.resolveNode(node, true);
 

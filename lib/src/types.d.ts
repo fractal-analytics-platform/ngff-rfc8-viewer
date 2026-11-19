@@ -79,6 +79,7 @@ export type CoordinateSystem = {
 export type D3Node = {
   id: string; // in case of arrays this is a generated id, otherwise it is the original node id
   parentId: string | null;
+  index: number | null; // used only for arrays
   omeNode: OmeNode | OmeArray;
   resolvedPath: string;
   loading: boolean;

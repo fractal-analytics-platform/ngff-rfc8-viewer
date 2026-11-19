@@ -227,7 +227,7 @@ export class TreeView {
           d3.select(event.target).attr('stroke', STROKE_COLORS.hover);
           this.tooltip?.style('opacity', 1).html(`
             <strong>Id: </strong>${('id' in omeNode ? omeNode.id : '') || '-'}<br>
-            <strong>Name: </strong>${omeNode.name}<br>
+            <strong>Name: </strong>${omeNode.name || '-'}<br>
             <strong>Type: </strong> ${omeNode.type}
           `);
         }
