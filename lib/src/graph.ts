@@ -174,7 +174,7 @@ export class NGFFGraph {
     const children = 'nodes' in node ? node.nodes : 'data' in node ? node.data : [];
     for (let i = 0; i < children.length; i++) {
       const child = children[i];
-      const childId = 'id' in child ? child.id : `${parentId}/${i}`;
+      const childId = 'id' in child ? child.id : `${id}/${i}`;
       this.walk(nodes, child, childId, id, resolvedPath, extraEdges);
     }
   }
@@ -216,7 +216,9 @@ export class NGFFGraph {
 
   getParentsIds(node: D3Node): Array<string> {
     const parents: Array<string> = [];
-    parents.push(node.id);
+    if (node.omeNode.type !== 'array') {
+      parents.push(node.id);
+    }
     let current = node;
     while (current.parentId) {
       const parent = this.nodes.find((n) => n.id === current.parentId);
