@@ -129,7 +129,7 @@ describe('NGFFResolver', () => {
           omeNode: {
             path: {
               type: 'zarr',
-              format: 'absolute',
+              format: 'http',
               href: 'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e01_inlined_multiscale'
             }
           }
