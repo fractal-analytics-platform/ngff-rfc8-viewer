@@ -240,6 +240,7 @@ export class NGFFSidebar {
         const data = await response.json();
         this.addKeyValue('Data Type', data.data_type, 'code');
         this.addKeyValue('Shape', JSON.stringify(data.shape), 'code');
+        this.addKeyValue('Dimensions', JSON.stringify(data.dimension_names), 'code');
         this.addFieldValue(data, 'chunk_grid', 'Chunk grid');
       } else {
         this.addErrorElement(
