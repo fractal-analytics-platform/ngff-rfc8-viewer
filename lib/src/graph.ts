@@ -26,6 +26,8 @@ export class NGFFGraph {
   };
 
   private lastGeneratedId = 0;
+  // key: omeNode id, value: D3 node
+  private nodesMap = new Map<string, D3Node & { omeNode: OmeNode }>();
 
   constructor(
     resolver: NGFFResolver,
@@ -109,6 +111,7 @@ export class NGFFGraph {
 
   async loadRoot(): Promise<boolean> {
     try {
+      this.nodesMap.clear();
       const ome = await this.loader.loadGraphData();
       await this.render(ome);
       return true;
@@ -156,7 +159,7 @@ export class NGFFGraph {
   ) {
     const generatedId = id ?? String(++this.lastGeneratedId);
 
-    nodes.push({
+    const d3Node = {
       id: generatedId,
       omeNode: { ...node },
       parentId: parentId,
@@ -166,7 +169,12 @@ export class NGFFGraph {
       error: false,
       collapsed: false,
       selected: false
-    });
+    };
+
+    nodes.push(d3Node);
+    if ('id' in node) {
+      this.nodesMap.set(node.id, d3Node as D3Node & { omeNode: OmeNode });
+    }
 
     if (this.computeExtraEdges) {
       this.computeExtraEdges(node, extraEdges);
@@ -174,7 +182,14 @@ export class NGFFGraph {
 
     const children = 'nodes' in node ? node.nodes : 'data' in node ? node.data : [];
     for (const child of children) {
-      this.walk(nodes, child, null, generatedId, resolvedPath, extraEdges);
+      let d3Id = null;
+      if ('id' in child) {
+        const d3Node = this.nodesMap.get(child.id);
+        if (d3Node) {
+          d3Id = d3Node.id;
+        }
+      }
+      this.walk(nodes, child, d3Id, generatedId, resolvedPath, extraEdges);
     }
   }
 
@@ -329,6 +344,9 @@ export class NGFFGraph {
   updateNode(node: D3Node, ome: OmeNode) {
     node.loaded = true;
     node.omeNode = { ...ome };
+    if ('id' in ome) {
+      this.nodesMap.set(ome.id, node as D3Node & { omeNode: OmeNode });
+    }
     this.signalNodeUpdated(node);
   }
 
