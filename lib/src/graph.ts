@@ -25,10 +25,6 @@ export class NGFFGraph {
     change: [] as Array<() => void>
   };
 
-  private lastGeneratedId = 0;
-  // key: omeNode id, value: D3 node
-  private nodesMap = new Map<string, D3Node & { omeNode: OmeNode }>();
-
   constructor(
     resolver: NGFFResolver,
     autoloadDepth: number,
@@ -67,6 +63,9 @@ export class NGFFGraph {
   // called when loading fails
   signalError(message: string | null) {
     console.trace(message); // to enable debugging of where the error originated
+    if (message && message.match(/^ambiguous: .*/)) {
+      message = 'Graph cycle not supported';
+    }
     this.eventListeners['error'].forEach((fn) => fn(message));
   }
   // handled by viewer showing an error
@@ -111,7 +110,6 @@ export class NGFFGraph {
 
   async loadRoot(): Promise<boolean> {
     try {
-      this.nodesMap.clear();
       const ome = await this.loader.loadGraphData();
       await this.render(ome);
       return true;
@@ -152,15 +150,13 @@ export class NGFFGraph {
   walk(
     nodes: Array<D3Node>,
     node: OmeNode | OmeArray,
-    id: string | null,
+    id: string,
     parentId: string | null,
     resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
-    const generatedId = id ?? String(++this.lastGeneratedId);
-
-    const d3Node = {
-      id: generatedId,
+    nodes.push({
+      id,
       omeNode: { ...node },
       parentId: parentId,
       loading: false,
@@ -169,32 +165,22 @@ export class NGFFGraph {
       error: false,
       collapsed: false,
       selected: false
-    };
-
-    nodes.push(d3Node);
-    if ('id' in node) {
-      this.nodesMap.set(node.id, d3Node as D3Node & { omeNode: OmeNode });
-    }
+    });
 
     if (this.computeExtraEdges) {
       this.computeExtraEdges(node, extraEdges);
     }
 
     const children = 'nodes' in node ? node.nodes : 'data' in node ? node.data : [];
-    for (const child of children) {
-      let d3Id = null;
-      if ('id' in child) {
-        const d3Node = this.nodesMap.get(child.id);
-        if (d3Node) {
-          d3Id = d3Node.id;
-        }
-      }
-      this.walk(nodes, child, d3Id, generatedId, resolvedPath, extraEdges);
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const childId = 'id' in child ? child.id : `${parentId}/${i}`;
+      this.walk(nodes, child, childId, id, resolvedPath, extraEdges);
     }
   }
 
   async render(ome: OmeNode) {
-    this.walk(this.nodes, ome, null, null, this.resolver.getRootRelativePath(), this.extraEdges);
+    this.walk(this.nodes, ome, ome.id, null, this.resolver.getRootRelativePath(), this.extraEdges);
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -230,18 +216,14 @@ export class NGFFGraph {
 
   getParentsIds(node: D3Node): Array<string> {
     const parents: Array<string> = [];
-    if ('id' in node.omeNode) {
-      parents.push(node.omeNode.id);
-    }
+    parents.push(node.id);
     let current = node;
     while (current.parentId) {
       const parent = this.nodes.find((n) => n.id === current.parentId);
       if (!parent) {
         break;
       }
-      if ('id' in parent.omeNode) {
-        parents.push(parent.omeNode.id);
-      }
+      parents.push(parent.id);
       current = parent;
     }
     return parents.reverse();
@@ -344,9 +326,6 @@ export class NGFFGraph {
   updateNode(node: D3Node, ome: OmeNode) {
     node.loaded = true;
     node.omeNode = { ...ome };
-    if ('id' in ome) {
-      this.nodesMap.set(ome.id, node as D3Node & { omeNode: OmeNode });
-    }
     this.signalNodeUpdated(node);
   }
 
