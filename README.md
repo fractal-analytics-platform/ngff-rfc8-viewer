@@ -6,9 +6,11 @@ Web viewer for the NGFF RFC-8 collections metadata - see https://ngff.openmicros
 
 ## Quick start
 
-The web viewer is available at https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/, and it includes multiple pre-made examples.
+The web viewer is available at https://fractal-analytics-platform.github.io/ngff-rfc8-viewer/, and it includes [multiple pre-made examples](https://github.com/fractal-analytics-platform/ngff-rfc8-examples). To create new RFC-8 OME-Zarr collections, also check out the [ngio-collections](https://github.com/BioVisionCenter/ngio-collections) package.
 
-To create new RFC-8 OME-Zarr collections, also check out the [ngio-collections](https://github.com/BioVisionCenter/ngio-collections) package.
+## Note about RFC8 version
+
+The current target of this project is revision v2 of RFC8 (see [ongoing work](https://github.com/ome/ngff/pull/667)). A custom deviation from the specification is that the viewer also supports `"format": "http"` for `path` objects, with `href` being an HTTP(s) URL.
 
 ## How to build the library
 
@@ -28,7 +30,6 @@ and then the root project (which is a demo page calling the library)
 npm ci
 npm run build
 ```
-
 
 ## How to include the library
 

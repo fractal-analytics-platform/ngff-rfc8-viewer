@@ -3,7 +3,6 @@ import type { NGFFGraph } from './graph';
 import { ImagesView } from './views/images';
 import { ListView } from './views/list';
 import { TreeView } from './views/tree';
-import { ErrorAlert } from './error';
 import type { NGFFResolver } from './resolver';
 
 export default class NGFFControlPanel {
@@ -22,8 +21,6 @@ export default class NGFFControlPanel {
     this.graph = graph;
     this.resolver = resolver;
     element.classList.add(`${CSS_CLASS_PREFIX}control-panel`);
-
-    new ErrorAlert(graph, containerId);
 
     // Add all the buttons to the control panel
     const { loadNextBtn, loadAllBtn } = this.buildButtons(element);

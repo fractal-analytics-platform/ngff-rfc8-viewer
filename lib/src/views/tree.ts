@@ -82,6 +82,10 @@ export class TreeView {
 
   renderTree() {
     const hierarchy = this.graph.getHierarchy();
+    if (!hierarchy) {
+      return;
+    }
+
     this.width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
     this.height = Math.max(1, hierarchy.height) * NODE_SPACING;
     // We only want to set the viewBox on the first render
@@ -219,11 +223,12 @@ export class TreeView {
       })
       .on('mouseenter', (event, d) => {
         if (event.target instanceof SVGCircleElement) {
+          const { omeNode } = d.data;
           d3.select(event.target).attr('stroke', STROKE_COLORS.hover);
           this.tooltip?.style('opacity', 1).html(`
-            <strong>Id: </strong>${d.data.omeNode.id || '-'}<br>
-            <strong>Name: </strong>${d.data.omeNode.name}<br>
-            <strong>Type: </strong> ${d.data.omeNode.type}
+            <strong>Id: </strong>${('id' in omeNode ? omeNode.id : '') || '-'}<br>
+            <strong>Name: </strong>${omeNode.name || '-'}<br>
+            <strong>Type: </strong> ${omeNode.type}
           `);
         }
       })
@@ -268,7 +273,7 @@ export class TreeView {
       .each(function (d) {
         // split long labels on multiple lines
         const charsPerLine = 15;
-        const name = d.data.omeNode.name;
+        const name = d.data.omeNode.name || '';
 
         for (let i = 0; i < name.length; i += charsPerLine) {
           const line = name.substring(i, i + charsPerLine);

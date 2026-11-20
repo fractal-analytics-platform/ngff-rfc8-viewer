@@ -1,5 +1,5 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import type { D3Node, SinglescaleOmeNode, OmeNode } from './types';
+import type { D3Node, OmeArray, OmeNode } from './types';
 import * as omezarr from 'ome-zarr.js';
 import * as zarr from 'zarrita';
 
@@ -9,7 +9,7 @@ export function createThumbnailImg(
   node: D3Node,
   baseUrl: string,
   width: number = defaultWidth,
-  ssChildren?: OmeNode[]
+  ssChildren: Array<OmeNode | OmeArray> = []
 ): HTMLDivElement {
   const imgElement = document.createElement('img');
   // set initial source for the image to data:url for a blank image
@@ -34,56 +34,60 @@ export function createThumbnailImg(
 
   const rfc8multiscales: Partial<OmeNode> = node.omeNode;
   if (
-    (!('nodes' in rfc8multiscales) || rfc8multiscales.nodes?.length === 0) &&
-    !(ssChildren && ssChildren.length > 0)
+    (!('data' in rfc8multiscales) || !rfc8multiscales.data || rfc8multiscales.data.length === 0) &&
+    (!ssChildren || ssChildren.length === 0)
   ) {
     showError('RFC8 multiscale node does not contain any nodes');
     return container;
   }
 
   const ssNodes =
-    'nodes' in rfc8multiscales && rfc8multiscales.nodes?.length
-      ? rfc8multiscales.nodes?.map((node) => node as SinglescaleOmeNode)
-      : ssChildren?.map((node) => node as SinglescaleOmeNode);
+    'data' in rfc8multiscales && rfc8multiscales.data && rfc8multiscales.data.length
+      ? rfc8multiscales.data
+      : ssChildren.map((node) => node as OmeArray);
 
-  if (!(ssNodes && ssNodes.length > 0)) {
-    showError('No singlescale OME nodes found');
+  if (ssNodes.length === 0) {
+    showError('No array OME nodes found');
     return container;
   }
 
-  function createDataset(node: SinglescaleOmeNode): omezarr.Dataset {
-    const scaleTransform = node.attributes.coordinateTransformations.find(
-      (ct) => ct.type === 'scale'
-    );
-    if (!scaleTransform?.scale) {
-      showError('No scale transformation found for node: ' + node.path!.path);
-      console.log('No scale transformation found for node: ' + node.path!.path);
+  function createDataset(node: OmeArray): omezarr.Dataset | undefined {
+    if ('downsamplingTransformations' in node && node.downsamplingTransformations) {
+      const scaleTransform = node.downsamplingTransformations.find((ct) => ct.type === 'scale');
+      if (!scaleTransform?.scale) {
+        showError('No scale transformation found for node: ' + node.path!.href);
+        console.log('No scale transformation found for node: ' + node.path!.href);
+        return {
+          path: node.path!.href,
+          coordinateTransformations: []
+        };
+      }
       return {
-        path: node.path!.path,
-        coordinateTransformations: []
+        path: node.path!.href,
+        coordinateTransformations: [
+          {
+            type: 'scale' as const,
+            scale: scaleTransform!.scale
+          }
+        ]
       };
+    } else {
+      return undefined;
     }
-    return {
-      path: node.path!.path,
-      coordinateTransformations: [
-        {
-          type: 'scale' as const,
-          scale: scaleTransform!.scale
-        }
-      ]
-    };
   }
 
   if (
-    rfc8multiscales.attributes &&
-    'coordinateSystems' in rfc8multiscales.attributes &&
-    Array.isArray(rfc8multiscales.attributes.coordinateSystems) &&
-    rfc8multiscales.attributes.coordinateSystems.length > 0 &&
-    Array.isArray(rfc8multiscales.attributes.coordinateSystems[0].axes)
+    'coordinateSystems' in rfc8multiscales &&
+    Array.isArray(rfc8multiscales.coordinateSystems) &&
+    rfc8multiscales.coordinateSystems.length > 0 &&
+    Array.isArray(rfc8multiscales.coordinateSystems[0].axes)
   ) {
     const ms: omezarr.Multiscale = {
-      axes: rfc8multiscales.attributes.coordinateSystems[0].axes,
-      datasets: ssNodes.map(createDataset) as [omezarr.Dataset, ...omezarr.Dataset[]]
+      axes: rfc8multiscales.coordinateSystems[0].axes,
+      datasets: ssNodes.map(createDataset).filter((d) => !!d) as [
+        omezarr.Dataset,
+        ...omezarr.Dataset[]
+      ]
     };
 
     const v05Attrs = {

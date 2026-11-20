@@ -32,27 +32,22 @@ vi.mock('ome-zarr.js', () => {
   return { NgffImage };
 });
 
-const singlescale = {
-  type: 'singlescale',
+const array = {
+  type: 'array',
   name: 'high-res',
   id: 'd3f91d97-cf73-4bbf-aaea-d72d8a6ceca0',
-  attributes: {
-    coordinateTransformations: [
-      {
-        input: {
-          id: 'd3f91d97-cf73-4bbf-aaea-d72d8a6ceca0'
-        },
-        output: {
-          id: '36e2f255-57f0-4b47-9479-3bd63fe1c5ea'
-        },
-        type: 'scale',
-        scale: [1, 1]
-      }
-    ]
-  },
+  coordinateTransformations: [
+    {
+      input: 'd3f91d97-cf73-4bbf-aaea-d72d8a6ceca0',
+      output: '36e2f255-57f0-4b47-9479-3bd63fe1c5ea',
+      type: 'scale',
+      scale: [1, 1]
+    }
+  ],
   path: {
     type: 'zarr',
-    path: './1'
+    format: 'relative',
+    href: './1'
   }
 };
 
@@ -60,25 +55,23 @@ const multiscale = {
   type: 'multiscale',
   name: 'my multiscale',
   id: '2fc172e1-8a87-41fa-9b01-d361dfe60874',
-  attributes: {
-    coordinateSystems: [
-      {
-        id: '36e2f255-57f0-4b47-9479-3bd63fe1c5ea',
-        axes: [
-          {
-            name: 'y',
-            type: 'space',
-            unit: 'micrometer'
-          },
-          {
-            name: 'x',
-            type: 'space',
-            unit: 'micrometer'
-          }
-        ]
-      }
-    ]
-  }
+  coordinateSystems: [
+    {
+      id: '36e2f255-57f0-4b47-9479-3bd63fe1c5ea',
+      axes: [
+        {
+          name: 'y',
+          type: 'space',
+          unit: 'micrometer'
+        },
+        {
+          name: 'x',
+          type: 'space',
+          unit: 'micrometer'
+        }
+      ]
+    }
+  ]
 };
 
 const collection = {
@@ -101,7 +94,7 @@ describe('NGFFSidebar', () => {
         json: async () => ({
           ome: {
             ...collection,
-            nodes: [{ ...multiscale, nodes: [singlescale] }]
+            nodes: [{ ...multiscale, data: [array] }]
           }
         })
       });
@@ -130,7 +123,7 @@ describe('NGFFSidebar', () => {
           json: async () => ({
             ome: {
               ...collection,
-              nodes: [{ ...multiscale, path: { type: 'zarr', path: './0' } }]
+              nodes: [{ ...multiscale, path: { type: 'zarr', href: './0' } }]
             }
           })
         })
@@ -139,7 +132,7 @@ describe('NGFFSidebar', () => {
           json: async () => ({
             ome: {
               ...multiscale,
-              nodes: [singlescale]
+              data: [array]
             }
           })
         });
@@ -168,7 +161,7 @@ describe('NGFFSidebar', () => {
           json: async () => ({
             ome: {
               ...collection,
-              path: { type: 'json', path: 'https://example.com/collection.json' }
+              path: { type: 'json', href: 'https://example.com/collection.json' }
             }
           })
         })
@@ -180,7 +173,7 @@ describe('NGFFSidebar', () => {
               nodes: [
                 {
                   ...multiscale,
-                  path: { type: 'zarr', path: 'https://example.com/multiscale.json' }
+                  path: { type: 'zarr', href: 'https://example.com/multiscale.json' }
                 }
               ]
             }
@@ -191,7 +184,7 @@ describe('NGFFSidebar', () => {
           json: async () => ({
             ome: {
               ...multiscale,
-              nodes: [singlescale]
+              data: [array]
             }
           })
         });
@@ -210,7 +203,7 @@ describe('NGFFSidebar', () => {
       await vi.waitFor(() => {
         expect(element.querySelector('img')).toHaveAttribute('src', 'mock-image');
       });
-      expect(FetchStore).toHaveBeenCalledWith('https://example.com/multiscale.json');
+      expect(FetchStore).toHaveBeenCalledWith('https://example.com');
     });
   });
 });
