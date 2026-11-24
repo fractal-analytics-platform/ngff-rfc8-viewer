@@ -3,15 +3,15 @@ import { CSS_CLASS_PREFIX } from './constants';
 const exampleSources = [
   [
     'Collection with a single (inlined) image',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e01_inlined_multiscale/zarr.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/main/data/e01_inlined_multiscale/zarr.json'
   ],
   [
     'Collection with many (distributed) images',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/revision/data/e02_distributed_multiscales/zarr.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/main/data/e02_distributed_multiscales/zarr.json'
   ],
   [
     'Use https paths to add the examples above into 1 collection',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e03_http_urls_for_other_examples/root.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e03_http_urls_for_other_examples/root.json'
   ],
   // These two examples would require some currently-undefined metadata (`acquisition` and/or `field`)
   // [
@@ -24,15 +24,15 @@ const exampleSources = [
   // ],
   [
     'IDR v0.5 images to RFC-8. Singlescales use https paths',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e06_v05_idr_multi_doc/collection.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e06_v05_idr_multi_doc/collection.json'
   ],
   [
     'Plate from IDR. Singlescales use https paths',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e07_v05_plate_to_multi_doc/collection.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e07_v05_plate_to_multi_doc/collection.json'
   ],
   [
     'Big plate from IDR. Singlescales use https paths',
-    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/revision/data/e08_v05_big_plate_to_multi_doc/collection.json'
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e08_v05_big_plate_to_multi_doc/collection.json'
   ]
   // This example should be rewritten
   // [
