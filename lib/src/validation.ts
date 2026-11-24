@@ -15,9 +15,17 @@ export function validateRequiredOmeStructure(node: unknown, path = '', recursive
     throw new Error(`Invalid field at ${path || 'root'}.id: must be a string or undefined`);
   }
 
-  if ('attributes' in node && node.attributes) {
-    if (!isObject(node.attributes)) {
-      throw new Error(`Invalid field at ${path || 'root'}.attributes: must be an object`);
+  if ('coordinateTransformations' in node && node.coordinateTransformations) {
+    if (!Array.isArray(node.coordinateTransformations)) {
+      throw new Error(
+        `Invalid field at ${path || 'root'}.coordinateTransformations: must be an array`
+      );
+    }
+  }
+
+  if ('coordinateSystems' in node && node.coordinateSystems) {
+    if (!Array.isArray(node.coordinateSystems)) {
+      throw new Error(`Invalid field at ${path || 'root'}.coordinateSystems: must be an array`);
     }
   }
 
@@ -49,11 +57,11 @@ export function validateRequiredOmeStructure(node: unknown, path = '', recursive
     if (typeof node.path.type !== 'string' || !node.path.type) {
       throw new Error(`Invalid field at ${path || 'root'}.path.type: must be a non-empty string`);
     }
-    if (!('path' in node.path)) {
-      throw new Error(`Invalid field at ${path || 'root'}.path: missing path field`);
+    if (!('href' in node.path)) {
+      throw new Error(`Invalid field at ${path || 'root'}.path: missing href field`);
     }
-    if (typeof node.path.path !== 'string' || !node.path.path) {
-      throw new Error(`Invalid field at ${path || 'root'}.path.path: must be a non-empty string`);
+    if (typeof node.path.href !== 'string' || !node.path.href) {
+      throw new Error(`Invalid field at ${path || 'root'}.path.href: must be a non-empty string`);
     }
   }
 }

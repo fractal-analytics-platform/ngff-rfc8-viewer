@@ -129,16 +129,19 @@ export class NGFFSidebar {
     this.node = node;
     this.content.innerHTML = '';
 
-    this.addKeyValue('Id', node.omeNode.id || '-');
+    this.addKeyValue('Id', 'id' in node.omeNode ? node.omeNode.id : undefined);
     this.addKeyValue('Name', node.omeNode.name);
     this.addKeyValue('Type', node.omeNode.type);
+    if (node.omeNode.type === 'array') {
+      this.addKeyValue('Index', String(node.index));
+    }
 
     const fullUrl = this.resolver.resolveNode(node, true);
 
     // Show link to fullUrl json and show path if available
     if ('path' in node.omeNode && node.omeNode.path) {
       this.addKeyValueLink('File loaded from', fullUrl);
-      this.addKeyValue('Path', `${node.omeNode.path.path} (type: ${node.omeNode.path.type})`);
+      this.addKeyValue('Path', `${node.omeNode.path.href} (type: ${node.omeNode.path.type})`);
     } else {
       this.addKeyValueLink('Node in-line in file', fullUrl);
     }
@@ -146,24 +149,20 @@ export class NGFFSidebar {
     // For multiscale nodes, display a thumbnail image
     if (node.omeNode.type === 'multiscale') {
       const baseUrl = this.resolver.getDirectory(fullUrl);
-      // if the node has in-line 'singlescale' nodes, they contain all info the thumbnail needs
-      if ('nodes' in node.omeNode) {
+      // if the node has in-line 'array' nodes, they contain all info the thumbnail needs
+      if ('data' in node.omeNode) {
         this.content.appendChild(createThumbnailImg(node, baseUrl, 150));
       } else {
         // otherwise we need to traverse the graph to get child nodes
         const children = this.graph.getChildren(node).map((child) => child.omeNode);
         this.content.appendChild(createThumbnailImg(node, baseUrl, 150, children));
       }
+    } else if (node.omeNode.type === 'array') {
+      this.addArrayInfo(fullUrl);
     }
 
-    if (node.omeNode.attributes) {
-      this.addTitle('Attributes');
-      const pre = document.createElement('pre');
-      pre.textContent = JSON.stringify(node.omeNode.attributes, null, 2);
-      this.content.appendChild(pre);
-    } else {
-      this.addKeyValue('Attributes', '-');
-    }
+    this.addFieldValue(node.omeNode, 'coordinateTransformations', 'Coordinate Transformations');
+    this.addFieldValue(node.omeNode, 'coordinateSystems', 'Coordinate Systems');
 
     if (this.graph.getValidation()) {
       this.showValidation(node);
@@ -234,6 +233,34 @@ export class NGFFSidebar {
     return { ome: omeNode };
   }
 
+  private async addArrayInfo(url: string) {
+    try {
+      const response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        this.addKeyValue('Data Type', data.data_type, 'code');
+        this.addKeyValue('Shape', JSON.stringify(data.shape), 'code');
+        this.addKeyValue('Dimensions', JSON.stringify(data.dimension_names), 'code');
+        this.addFieldValue(data, 'chunk_grid', 'Chunk grid');
+      } else {
+        this.addErrorElement(
+          `Unable to fetch array info. Server replied with ${response.status} status.`
+        );
+      }
+    } catch (err) {
+      this.addErrorElement(
+        `Error while adding array info. Cause is: ${err instanceof Error ? err.message : 'Unexpected error'}`
+      );
+    }
+  }
+
+  private addErrorElement(message: string) {
+    const errorElement = document.createElement('div');
+    errorElement.classList.add(`${CSS_CLASS_PREFIX}error`);
+    errorElement.textContent = message;
+    this.content.append(errorElement);
+  }
+
   private addTitle(value: string) {
     const p = document.createElement('p');
     const title = document.createElement('strong');
@@ -242,10 +269,19 @@ export class NGFFSidebar {
     this.content.appendChild(p);
   }
 
-  private addKeyValue(key: string, value: string) {
+  private addFieldValue(node: Record<string, any>, key: string, label: string) {
+    if (key in node) {
+      this.addTitle(label);
+      const pre = document.createElement('pre');
+      pre.textContent = JSON.stringify(node[key], null, 2);
+      this.content.appendChild(pre);
+    }
+  }
+
+  private addKeyValue(key: string, value: string | undefined, tag = 'span') {
     const p = document.createElement('p');
     const title = document.createElement('strong');
-    const text = document.createElement('span');
+    const text = document.createElement(tag);
     title.textContent = `${key}: `;
     text.textContent = value || '-';
     p.appendChild(title);

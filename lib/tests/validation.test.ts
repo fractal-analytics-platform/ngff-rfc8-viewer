@@ -9,12 +9,6 @@ describe('validation', () => {
         type: 'collection',
         name: 'My Dataset',
         id: 'dataset',
-        attributes: {
-          'fractal:dataset': {
-            user: 'lorenzo',
-            project: 'base-dataset'
-          }
-        },
         nodes: [
           {
             type: 'collection',
@@ -22,7 +16,8 @@ describe('validation', () => {
             id: 'plate',
             path: {
               type: 'json',
-              path: './plate/plate.json'
+              format: 'relative',
+              href: './plate/plate.json'
             }
           }
         ]
@@ -54,14 +49,24 @@ describe('validation', () => {
     ).toThrow('Invalid field at root.id: must be a string or undefined');
   });
 
-  it('invalid attributes type', () => {
+  it('invalid coordinateTransformations type', () => {
     expect(() =>
       validateRequiredOmeStructure({
-        type: 'collection',
+        type: 'multiscale',
         name: 'foo',
-        attributes: []
+        coordinateTransformations: {}
       })
-    ).toThrow('Invalid field at root.attributes: must be an object');
+    ).toThrow('Invalid field at root.coordinateTransformations: must be an array');
+  });
+
+  it('invalid coordinateSystems type', () => {
+    expect(() =>
+      validateRequiredOmeStructure({
+        type: 'multiscale',
+        name: 'foo',
+        coordinateSystems: {}
+      })
+    ).toThrow('Invalid field at root.coordinateSystems: must be an array');
   });
 
   it('invalid path', () => {
@@ -86,7 +91,7 @@ describe('validation', () => {
     ).toThrow('Invalid field at root.path: missing type field');
   });
 
-  it('missing path.path', () => {
+  it('missing path.href', () => {
     expect(() =>
       validateRequiredOmeStructure({
         type: 'collection',
@@ -94,7 +99,7 @@ describe('validation', () => {
         id: 'foo',
         path: { type: 'zarr' }
       })
-    ).toThrow('Invalid field at root.path: missing path field');
+    ).toThrow('Invalid field at root.path: missing href field');
   });
 
   it('invalid path.type', () => {
@@ -108,15 +113,15 @@ describe('validation', () => {
     ).toThrow('Invalid field at root.path.type: must be a non-empty string');
   });
 
-  it('invalid path.path', () => {
+  it('invalid path.href', () => {
     expect(() =>
       validateRequiredOmeStructure({
         type: 'collection',
         name: 'foo',
         id: 'foo',
-        path: { type: 'zarr', path: [] }
+        path: { type: 'zarr', href: [] }
       })
-    ).toThrow('Invalid field at root.path.path: must be a non-empty string');
+    ).toThrow('Invalid field at root.path.href: must be a non-empty string');
   });
 
   it('invalid multiscale: found both nodes and path', () => {

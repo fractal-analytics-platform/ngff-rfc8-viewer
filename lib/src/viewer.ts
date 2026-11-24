@@ -1,5 +1,6 @@
 import { CSS_CLASS_PREFIX } from './constants';
 import NGFFControlPanel from './control';
+import { ErrorAlert } from './error';
 import { NGFFGraph } from './graph';
 import { createHomepage } from './homepage';
 import { NGFFResolver } from './resolver';
@@ -59,6 +60,7 @@ export default class NGFFViewer {
 
       // sidebar listens to graph update and load events
       new NGFFSidebar(sidebar, this.graph, resolver);
+      new ErrorAlert(this.graph, this.graphContainerId);
 
       // When page loads, we first load the graph's root...
       await this.graph.loadRoot();

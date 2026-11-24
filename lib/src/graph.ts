@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import type { D3Node, ExtraEdgesFn, OmeNode, OmePath } from './types';
+import type { D3Node, ExtraEdgesFn, OmeArray, OmeNode, OmePath } from './types';
 import { NGFFLoader, UntrustedDomainError } from './loader';
 import type { NGFFResolver } from './resolver';
 
@@ -24,8 +24,6 @@ export class NGFFGraph {
     nodeSelected: [] as Array<(node?: D3Node) => void>,
     change: [] as Array<() => void>
   };
-
-  private lastGeneratedId = 0;
 
   constructor(
     resolver: NGFFResolver,
@@ -65,6 +63,9 @@ export class NGFFGraph {
   // called when loading fails
   signalError(message: string | null) {
     console.trace(message); // to enable debugging of where the error originated
+    if (message && message.match(/^ambiguous: .*/)) {
+      message = 'Graph cycle not supported';
+    }
     this.eventListeners['error'].forEach((fn) => fn(message));
   }
   // handled by viewer showing an error
@@ -148,20 +149,18 @@ export class NGFFGraph {
 
   walk(
     nodes: Array<D3Node>,
-    node: OmeNode & { generatedId?: string },
+    node: OmeNode | OmeArray,
+    id: string,
     parentId: string | null,
+    index: number | null,
     resolvedPath: string,
     extraEdges: Array<{ sourceId: string; targetId: string }>
   ) {
-    if (!('generatedId' in node) || !node.generatedId) {
-      this.lastGeneratedId++;
-      node.generatedId = String(this.lastGeneratedId);
-    }
-
     nodes.push({
-      id: node.generatedId,
-      omeNode: this.getBasicOmeNode(node),
+      id,
+      omeNode: { ...node },
       parentId: parentId,
+      index: node.type === 'array' ? index : null,
       loading: false,
       loaded: !('path' in node),
       resolvedPath,
@@ -174,23 +173,24 @@ export class NGFFGraph {
       this.computeExtraEdges(node, extraEdges);
     }
 
-    if ('nodes' in node && node.nodes) {
-      node.nodes.forEach((child) =>
-        this.walk(nodes, child, node.generatedId!, resolvedPath, extraEdges)
-      );
+    const children = 'nodes' in node ? node.nodes : 'data' in node ? node.data : [];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      const childId = 'id' in child ? child.id : `${id}/${i}`;
+      this.walk(nodes, child, childId, id, i, resolvedPath, extraEdges);
     }
-  }
-
-  private getBasicOmeNode(node: OmeNode): OmeNode {
-    const nodeCopy = { ...node };
-    if ('generatedId' in nodeCopy) {
-      delete nodeCopy['generatedId'];
-    }
-    return nodeCopy;
   }
 
   async render(ome: OmeNode) {
-    this.walk(this.nodes, ome, null, this.resolver.getRootRelativePath(), this.extraEdges);
+    this.walk(
+      this.nodes,
+      ome,
+      ome.id,
+      null,
+      null,
+      this.resolver.getRootRelativePath(),
+      this.extraEdges
+    );
     this.buildHierarchy();
 
     if (this.autoloadDepth > 0) {
@@ -212,12 +212,12 @@ export class NGFFGraph {
     }
   }
 
-  getNodeId(node: D3Node): string {
-    return node.omeNode.id || node.omeNode?.name;
-  }
-
   getNode(id: string): D3Node | undefined {
     return this.nodes.find((n) => n.id === id);
+  }
+
+  getNodeOmeId(node: D3Node): string | undefined {
+    return 'id' in node.omeNode ? node.omeNode.id : undefined;
   }
 
   getChildren(node: D3Node): Array<D3Node> {
@@ -226,14 +226,16 @@ export class NGFFGraph {
 
   getParentsIds(node: D3Node): Array<string> {
     const parents: Array<string> = [];
-    parents.push(this.getNodeId(node));
+    if (node.omeNode.type !== 'array') {
+      parents.push(node.id);
+    }
     let current = node;
     while (current.parentId) {
       const parent = this.nodes.find((n) => n.id === current.parentId);
       if (!parent) {
         break;
       }
-      parents.push(this.getNodeId(parent));
+      parents.push(parent.id);
       current = parent;
     }
     return parents.reverse();
@@ -245,37 +247,35 @@ export class NGFFGraph {
       throw new Error('Cannot select a path before the graph has loaded');
     }
 
-    const parentIds = targetPath.split('/');
+    const parentOmeIds = targetPath.split('/');
     let currentNode: D3Node | null = null;
-    currentNode = this.nodes.find((n) => this.getNodeId(n) === parentIds[0]) || null;
+    currentNode = this.nodes.find((n) => this.getNodeOmeId(n) === parentOmeIds[0]) || null;
     if (!currentNode) {
       throw new Error(`No node found at path "${targetPath}"`);
     }
-    parentIds.shift();
+    parentOmeIds.shift();
 
-    while (parentIds.length > 0) {
-      const nextId = parentIds[0];
+    while (parentOmeIds.length > 0) {
+      const nextOmeId = parentOmeIds[0];
       // make sure node is loaded before looking for its children
       await this.loadNodeWithSignal(
         currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } }
       );
       const child = this.nodes.find(
-        (n) => n.parentId === currentNode!.id && this.getNodeId(n) === nextId
+        (n) => n.parentId === currentNode!.id && this.getNodeOmeId(n) === nextOmeId
       );
       if (!child) {
-        throw new Error(
-          `Node at path "${this.getNodeId(currentNode!)}" had no child with ID "${nextId}"`
-        );
+        throw new Error(`Node at path "${currentNode.id}" had no child with ID "${nextOmeId}"`);
       }
       currentNode = child;
-      parentIds.shift();
+      parentOmeIds.shift();
     }
 
     // Finally, let's load the target node
     this.selectNode(currentNode);
     await this.loadNodeWithSignal(currentNode as D3Node & { omeNode: OmeNode & { path: OmePath } });
 
-    return currentNode!;
+    return currentNode;
   }
 
   async recursiveLoad(autoloadDepth: number) {
@@ -284,7 +284,7 @@ export class NGFFGraph {
       for (const leave of this.hierarchy!.leaves()) {
         if ('path' in leave.data.omeNode) {
           const node = leave.data as D3Node & { omeNode: OmeNode & { path: OmePath } };
-          if (!node.loaded && !node.error && !(node.omeNode.type === 'singlescale')) {
+          if (!node.loaded && !node.error && !(node.omeNode.type === 'array')) {
             await this.loadNode(node);
             loaded = true;
           }
@@ -302,15 +302,16 @@ export class NGFFGraph {
   }
 
   async loadNode(node: D3Node & { omeNode: OmeNode & { path: OmePath } }) {
-    if (node.loading || node.loaded || node.error || node.omeNode.type === 'singlescale') {
+    if (node.loading || node.loaded || node.error || node.omeNode.type === 'array') {
       return;
     }
     node.loading = true;
     try {
       const loadPath = this.resolver.resolveNode(node);
+      node.resolvedPath = loadPath;
       const ome = await this.loader.loadNode(loadPath);
       this.updateNode(node, ome);
-      this.appendSubtree(ome, loadPath);
+      this.appendSubtree(node, ome, loadPath);
     } catch (err) {
       if (err instanceof UntrustedDomainError) {
         node.loading = false;
@@ -336,15 +337,14 @@ export class NGFFGraph {
 
   updateNode(node: D3Node, ome: OmeNode) {
     node.loaded = true;
-    node.omeNode.attributes = { ...(node.omeNode.attributes || {}), ...ome.attributes };
-    (ome as any).generatedId = node.id;
+    node.omeNode = { ...ome };
     this.signalNodeUpdated(node);
   }
 
-  appendSubtree(ome: OmeNode, resolvedPath: string) {
+  appendSubtree(node: D3Node, ome: OmeNode, resolvedPath: string) {
     const nodes: Array<D3Node> = [];
     const extraEdges: Array<{ sourceId: string; targetId: string }> = [];
-    this.walk(nodes, ome, null, resolvedPath, extraEdges);
+    this.walk(nodes, ome, node.id, node.parentId, null, resolvedPath, extraEdges);
     if (nodes.length > 0) {
       this.nodes.push(...nodes.splice(1));
     }

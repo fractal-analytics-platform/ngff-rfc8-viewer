@@ -85,7 +85,7 @@ describe('NGFFResolver', () => {
   });
 
   describe('resolveNode', () => {
-    it('resolve node with zarr path', () => {
+    it('resolve node with relative path - zarr type', () => {
       const resolver = new NGFFResolver(source);
       const path = resolver.resolveNode(
         {
@@ -93,7 +93,8 @@ describe('NGFFResolver', () => {
           omeNode: {
             path: {
               type: 'zarr',
-              path: './0'
+              format: 'relative',
+              href: './0'
             }
           }
         } as D3Node,
@@ -102,7 +103,7 @@ describe('NGFFResolver', () => {
       expect(path).toEqual('https://example.com/graph/0/zarr.json');
     });
 
-    it('resolve node with json path', () => {
+    it('resolve node with relative path - json type', () => {
       const resolver = new NGFFResolver(source);
       const path = resolver.resolveNode(
         {
@@ -110,13 +111,34 @@ describe('NGFFResolver', () => {
           omeNode: {
             path: {
               type: 'json',
-              path: './0/node.json'
+              format: 'relative',
+              href: './0/node.json'
             }
           }
         } as D3Node,
         true
       );
       expect(path).toEqual('https://example.com/graph/0/node.json');
+    });
+
+    it('resolve node with absolute path - zarr type', () => {
+      const resolver = new NGFFResolver(source);
+      const path = resolver.resolveNode(
+        {
+          resolvedPath: './zarr.json',
+          omeNode: {
+            path: {
+              type: 'zarr',
+              format: 'http',
+              href: 'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e01_inlined_multiscale'
+            }
+          }
+        } as D3Node,
+        true
+      );
+      expect(path).toEqual(
+        'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e01_inlined_multiscale/zarr.json'
+      );
     });
   });
 });
