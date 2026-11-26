@@ -20,11 +20,11 @@ export class NGFFLoader {
     this.addTrustedDomain(url.hostname);
   }
 
-  async loadGraphData(): Promise<OmeNode> {
+  public async loadGraphData(): Promise<OmeNode> {
     return await this.loadNode(this.resolver.getSource());
   }
 
-  async loadNode(source: string): Promise<OmeNode> {
+  public async loadNode(source: string): Promise<OmeNode> {
     source = this.resolver.getAbsoluteUrl(source);
     const url = this.checkUrl(source);
     if (!this.trustedDomains.includes(url.hostname)) {
@@ -51,7 +51,7 @@ export class NGFFLoader {
     }
   }
 
-  addTrustedDomain(domain: string) {
+  public addTrustedDomain(domain: string) {
     this.trustedDomains.push(domain);
   }
 

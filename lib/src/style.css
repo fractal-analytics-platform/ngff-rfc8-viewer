@@ -33,7 +33,11 @@
   position: relative;
 }
 
-.ngff-rfc8-viewer-graph-container .export-buttons {
+.ngff-rfc8-viewer-view-container {
+  height: 100%;
+}
+
+.ngff-rfc8-viewer-view-container .export-buttons {
   position: absolute;
   right: 10px;
   bottom: 10px;

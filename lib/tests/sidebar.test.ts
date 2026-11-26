@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NGFFResolver } from '../src/resolver';
 import { NGFFGraph } from '../src/graph';
 import { NGFFSidebar } from '../src/sidebar';
+import { NGFFGraphPage } from '../src/pages/graph';
 import '@testing-library/jest-dom/vitest';
 
 const { FetchStore } = vi.hoisted(() => {
@@ -81,6 +82,12 @@ const collection = {
   id: 'a362bc11-0d35-48e7-a058-3c311b398120'
 };
 
+const mockGraphPage = {
+  getValidation: () => false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  signalLoading: (_) => {}
+} as NGFFGraphPage;
+
 describe('NGFFSidebar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -99,13 +106,13 @@ describe('NGFFSidebar', () => {
         })
       });
       const resolver = new NGFFResolver('https://example.com/graph/root.json');
-      const graph = new NGFFGraph(resolver, 0);
+      const graph = new NGFFGraph(mockGraphPage, resolver, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][1] as any);
 
-      const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, graph, resolver);
-      sidebar.showInfo(graph['nodes'][1]);
+      const sidebar = new NGFFSidebar(mockGraphPage, graph, resolver);
+      sidebar.setNode(graph['nodes'][1]);
+      const element = sidebar.render();
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
       expect(element).toHaveTextContent('Name: my multiscale');
@@ -137,13 +144,13 @@ describe('NGFFSidebar', () => {
           })
         });
       const resolver = new NGFFResolver('https://example.com/graph/');
-      const graph = new NGFFGraph(resolver, 0);
+      const graph = new NGFFGraph(mockGraphPage, resolver, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][1] as any);
 
-      const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, graph, resolver);
-      sidebar.showInfo(graph['nodes'][1]);
+      const sidebar = new NGFFSidebar(mockGraphPage, graph, resolver);
+      sidebar.setNode(graph['nodes'][1]);
+      const element = sidebar.render();
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
       expect(element).toHaveTextContent('Name: my multiscale');
@@ -189,14 +196,14 @@ describe('NGFFSidebar', () => {
           })
         });
       const resolver = new NGFFResolver('https://example.com/');
-      const graph = new NGFFGraph(resolver, 0);
+      const graph = new NGFFGraph(mockGraphPage, resolver, 0);
       await graph.loadRoot();
       await graph.loadNode(graph['nodes'][0] as any);
       await graph.loadNode(graph['nodes'][1] as any);
 
-      const element = document.createElement('div');
-      const sidebar = new NGFFSidebar(element, graph, resolver);
-      sidebar.showInfo(graph['nodes'][1]);
+      const sidebar = new NGFFSidebar(mockGraphPage, graph, resolver);
+      sidebar.setNode(graph['nodes'][1]);
+      const element = sidebar.render();
 
       expect(element).toHaveTextContent('Id: 2fc172e1-8a87-41fa-9b01-d361dfe60874');
       expect(element).toHaveTextContent('Name: my multiscale');

@@ -1,25 +1,34 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import type { NGFFGraph } from './graph';
 
 export class ErrorAlert {
   private errorAlert: HTMLDivElement;
 
-  constructor(graph: NGFFGraph, containerId: string) {
+  constructor() {
     this.errorAlert = document.createElement('div');
+  }
+
+  public render(): HTMLElement {
     this.errorAlert.classList.add(
       `${CSS_CLASS_PREFIX}alert`,
       `${CSS_CLASS_PREFIX}error`,
       `${CSS_CLASS_PREFIX}alert-fixed`,
       `${CSS_CLASS_PREFIX}hide`
     );
-    document.getElementById(containerId)?.appendChild(this.errorAlert);
-
-    graph.addErrorListener((message: string | null) =>
-      message === null ? this.hideErrorAlert() : this.showErrorAlert(message)
-    );
+    return this.errorAlert;
   }
 
-  showErrorAlert(message: string) {
+  public signalError(err: unknown) {
+    if (err) {
+      console.trace(err); // to enable debugging of where the error originated
+      const message =
+        typeof err === 'string' ? err : err instanceof Error ? err.message : 'Unexpected error';
+      this.showErrorAlert(message);
+    } else {
+      this.hideErrorAlert();
+    }
+  }
+
+  private showErrorAlert(message: string) {
     this.errorAlert.innerHTML = '';
     const span = document.createElement('span');
     span.textContent = message;
@@ -31,7 +40,7 @@ export class ErrorAlert {
     this.errorAlert.classList.remove(`${CSS_CLASS_PREFIX}hide`);
   }
 
-  hideErrorAlert() {
+  private hideErrorAlert() {
     this.errorAlert.classList.add(`${CSS_CLASS_PREFIX}hide`);
   }
 }

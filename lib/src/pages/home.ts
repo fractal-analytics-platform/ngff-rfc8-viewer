@@ -1,4 +1,4 @@
-import { CSS_CLASS_PREFIX } from './constants';
+import { CSS_CLASS_PREFIX } from '../constants';
 
 const exampleSources = [
   [
@@ -41,48 +41,50 @@ const exampleSources = [
   // ],
 ];
 
-export function createHomepage(): HTMLDivElement {
-  const container = document.createElement('div');
-  container.classList.add(`${CSS_CLASS_PREFIX}homepage`);
-  container.appendChild(document.createElement('h1')).textContent = 'ngff-rfc8-viewer';
+export class NGFFHomePage {
+  public render(): HTMLElement {
+    const container = document.createElement('div');
+    container.classList.add(`${CSS_CLASS_PREFIX}homepage`);
+    container.appendChild(document.createElement('h1')).textContent = 'ngff-rfc8-viewer';
 
-  const queryParams = new URLSearchParams(window.location.search);
-  const currentUrl = window.location.href;
+    const queryParams = new URLSearchParams(window.location.search);
+    const currentUrl = window.location.href;
 
-  const form = document.createElement('form');
-  container.appendChild(form);
-  const input = document.createElement('input');
-  input.placeholder = 'Enter source URL...';
-  input.name = 'source';
-  form.method = 'get';
-  form.action = currentUrl.split('?')[0];
-  form.appendChild(input);
+    const form = document.createElement('form');
+    container.appendChild(form);
+    const input = document.createElement('input');
+    input.placeholder = 'Enter source URL...';
+    input.name = 'source';
+    form.method = 'get';
+    form.action = currentUrl.split('?')[0];
+    form.appendChild(input);
 
-  // Add a list of example sources
-  const list = document.createElement('ul');
-  container.appendChild(list);
+    // Add a list of example sources
+    const list = document.createElement('ul');
+    container.appendChild(list);
 
-  function createLink(url: string, text: string, parent: HTMLElement): HTMLAnchorElement {
-    const link = document.createElement('a');
-    queryParams.set('source', url);
-    link.href = `${currentUrl.split('?')[0]}?${queryParams.toString()}`;
-    link.textContent = text;
-    parent.appendChild(link);
-    const jsonLink = document.createElement('a');
-    jsonLink.href = url;
-    jsonLink.target = '_blank';
-    jsonLink.style.marginLeft = '20px';
-    jsonLink.textContent = '[view json]';
-    parent.appendChild(jsonLink);
-    return link;
+    function createLink(url: string, text: string, parent: HTMLElement): HTMLAnchorElement {
+      const link = document.createElement('a');
+      queryParams.set('source', url);
+      link.href = `${currentUrl.split('?')[0]}?${queryParams.toString()}`;
+      link.textContent = text;
+      parent.appendChild(link);
+      const jsonLink = document.createElement('a');
+      jsonLink.href = url;
+      jsonLink.target = '_blank';
+      jsonLink.style.marginLeft = '20px';
+      jsonLink.textContent = '[view json]';
+      parent.appendChild(jsonLink);
+      return link;
+    }
+
+    for (const [text, url] of exampleSources) {
+      const listItem = document.createElement('li');
+      listItem.style.marginBottom = '10px';
+      createLink(url, text, listItem);
+      list.appendChild(listItem);
+    }
+
+    return container;
   }
-
-  for (const [text, url] of exampleSources) {
-    const listItem = document.createElement('li');
-    listItem.style.marginBottom = '10px';
-    createLink(url, text, listItem);
-    list.appendChild(listItem);
-  }
-
-  return container;
 }

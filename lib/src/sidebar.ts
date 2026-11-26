@@ -4,67 +4,41 @@ import type { D3Node } from './types';
 import { NGFFGraph } from './graph';
 import { createThumbnailImg } from './thumbnail';
 import type { NGFFResolver } from './resolver';
+import type { NGFFGraphPage } from './pages/graph';
 
-const defaultWidth = 560;
-const minWidth = 150;
-const minSpace = 100;
-const smallScreenBreakpoint = 768;
-// validation errors to ignore for *unloaded* multiscale nodes only
-const IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE = [
-  "must have required property 'attributes'",
-  'must match "then" schema'
-];
+const DEFAULT_WIDTH = 560;
+const MIN_WIDTH = 150;
+const MIN_SPACE = 100;
+const SMALL_SCREEN_BREAKPOINT = 768;
 
 export class NGFFSidebar {
-  private element: HTMLElement;
-  private content: HTMLElement;
-  private node: D3Node | null = null;
+  private page: NGFFGraphPage;
   private graph: NGFFGraph;
   private resolver: NGFFResolver;
+  private element: HTMLElement;
+  private content: HTMLElement;
 
-  constructor(element: HTMLElement, graph: NGFFGraph, resolver: NGFFResolver) {
-    this.element = element;
+  private node: D3Node | undefined = undefined;
+
+  constructor(page: NGFFGraphPage, graph: NGFFGraph, resolver: NGFFResolver) {
+    this.page = page;
     this.graph = graph;
     this.resolver = resolver;
+    this.element = document.createElement('div');
+    this.content = document.createElement('div');
+  }
 
-    // Listen for loading & update events from the graph to refresh the sidebar if needed
-    graph.addLoadingListener((loading) => {
-      if (!loading && this.isOpen()) {
-        // If the current node is a multiscale node with remote children (now loaded),
-        // showInfo() to display thumbnail
-        if (
-          this.node &&
-          this.node.omeNode.type === 'multiscale' &&
-          !('nodes' in this.node.omeNode)
-        ) {
-          this.showInfo(this.node);
-        }
-      }
-    });
-    graph.addNodeUpdatedListener((node) => {
-      if (this.isOpen()) {
-        this.showInfo(node);
-      }
-    });
-    graph.addNodeSelectedListener((node) => {
-      if (node) {
-        this.showInfo(node);
-      } else {
-        this.content.innerHTML = '';
-        this.hide();
-      }
-    });
-
-    element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
+  public render(): HTMLElement {
+    this.element.classList.add(`${CSS_CLASS_PREFIX}sidebar`, `${CSS_CLASS_PREFIX}hide`);
 
     this.buildResizer();
 
-    const content = document.createElement('div');
-    content.classList.add(`${CSS_CLASS_PREFIX}sidebar-content`);
-    element.appendChild(content);
-    this.content = content;
+    this.content.classList.add(`${CSS_CLASS_PREFIX}sidebar-content`);
+    this.element.appendChild(this.content);
 
-    this.setWidth(defaultWidth);
+    this.setWidth(DEFAULT_WIDTH);
+
+    return this.element;
   }
 
   private buildResizer() {
@@ -96,9 +70,9 @@ export class NGFFSidebar {
 
       const delta = e.clientX - startX;
       const newWidth = startWidth - delta;
-      const maxWidth = document.documentElement.clientWidth - minSpace;
+      const maxWidth = document.documentElement.clientWidth - MIN_SPACE;
 
-      if (newWidth >= minWidth && newWidth <= maxWidth) {
+      if (newWidth >= MIN_WIDTH && newWidth <= maxWidth) {
         this.setWidth(newWidth);
       }
     };
@@ -115,19 +89,28 @@ export class NGFFSidebar {
 
   private setWidth(width: number) {
     const viewportWidth = document.documentElement.clientWidth;
-    if (viewportWidth <= smallScreenBreakpoint) {
+    if (viewportWidth <= SMALL_SCREEN_BREAKPOINT) {
       return;
     }
-    if (width > viewportWidth - minSpace) {
-      width = viewportWidth - minSpace;
+    if (width > viewportWidth - MIN_SPACE) {
+      width = viewportWidth - MIN_SPACE;
     }
     this.element.style.width = `${width}px`;
     this.element.style.minWidth = `${width}px`;
   }
 
-  showInfo(node: D3Node) {
+  public refresh() {
+    this.setNode(this.node);
+  }
+
+  public setNode(node?: D3Node) {
     this.node = node;
     this.content.innerHTML = '';
+
+    if (!node) {
+      this.hide();
+      return;
+    }
 
     this.addKeyValue('Id', 'id' in node.omeNode ? node.omeNode.id : undefined);
     this.addKeyValue('Name', node.omeNode.name);
@@ -164,7 +147,7 @@ export class NGFFSidebar {
     this.addFieldValue(node.omeNode, 'coordinateTransformations', 'Coordinate Transformations');
     this.addFieldValue(node.omeNode, 'coordinateSystems', 'Coordinate Systems');
 
-    if (this.graph.getValidation()) {
+    if (this.page.getValidation()) {
       this.showValidation(node);
     } else {
       this.element.classList.remove(`${CSS_CLASS_PREFIX}has-error`);
@@ -187,15 +170,8 @@ export class NGFFSidebar {
           Array.isArray(err.schemaErrors) &&
           err.schemaErrors.length > 0
         ) {
-          const toIgnore =
-            !node.loaded && node.omeNode.type === 'multiscale'
-              ? IGNORED_ERRORS_FOR_UNLOADED_MULTISCALE
-              : [];
-
           error.textContent = 'Validation errors, see below';
-          for (const schemaError of err.schemaErrors.filter(
-            (se) => !toIgnore.includes(se.message)
-          )) {
+          for (const schemaError of err.schemaErrors) {
             // we log in case node reloading causes the error to be lost
             console.log('Schema Validation error:', schemaError);
             const error = document.createElement('pre');
@@ -302,11 +278,7 @@ export class NGFFSidebar {
     this.content.appendChild(p);
   }
 
-  hide() {
+  private hide() {
     this.element.classList.add(`${CSS_CLASS_PREFIX}hide`);
-  }
-
-  isOpen() {
-    return !this.element.classList.contains(`${CSS_CLASS_PREFIX}hide`);
   }
 }
