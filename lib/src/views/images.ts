@@ -10,6 +10,7 @@ const SCROLL_DEBOUNCE_MS = 50;
 export class ImagesView implements NGFFView {
   private graph: NGFFGraph;
   private rootElement: HTMLDivElement;
+  private warningMessageElement: HTMLDivElement;
   private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
   private rendering = false;
 
@@ -24,6 +25,14 @@ export class ImagesView implements NGFFView {
       }
     };
     this.rootElement.addEventListener('scroll', this.onScroll);
+
+    this.warningMessageElement = document.createElement('div');
+    this.warningMessageElement.classList.add(
+      `${CSS_CLASS_PREFIX}alert`,
+      `${CSS_CLASS_PREFIX}warning`,
+      `${CSS_CLASS_PREFIX}hide`
+    );
+
     container.appendChild(this.rootElement);
   }
 
@@ -68,6 +77,7 @@ export class ImagesView implements NGFFView {
       }
     });
     await Promise.all(thumbnailPromises);
+    this.checkUnloadedNodes();
   }
 
   private async loadThumbnail(nodeElement: HTMLElement) {
@@ -110,23 +120,7 @@ export class ImagesView implements NGFFView {
     }
     this.rendering = true;
     this.rootElement.innerHTML = '';
-    const unloadedCollections = this.graph.countUnloadedNodes('collection');
-    const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
-    let message = '';
-    if (unloadedCollections > 0) {
-      message = `${unloadedCollections} collections are not loaded.
-      Not all images are shown. Click the "Load All Nodes" button above.`;
-    } else if (unloadedMultiscales > 0) {
-      message = `Some multiscale nodes are not loaded.
-      Thumbnails won't be displayed. Click nodes below to load.`;
-    }
-    if (message) {
-      const msg = document.createElement('div');
-      msg.textContent = message;
-      msg.style.margin = '0 0 1em 0';
-      msg.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}warning`);
-      this.rootElement.appendChild(msg);
-    }
+    this.rootElement.appendChild(this.warningMessageElement);
 
     const hierarchy = this.graph.getHierarchy();
     if (!hierarchy) {
@@ -139,6 +133,21 @@ export class ImagesView implements NGFFView {
     });
     await this.loadVisibleThumbnails();
     this.rendering = false;
+  }
+
+  private checkUnloadedNodes() {
+    const unloadedCollections = this.graph.countUnloadedNodes('collection');
+    const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
+    let message = '';
+    if (unloadedCollections > 0) {
+      message = `${unloadedCollections} collections are not loaded.
+      Not all images are shown. Click the "Load All Nodes" button above.`;
+    } else if (unloadedMultiscales > 0) {
+      message = `Some multiscale nodes are not loaded.
+      Thumbnails won't be displayed. Click nodes below to load.`;
+    }
+    this.warningMessageElement.textContent = message;
+    this.warningMessageElement.classList.toggle(`${CSS_CLASS_PREFIX}hide`, !message);
   }
 
   private renderNode(node: D3Node) {

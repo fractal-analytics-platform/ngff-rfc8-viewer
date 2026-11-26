@@ -428,3 +428,7 @@ Show the "sidebar" below the graph
 .ngff-rfc8-viewer-image-row .ngff-rfc8-viewer-thumbnail-container {
   flex-shrink: 0;
 }
+
+.ngff-rfc8-viewer-images-graph-root .ngff-rfc8-viewer-alert {
+  margin: 0 0 1em 0;
+}
