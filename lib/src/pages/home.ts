@@ -56,8 +56,16 @@ export class NGFFHomePage {
     input.placeholder = 'Enter source URL...';
     input.name = 'source';
     form.method = 'get';
+    input.addEventListener('paste', function (event) {
+      if (event.clipboardData) {
+        input.value = event.clipboardData.getData('text');
+        form.submit();
+      }
+    });
     form.action = currentUrl.split('?')[0];
     form.appendChild(input);
+    this.appendHiddenInputFromParam(form, queryParams, 'view');
+    this.appendHiddenInputFromParam(form, queryParams, 'validate');
 
     // Add a list of example sources
     const list = document.createElement('ul');
@@ -86,5 +94,16 @@ export class NGFFHomePage {
     }
 
     return container;
+  }
+
+  private appendHiddenInputFromParam(form: HTMLFormElement, params: URLSearchParams, key: string) {
+    const value = params.get(key);
+    if (value) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    }
   }
 }
