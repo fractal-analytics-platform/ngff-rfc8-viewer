@@ -26,7 +26,9 @@ export class NGFFAlert {
 
   public signalError(err: unknown) {
     if (err) {
-      console.trace(err); // to enable debugging of where the error originated
+      if (typeof err !== 'string') {
+        console.trace(err); // to enable debugging of where the error originated
+      }
       this.message =
         typeof err === 'string' ? err : err instanceof Error ? err.message : 'Unexpected error';
       this.showMessage();

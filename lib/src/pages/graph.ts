@@ -162,11 +162,11 @@ export class NGFFGraphPage {
 
   public async backToRoot() {
     this.view?.selectNode();
+    if (this.view instanceof TreeView) {
+      this.view.resetZoom();
+    }
     try {
       await this.graph.loadRoot();
-      if (this.view instanceof TreeView) {
-        this.view.resetZoom();
-      }
       this.view?.render();
     } catch (err) {
       this.displayRootError(err);
