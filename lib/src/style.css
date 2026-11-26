@@ -29,11 +29,18 @@
 }
 
 .ngff-rfc8-viewer-graph-container {
+  display: flex;
   flex-grow: 1;
   position: relative;
+  flex-direction: column;
 }
 
-.ngff-rfc8-viewer-graph-container .export-buttons {
+.ngff-rfc8-viewer-view-container {
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.ngff-rfc8-viewer-view-container .export-buttons {
   position: absolute;
   right: 10px;
   bottom: 10px;
@@ -199,15 +206,8 @@ Show the "sidebar" below the graph
 
 .ngff-rfc8-viewer-control-panel {
   background-color: #bed1d8;
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  padding: 8px 0;
   z-index: 99999;
-  display: flex;
   align-items: center;
-  overflow-x: auto;
   display: flex;
   gap: 10px;
   padding: 7px 10px;
@@ -328,7 +328,7 @@ Show the "sidebar" below the graph
 
 .ngff-rfc8-viewer-list-graph-root,
 .ngff-rfc8-viewer-images-graph-root {
-  padding: 65px 15px 15px 15px;
+  padding: 15px;
   height: 100%;
   box-sizing: border-box;
   overflow: auto;
@@ -423,4 +423,13 @@ Show the "sidebar" below the graph
 }
 .ngff-rfc8-viewer-image-row .ngff-rfc8-viewer-thumbnail-container {
   flex-shrink: 0;
+}
+
+.ngff-rfc8-viewer-images-graph-root .ngff-rfc8-viewer-alert {
+  margin: 0 0 1em 0;
+}
+
+.ngff-rfc8-viewer-graph {
+  /* to prevent the scrollbar */
+  margin: -5px 0;
 }

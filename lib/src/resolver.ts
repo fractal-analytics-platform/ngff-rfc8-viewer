@@ -16,7 +16,7 @@ export class NGFFResolver {
     this.prefix = this.getDirectory(this.source);
   }
 
-  getDirectory(path: string) {
+  public getDirectory(path: string) {
     if (path.endsWith('.json')) {
       // remove json file from path
       return path.substring(0, path.search(/\/[^/]+\.json$/));
@@ -24,22 +24,22 @@ export class NGFFResolver {
     return path;
   }
 
-  getSource() {
+  public getSource() {
     return this.source;
   }
 
-  getAbsoluteUrl(source: string) {
+  public getAbsoluteUrl(source: string) {
     if (source.startsWith('./')) {
       return `${this.prefix}${source.substring(1)}`;
     }
     return source;
   }
 
-  getRootRelativePath() {
+  public getRootRelativePath() {
     return '.' + this.source.replace(this.prefix, '');
   }
 
-  resolveNode(node: D3Node, absolute = false) {
+  public resolveNode(node: D3Node, absolute = false) {
     if ('path' in node.omeNode && node.omeNode.path) {
       if (!['zarr', 'json'].includes(node.omeNode.path.type)) {
         throw new Error(`Unexpected path type: ${node.omeNode.path.type}`);
@@ -57,7 +57,7 @@ export class NGFFResolver {
     }
   }
 
-  resolvePath(parentPath: string, path: string, absolute = false) {
+  public resolvePath(parentPath: string, path: string, absolute = false) {
     if (!(path.startsWith('./') || path.startsWith('http')) || path.includes('..')) {
       throw new Error(`Unsupported path "${path}"`);
     }

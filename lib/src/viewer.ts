@@ -1,86 +1,89 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import NGFFControlPanel from './control';
-import { ErrorAlert } from './error';
-import { NGFFGraph } from './graph';
-import { createHomepage } from './homepage';
-import { NGFFResolver } from './resolver';
-import { NGFFSidebar } from './sidebar';
+import { NGFFAlert } from './alert';
+import { NGFFGraphPage } from './pages/graph';
+import { NGFFHomePage } from './pages/home';
 
 export default class NGFFViewer {
-  private graph: NGFFGraph | null = null;
-  private graphContainerId: string | null = null;
-  // private view: TreeView | ListView | ImagesView | null = null;
+  private elementId: string;
+  private container: HTMLElement;
+  private errorAlert: NGFFAlert;
 
-  constructor(elementId: string, source: string | null, autoloadDepth: number, validate: boolean) {
+  constructor(elementId: string) {
+    this.elementId = elementId;
     const element = document.getElementById(elementId);
-    element?.classList.add(`${CSS_CLASS_PREFIX}body`);
     if (!element) {
-      console.warn(`Unable to find element with id ${elementId}`);
-      return;
+      throw new Error(`Unable to find element with id ${elementId}`);
     }
 
-    this.load(element, source, autoloadDepth, validate);
-  }
+    element.classList.add(`${CSS_CLASS_PREFIX}body`);
 
-  async load(
-    element: HTMLElement,
-    source: string | null,
-    autoloadDepth: number,
-    validate: boolean
-  ) {
-    console.log('NGFFViewer: load()');
-    if (!source) {
-      element.innerHTML = '';
-      element.appendChild(createHomepage());
-      return;
-    }
+    this.container = document.createElement('div');
+    element.appendChild(this.container);
 
-    const viewerContainer = document.createElement('div');
-    viewerContainer.classList.add(`${CSS_CLASS_PREFIX}container`);
-
-    const graphContainer = document.createElement('div');
-    graphContainer.classList.add(`${CSS_CLASS_PREFIX}graph-container`);
-    this.graphContainerId = `${element.id}-graph-container`;
-    graphContainer.id = this.graphContainerId;
-
-    const sidebar = document.createElement('div');
-
-    const controlPanel = document.createElement('div');
-    graphContainer.append(controlPanel);
-
-    viewerContainer.appendChild(graphContainer);
-    viewerContainer.appendChild(sidebar);
-
-    element.appendChild(viewerContainer);
+    this.errorAlert = new NGFFAlert({ fixed: true, dismissable: true });
+    element.appendChild(this.errorAlert.render());
 
     try {
-      const resolver = new NGFFResolver(source);
-      this.graph = new NGFFGraph(resolver, autoloadDepth);
-      this.graph.setValidation(validate);
-
-      // sidebar listens to graph update and load events
-      new NGFFSidebar(sidebar, this.graph, resolver);
-      new ErrorAlert(this.graph, this.graphContainerId);
-
-      // When page loads, we first load the graph's root...
-      await this.graph.loadRoot();
-
-      // control listens to graph events and calls viewer.refreshView() when necessary
-      new NGFFControlPanel(controlPanel, this.graph, resolver, this.graphContainerId);
+      this.initHistory();
+      this.handleRoute();
     } catch (err) {
-      console.error(err);
-      const error = err instanceof Error ? err.message : 'Unexpected error';
-      this.showAlert(element, error, 'error');
+      this.signalError(err);
     }
   }
 
-  showAlert(element: HTMLElement, message: string, type: 'warning' | 'error') {
-    const alert = document.createElement('div');
-    alert.classList.add(`${CSS_CLASS_PREFIX}alert`);
-    alert.classList.add(`${CSS_CLASS_PREFIX}${type}`);
-    alert.classList.remove(`${CSS_CLASS_PREFIX}hide`);
-    alert.innerHTML = message;
-    element.innerHTML = '';
-    element.appendChild(alert);
+  public showHome() {
+    this.destroy();
+    const homePage = new NGFFHomePage();
+    this.setPage(homePage.render());
+  }
+
+  public showGraph(source: string, autoloadDepth: number, validate: boolean) {
+    this.destroy();
+    const graphPage = new NGFFGraphPage(this, source, autoloadDepth, validate);
+    this.setPage(graphPage.render());
+  }
+
+  private setPage(newPage: HTMLElement) {
+    this.container.replaceWith(newPage);
+    this.container = newPage;
+  }
+
+  public signalError(err: unknown) {
+    this.errorAlert.signalError(err);
+  }
+
+  public getContainerId() {
+    return this.elementId;
+  }
+
+  private handleRoute() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const source = urlParams.get('source');
+    const autoload = urlParams.get('autoload');
+    const validate = urlParams.get('validate') === 'true';
+    let autoloadDepth = 0;
+    if (autoload !== null) {
+      autoloadDepth = parseInt(autoload);
+      if (isNaN(autoloadDepth)) {
+        autoloadDepth = 0;
+      }
+    }
+
+    if (source) {
+      this.showGraph(source, autoloadDepth, validate);
+    } else {
+      this.showHome();
+    }
+  }
+
+  private initHistory() {
+    window.addEventListener('popstate', () => {
+      this.handleRoute();
+    });
+  }
+
+  private destroy() {
+    this.signalError(null);
+    this.container.replaceChildren();
   }
 }

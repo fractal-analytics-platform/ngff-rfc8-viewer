@@ -2,24 +2,21 @@ import type { D3Node, OmeNode, OmePath } from './../types';
 import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
-import type { NGFFResolver } from '../resolver';
+import type { NGFFView } from './base';
+import { NGFFAlert } from '../alert';
 
 const THUMBNAIL_SIZE = 100;
 const SCROLL_DEBOUNCE_MS = 50;
 
-export class ImagesView {
+export class ImagesView implements NGFFView {
   private graph: NGFFGraph;
-  private resolver: NGFFResolver;
-  private containerId: string;
   private rootElement: HTMLDivElement;
-  private unsubscribers: Array<() => void> = [];
+  private warningAlert: NGFFAlert;
   private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
   private rendering = false;
 
-  constructor(graph: NGFFGraph, resolver: NGFFResolver, containerId: string) {
+  constructor(graph: NGFFGraph, container: HTMLElement) {
     this.graph = graph;
-    this.resolver = resolver;
-    this.containerId = containerId;
 
     this.rootElement = document.createElement('div');
     this.rootElement.classList.add(`${CSS_CLASS_PREFIX}images-graph-root`);
@@ -29,31 +26,27 @@ export class ImagesView {
       }
     };
     this.rootElement.addEventListener('scroll', this.onScroll);
-    document.getElementById(this.containerId)?.appendChild(this.rootElement);
+    this.warningAlert = new NGFFAlert({ type: 'warning' });
 
-    this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
-    this.unsubscribers.push(
-      graph.addNodeSelectedListener(() => {
-        const descendants = this.graph.getHierarchy().descendants();
-        descendants.forEach((d) => {
-          if (d.data.omeNode.type === 'multiscale') {
-            const nodeElement = document.getElementById(`image-row-node-${d.data.id}`);
-            if (nodeElement) {
-              nodeElement.style.borderColor = d.data.selected
-                ? STROKE_COLORS.selected
-                : 'transparent';
-            }
-          }
-        });
-      })
-    );
-
-    // initial render of the tree
-    this.renderTree();
+    container.appendChild(this.rootElement);
   }
 
-  selectNode(node?: D3Node) {
-    this.graph.selectNode(node!);
+  public selectNode(node?: D3Node) {
+    this.graph.signalNodeSelected(node);
+
+    const hierarchy = this.graph.getHierarchy();
+    if (!hierarchy) {
+      return;
+    }
+
+    hierarchy.descendants().forEach((d) => {
+      if (d.data.omeNode.type === 'multiscale') {
+        const nodeElement = document.getElementById(`image-row-node-${d.data.id}`);
+        if (nodeElement) {
+          nodeElement.style.borderColor = d.data.selected ? STROKE_COLORS.selected : 'transparent';
+        }
+      }
+    });
   }
 
   private onScroll = () => {
@@ -79,9 +72,10 @@ export class ImagesView {
       }
     });
     await Promise.all(thumbnailPromises);
+    this.checkUnloadedNodes();
   }
 
-  async loadThumbnail(nodeElement: HTMLElement) {
+  private async loadThumbnail(nodeElement: HTMLElement) {
     const nodeId = nodeElement.id.replace('image-row-node-', '');
     const node = this.graph.getNode(nodeId);
     if (!node) {
@@ -89,8 +83,9 @@ export class ImagesView {
     }
 
     // Add Thumbnail for the node
-    const fullUrl = this.resolver.resolveNode(node, true);
-    const baseUrl = this.resolver.getDirectory(fullUrl);
+    const resolver = this.graph.getResolver();
+    const fullUrl = resolver.resolveNode(node, true);
+    const baseUrl = resolver.getDirectory(fullUrl);
 
     let thumbnailElement: HTMLElement;
     if ('nodes' in node.omeNode) {
@@ -112,12 +107,30 @@ export class ImagesView {
     nodeElement.prepend(thumbnailElement);
   }
 
-  async renderTree() {
+  public async render() {
+    console.log('[ImagesView] render');
+
     if (this.rendering) {
       return;
     }
     this.rendering = true;
     this.rootElement.innerHTML = '';
+    this.rootElement.appendChild(this.warningAlert.render());
+
+    const hierarchy = this.graph.getHierarchy();
+    if (!hierarchy) {
+      this.rendering = false;
+      return;
+    }
+
+    hierarchy.descendants().forEach((d) => {
+      this.renderNode(d.data);
+    });
+    await this.loadVisibleThumbnails();
+    this.rendering = false;
+  }
+
+  private checkUnloadedNodes() {
     const unloadedCollections = this.graph.countUnloadedNodes('collection');
     const unloadedMultiscales = this.graph.countUnloadedNodes('multiscale');
     let message = '';
@@ -128,22 +141,10 @@ export class ImagesView {
       message = `Some multiscale nodes are not loaded.
       Thumbnails won't be displayed. Click nodes below to load.`;
     }
-    if (message) {
-      const msg = document.createElement('div');
-      msg.textContent = message;
-      msg.style.margin = '0 0 1em 0';
-      msg.classList.add(`${CSS_CLASS_PREFIX}alert`, `${CSS_CLASS_PREFIX}warning`);
-      this.rootElement.appendChild(msg);
-    }
-    const descendants = this.graph.getHierarchy().descendants();
-    descendants.forEach((d) => {
-      this.renderNode(d.data);
-    });
-    await this.loadVisibleThumbnails();
-    this.rendering = false;
+    this.warningAlert.signalError(message);
   }
 
-  renderNode(node: D3Node) {
+  private renderNode(node: D3Node) {
     // We only render multiscale nodes
     if (!(node.omeNode.type === 'multiscale')) {
       return;
@@ -174,11 +175,7 @@ export class ImagesView {
     this.rootElement.appendChild(nodeElement);
   }
 
-  destroy() {
+  public destroy() {
     clearTimeout(this.scrollTimeout);
-    this.rootElement.removeEventListener('scroll', this.onScroll);
-    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
-    this.unsubscribers = [];
-    this.rootElement.remove();
   }
 }

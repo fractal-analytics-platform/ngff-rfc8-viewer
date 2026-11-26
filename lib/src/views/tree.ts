@@ -2,33 +2,30 @@ import * as d3 from 'd3';
 import type { D3Node, OmeNode, OmePath } from '../types';
 import { CSS_CLASS_PREFIX, NODE_COLORS, STROKE_COLORS } from '../constants';
 import type { NGFFGraph } from '../graph';
+import type { NGFFView } from './base';
 
 const NODE_SPACING = 160;
 const CIRCLE_RADIUS = 24;
 const ARROW_SIZE = 20;
 const MAX_EXPORT_SIZE = 16384;
 
-export class TreeView {
+export class TreeView implements NGFFView {
   private graph: NGFFGraph;
-  private containerId: string;
   private width: number = 0;
   private height: number = 0;
   private currentZoom: any;
   /** x position of root node */
   private rootX: number | null = null;
 
-  private svg: d3.Selection<SVGSVGElement, unknown, HTMLElement, any>;
+  private svg: d3.Selection<SVGSVGElement, unknown, null, any>;
   private tooltip: d3.Selection<HTMLDivElement, unknown, HTMLElement, any>;
-  private unsubscribers: Array<() => void> = [];
 
-  constructor(graph: NGFFGraph, containerId: string) {
+  constructor(graph: NGFFGraph, container: HTMLElement) {
     this.graph = graph;
-    this.containerId = containerId;
 
     this.svg = d3
-      .select(`#${containerId}`)
+      .select(container)
       .append('svg')
-      .attr('id', `${containerId}-graph`)
       .attr('class', `${CSS_CLASS_PREFIX}graph`)
       .attr('width', '100%')
       .attr('height', '100%')
@@ -45,21 +42,7 @@ export class TreeView {
       .attr('class', `${CSS_CLASS_PREFIX}tree-tooltip`)
       .style('opacity', 0);
 
-    this.unsubscribers.push(graph.addChangeListener(() => this.renderTree()));
-
-    // Also re-render when loading completes
-    this.unsubscribers.push(
-      graph.addLoadingListener((isLoading) => {
-        if (!isLoading) {
-          this.renderTree();
-        }
-      })
-    );
-
-    const exportButtons = d3
-      .select(`#${containerId}`)
-      .append('div')
-      .attr('class', 'export-buttons');
+    const exportButtons = d3.select(container).append('div').attr('class', 'export-buttons');
 
     exportButtons
       .append('button')
@@ -70,17 +53,30 @@ export class TreeView {
       .append('button')
       .text('Export PNG')
       .on('click', () => this.exportPNG());
-
-    this.unsubscribers.push(this.graph.addNodeSelectedListener(() => this.renderTree()));
-    // initial render of the tree
-    this.renderTree();
   }
 
-  selectNode(node?: D3Node) {
-    this.graph.selectNode(node);
+  public selectNode(node?: D3Node) {
+    this.graph.signalNodeSelected(node);
+
+    this.svg
+      .selectAll('circle')
+      .attr('stroke', (d: unknown) => {
+        const { data } = d as { data: D3Node };
+        return data.selected
+          ? STROKE_COLORS.selected
+          : data.loaded
+            ? 'none'
+            : STROKE_COLORS.inlining;
+      })
+      .attr('stroke-width', (d: unknown) => {
+        const { data } = d as { data: D3Node };
+        return data.selected ? 5 : 2;
+      });
   }
 
-  renderTree() {
+  public render() {
+    console.log('[TreeView] render');
+
     const hierarchy = this.graph.getHierarchy();
     if (!hierarchy) {
       return;
@@ -97,9 +93,9 @@ export class TreeView {
       .tree<D3Node>()
       .size([this.width, this.height])
       .separation(() => NODE_SPACING);
-    treeLayout(this.graph.getHierarchy());
+    treeLayout(hierarchy);
 
-    const descendants = this.graph.getHierarchy().descendants();
+    const descendants = hierarchy.descendants();
 
     this.svg.selectAll('*').remove();
     this.tooltip.style('opacity', 0);
@@ -135,7 +131,7 @@ export class TreeView {
 
     tree
       .selectAll('line.main')
-      .data(this.graph.getHierarchy().links())
+      .data(hierarchy.links())
       .enter()
       .append('line')
       .attr('x1', (d) => Number(d.source.x))
@@ -205,17 +201,21 @@ export class TreeView {
       .attr('stroke-width', (d) => (d.data.selected ? 5 : 2))
       .on('click', async (event, d) => {
         const node = d.data;
-        if ('path' in node.omeNode && node.omeNode.path) {
-          if (event.target instanceof SVGCircleElement) {
-            event.target.classList.add(`${CSS_CLASS_PREFIX}rotating-dash`);
-          }
-          await this.graph.loadNodeWithSignal(
-            node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-          );
-          this.selectNode(node);
-          this.renderTree();
-          if (event.target instanceof SVGCircleElement) {
-            event.target.classList.remove(`${CSS_CLASS_PREFIX}rotating-dash`);
+        if ('path' in node.omeNode && node.omeNode.path && node.omeNode.type !== 'array') {
+          if (node.loaded) {
+            this.selectNode(node);
+          } else {
+            if (event.target instanceof SVGCircleElement) {
+              event.target.classList.add(`${CSS_CLASS_PREFIX}rotating-dash`);
+            }
+            await this.graph.loadNodeWithSignal(
+              node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+            );
+            this.selectNode(node);
+            if (event.target instanceof SVGCircleElement) {
+              event.target.classList.remove(`${CSS_CLASS_PREFIX}rotating-dash`);
+            }
+            this.render();
           }
         } else {
           this.selectNode(node);
@@ -299,9 +299,17 @@ export class TreeView {
     this.svg.call(zoom.transform, this.currentZoom);
   }
 
-  private buildExportableSVG() {
+  public resetZoom() {
+    this.currentZoom = undefined;
+  }
+
+  private buildExportableSVG(): SVGElement | undefined {
     // Recompute initial dimensions
     const hierarchy = this.graph.getHierarchy();
+    if (!hierarchy) {
+      return;
+    }
+
     let k = 1;
     let width = Math.max(800, hierarchy.leaves().length * NODE_SPACING);
     let height = (Math.max(1, hierarchy.height) + 1) * NODE_SPACING;
@@ -328,15 +336,21 @@ export class TreeView {
     return svgElement;
   }
 
-  exportSVG() {
+  private exportSVG() {
     const svgElement = this.buildExportableSVG();
+    if (!svgElement) {
+      return;
+    }
     const svgString = new XMLSerializer().serializeToString(svgElement);
     const blob = new Blob([svgString], { type: 'image/svg+xml' });
     this.downloadImage(blob, 'svg');
   }
 
-  exportPNG() {
+  private exportPNG() {
     const svgElement = this.buildExportableSVG();
+    if (!svgElement) {
+      return;
+    }
 
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -380,17 +394,7 @@ export class TreeView {
     URL.revokeObjectURL(url);
   }
 
-  destroy() {
-    this.unsubscribers.forEach((unsubscribe) => unsubscribe());
-    this.unsubscribers = [];
-    // remove the svg element created in constructor
-    const el = document.getElementById(this.containerId + '-graph');
-    if (el) {
-      el.remove();
-    }
-    const exportBtns = document.querySelector(`#${this.containerId} .export-buttons`);
-    if (exportBtns) {
-      exportBtns.remove();
-    }
+  public destroy() {
+    document.querySelectorAll(`.${CSS_CLASS_PREFIX}tree-tooltip`).forEach((e) => e.remove());
   }
 }

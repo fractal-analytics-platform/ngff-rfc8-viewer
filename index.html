@@ -25,18 +25,7 @@
   <div id="viewer"></div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const source = urlParams.get('source');
-      const autoload = urlParams.get('autoload');
-      const validate = urlParams.get('validate') === 'true';
-      let autoloadDepth = 0;
-      if (autoload !== null) {
-        try {
-          autoloadDepth = parseInt(autoload);
-        } catch {
-        }
-      }
-      new NGFFViewer('viewer', source, autoloadDepth, validate);
+      new NGFFViewer('viewer');
     });
   </script>
 </body>

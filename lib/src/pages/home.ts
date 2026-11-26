@@ -1,0 +1,109 @@
+import { CSS_CLASS_PREFIX } from '../constants';
+
+const exampleSources = [
+  [
+    'Collection with a single (inlined) image',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/main/data/e01_inlined_multiscale/zarr.json'
+  ],
+  [
+    'Collection with many (distributed) images',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/refs/heads/main/data/e02_distributed_multiscales/zarr.json'
+  ],
+  [
+    'Use https paths to add the examples above into 1 collection',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e03_http_urls_for_other_examples/root.json'
+  ],
+  // These two examples would require some currently-undefined metadata (`acquisition` and/or `field`)
+  // [
+  //   'Plate with multiple fields',
+  //   'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e04_plate_multiple_fields/root.json'
+  // ],
+  // [
+  //   'Plate with multiple acquisitions of the same field',
+  //   'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e05_plate_multiple_acquisitions/root.json'
+  // ],
+  [
+    'IDR v0.5 images to RFC-8. Singlescales use https paths',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e06_v05_idr_multi_doc/collection.json'
+  ],
+  [
+    'Plate from IDR. Singlescales use https paths',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e07_v05_plate_to_multi_doc/collection.json'
+  ],
+  [
+    'Big plate from IDR. Singlescales use https paths',
+    'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/data/e08_v05_big_plate_to_multi_doc/collection.json'
+  ]
+  // This example should be rewritten
+  // [
+  //   'Basic example of invalid attributes (click on multiscale node)',
+  //   'https://raw.githubusercontent.com/fractal-analytics-platform/ngff-rfc8-examples/main/invalid-data/missing-multiscale-coordinate-systems.json'
+  // ],
+];
+
+export class NGFFHomePage {
+  public render(): HTMLElement {
+    const container = document.createElement('div');
+    container.classList.add(`${CSS_CLASS_PREFIX}homepage`);
+    container.appendChild(document.createElement('h1')).textContent = 'ngff-rfc8-viewer';
+
+    const queryParams = new URLSearchParams(window.location.search);
+    const currentUrl = window.location.href;
+
+    const form = document.createElement('form');
+    container.appendChild(form);
+    const input = document.createElement('input');
+    input.placeholder = 'Enter source URL...';
+    input.name = 'source';
+    form.method = 'get';
+    input.addEventListener('paste', function (event) {
+      if (event.clipboardData) {
+        input.value = event.clipboardData.getData('text');
+        form.submit();
+      }
+    });
+    form.action = currentUrl.split('?')[0];
+    form.appendChild(input);
+    this.appendHiddenInputFromParam(form, queryParams, 'view');
+    this.appendHiddenInputFromParam(form, queryParams, 'validate');
+
+    // Add a list of example sources
+    const list = document.createElement('ul');
+    container.appendChild(list);
+
+    function createLink(url: string, text: string, parent: HTMLElement): HTMLAnchorElement {
+      const link = document.createElement('a');
+      queryParams.set('source', url);
+      link.href = `${currentUrl.split('?')[0]}?${queryParams.toString()}`;
+      link.textContent = text;
+      parent.appendChild(link);
+      const jsonLink = document.createElement('a');
+      jsonLink.href = url;
+      jsonLink.target = '_blank';
+      jsonLink.style.marginLeft = '20px';
+      jsonLink.textContent = '[view json]';
+      parent.appendChild(jsonLink);
+      return link;
+    }
+
+    for (const [text, url] of exampleSources) {
+      const listItem = document.createElement('li');
+      listItem.style.marginBottom = '10px';
+      createLink(url, text, listItem);
+      list.appendChild(listItem);
+    }
+
+    return container;
+  }
+
+  private appendHiddenInputFromParam(form: HTMLFormElement, params: URLSearchParams, key: string) {
+    const value = params.get(key);
+    if (value) {
+      const input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = key;
+      input.value = value;
+      form.appendChild(input);
+    }
+  }
+}
