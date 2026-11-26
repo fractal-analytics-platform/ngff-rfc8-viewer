@@ -299,6 +299,10 @@ export class TreeView implements NGFFView {
     this.svg.call(zoom.transform, this.currentZoom);
   }
 
+  public resetZoom() {
+    this.currentZoom = undefined;
+  }
+
   private buildExportableSVG(): SVGElement | undefined {
     // Recompute initial dimensions
     const hierarchy = this.graph.getHierarchy();
