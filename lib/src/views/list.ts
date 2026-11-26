@@ -22,16 +22,14 @@ export class ListView implements NGFFView {
   }
 
   public async selectNode(node?: D3Node) {
+    if (node && !node.loaded) {
+      await this.graph.loadNodeWithSignal(
+        node as D3Node & { omeNode: OmeNode & { path: OmePath } }
+      );
+    }
     this.graph.signalNodeSelected(node);
-    if (node) {
-      // unloaded nodes are actually expanded already - don't toggle collapsed. Just load...
-      if (node.loaded) {
-        node.collapsed = !node.collapsed;
-      } else {
-        await this.graph.loadNodeWithSignal(
-          node as D3Node & { omeNode: OmeNode & { path: OmePath } }
-        );
-      }
+    if (node && node.loaded) {
+      node.collapsed = !node.collapsed;
     }
     this.render();
   }
