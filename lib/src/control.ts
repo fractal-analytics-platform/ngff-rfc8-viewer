@@ -156,6 +156,7 @@ export default class NGFFControlPanel {
       }
     );
     valBtn.id = `${CSS_CLASS_PREFIX}validate-btn`;
+    valBtn.classList.add(`${CSS_CLASS_PREFIX}hide`);
 
     return { loadNextBtn, loadAllBtn };
   }
