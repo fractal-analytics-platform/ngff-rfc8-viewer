@@ -211,6 +211,7 @@ export class NGFFGraph {
   }
 
   private buildHierarchy() {
+    this.checkIdsUnique();
     try {
       this.hierarchy = d3.stratify<D3Node>()(this.nodes);
     } catch (err) {
@@ -220,6 +221,13 @@ export class NGFFGraph {
       } else {
         throw err;
       }
+    }
+  }
+
+  private checkIdsUnique() {
+    const uniqueIds = new Set(this.nodes.map((n) => n.id));
+    if (uniqueIds.size !== this.nodes.length) {
+      throw new Error('Detected duplicated node identifiers');
     }
   }
 
