@@ -1,3 +1,4 @@
+import { NGFFAlert } from '../alert';
 import { CSS_CLASS_PREFIX } from '../constants';
 import NGFFControlPanel from '../control';
 import { NGFFGraph } from '../graph';
@@ -19,6 +20,7 @@ export class NGFFGraphPage {
   private sidebar: NGFFSidebar;
   private view: NGFFView | null = null;
   private viewContainer: HTMLElement;
+  private errorAlert: NGFFAlert;
   private validation: boolean = false;
 
   constructor(viewer: NGFFViewer, source: string, autoloadDepth: number, validate: boolean) {
@@ -32,6 +34,7 @@ export class NGFFGraphPage {
     this.sidebar = new NGFFSidebar(this, this.graph, resolver);
 
     this.viewContainer = document.createElement('div');
+    this.errorAlert = new NGFFAlert();
   }
 
   public render(): HTMLElement {
@@ -49,21 +52,30 @@ export class NGFFGraphPage {
     root.appendChild(graphContainer);
 
     this.signalLoading(true);
-    this.graph.loadRoot().then(async () => {
-      const params = new URLSearchParams(window.location.search);
-      this.setView((params.get('view') as ViewType) || 'tree', false);
-      root.appendChild(this.sidebar.render());
-      const node = await this.loadSelectedPath();
-      this.view?.render();
-      this.view?.selectNode(node);
-      this.signalLoading(false);
-    });
+    this.graph
+      .loadRoot()
+      .then(async () => {
+        const params = new URLSearchParams(window.location.search);
+        this.setView((params.get('view') as ViewType) || 'tree', false);
+        root.appendChild(this.sidebar.render());
+        const node = await this.loadSelectedPath();
+        this.view?.render();
+        this.view?.selectNode(node);
+        this.signalLoading(false);
+      })
+      .catch((err) => {
+        this.displayRootError(err);
+      });
 
     return root;
   }
 
   public async setView(view: ViewType, render = true) {
     if (!this.viewContainer) {
+      return;
+    }
+
+    if (this.errorAlert.getMessage()) {
       return;
     }
 
@@ -150,7 +162,17 @@ export class NGFFGraphPage {
 
   public async backToRoot() {
     this.view?.selectNode();
-    await this.graph.loadRoot();
-    this.view?.render();
+    try {
+      await this.graph.loadRoot();
+      this.view?.render();
+    } catch (err) {
+      this.displayRootError(err);
+    }
+  }
+
+  private displayRootError(err: unknown) {
+    this.viewContainer.innerHTML = '';
+    this.viewContainer.appendChild(this.errorAlert.render());
+    this.errorAlert.signalError(err);
   }
 }

@@ -3,6 +3,7 @@ import { CSS_CLASS_PREFIX, STROKE_COLORS } from './../constants';
 import type { NGFFGraph } from './../graph';
 import { createThumbnailImg } from './../thumbnail';
 import type { NGFFView } from './base';
+import { NGFFAlert } from '../alert';
 
 const THUMBNAIL_SIZE = 100;
 const SCROLL_DEBOUNCE_MS = 50;
@@ -10,7 +11,7 @@ const SCROLL_DEBOUNCE_MS = 50;
 export class ImagesView implements NGFFView {
   private graph: NGFFGraph;
   private rootElement: HTMLDivElement;
-  private warningMessageElement: HTMLDivElement;
+  private warningAlert: NGFFAlert;
   private scrollTimeout: ReturnType<typeof setTimeout> | undefined;
   private rendering = false;
 
@@ -25,13 +26,7 @@ export class ImagesView implements NGFFView {
       }
     };
     this.rootElement.addEventListener('scroll', this.onScroll);
-
-    this.warningMessageElement = document.createElement('div');
-    this.warningMessageElement.classList.add(
-      `${CSS_CLASS_PREFIX}alert`,
-      `${CSS_CLASS_PREFIX}warning`,
-      `${CSS_CLASS_PREFIX}hide`
-    );
+    this.warningAlert = new NGFFAlert({ type: 'warning' });
 
     container.appendChild(this.rootElement);
   }
@@ -120,7 +115,7 @@ export class ImagesView implements NGFFView {
     }
     this.rendering = true;
     this.rootElement.innerHTML = '';
-    this.rootElement.appendChild(this.warningMessageElement);
+    this.rootElement.appendChild(this.warningAlert.render());
 
     const hierarchy = this.graph.getHierarchy();
     if (!hierarchy) {
@@ -146,8 +141,7 @@ export class ImagesView implements NGFFView {
       message = `Some multiscale nodes are not loaded.
       Thumbnails won't be displayed. Click nodes below to load.`;
     }
-    this.warningMessageElement.textContent = message;
-    this.warningMessageElement.classList.toggle(`${CSS_CLASS_PREFIX}hide`, !message);
+    this.warningAlert.signalError(message);
   }
 
   private renderNode(node: D3Node) {

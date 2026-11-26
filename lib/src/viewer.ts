@@ -1,12 +1,12 @@
 import { CSS_CLASS_PREFIX } from './constants';
-import { ErrorAlert } from './error';
+import { NGFFAlert } from './alert';
 import { NGFFGraphPage } from './pages/graph';
 import { NGFFHomePage } from './pages/home';
 
 export default class NGFFViewer {
   private elementId: string;
   private container: HTMLElement;
-  private errorAlert: ErrorAlert;
+  private errorAlert: NGFFAlert;
 
   constructor(elementId: string) {
     this.elementId = elementId;
@@ -20,7 +20,7 @@ export default class NGFFViewer {
     this.container = document.createElement('div');
     element.appendChild(this.container);
 
-    this.errorAlert = new ErrorAlert();
+    this.errorAlert = new NGFFAlert({ fixed: true, dismissable: true });
     element.appendChild(this.errorAlert.render());
 
     try {

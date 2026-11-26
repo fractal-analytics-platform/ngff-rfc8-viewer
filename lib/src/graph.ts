@@ -69,8 +69,6 @@ export class NGFFGraph {
       if (this.autoloadDepth > 0) {
         await this.recursiveLoad(this.autoloadDepth);
       }
-    } catch (err) {
-      this.signalError(err);
     } finally {
       this.signalLoading(false);
     }
